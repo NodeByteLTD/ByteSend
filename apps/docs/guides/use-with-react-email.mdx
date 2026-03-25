@@ -1,0 +1,92 @@
+---
+title: Use with React Email
+description: "A guide on how to use useSend with React Email"
+---
+
+## Introduction
+
+[React Email](https://react.email/docs/introduction) is a library for building emails with React. In this guide, we will show you how to use useSend with React Email.
+
+## Install dependencies
+
+<CodeGroup>
+  ```sh npm
+  npm install usesend-js @react-email/render
+  ```
+
+```sh yarn
+yarn add usesend-js @react-email/render
+```
+
+```sh pnpm
+pnpm add usesend-js @react-email/render
+```
+
+```sh bun
+bun add usesend-js @react-email/render
+```
+
+</CodeGroup>
+
+## Create an email template
+
+```tsx
+import * as React from "react";
+import { Html } from "@react-email/html";
+import { Button } from "@react-email/button";
+
+export function Email(props) {
+  const { url } = props;
+
+  return (
+    <Html lang="en">
+      <Button href={url}>Click me</Button>
+    </Html>
+  );
+}
+```
+
+## Send an email using useSend
+
+```ts
+import { UseSend } from "usesend-js";
+import { render } from "@react-email/render";
+import { Email } from "./email";
+
+const usesend = new UseSend("us_your_usesend_api_key");
+
+  const html = await render(<Email url="https://usesend.com" />);
+
+const response = await usesend.emails.send({
+  to: "hello@usesend.com",
+  from: "hello@usesend.com",
+  subject: "useSend email",
+  html,
+});
+```
+
+## Build your project
+
+### JavaScript
+
+If you're using nodejs, importing `email.jsx` might fail. make sure to add these to your babel config:
+
+```js
+{
+  "plugins": ["@babel/plugin-proposal-class-properties"]
+}
+```
+
+Checkout this [example](https://github.com/usesend/unsend-js-examples/tree/main/react-email-js)
+
+### TypeScript
+
+Just add `jsx` to your `tsconfig.json`
+
+```json
+{
+  "compilerOptions": { "jsx": "react-jsx" }
+}
+```
+
+Checkout this [example](https://github.com/usesend/unsend-js-examples/tree/main/react-email-ts)

@@ -1,0 +1,512 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+  // Further reading:
+  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+  url      = env("DATABASE_URL")
+}
+
+model AppSetting {
+  key   String @id
+  value String
+}
+
+model SesSetting {
+  id                   String   @id @default(cuid())
+  region               String   @unique
+  idPrefix             String   @unique
+  topic                String
+  topicArn             String?
+  transactionalQuota   Int      @default(50)
+  callbackUrl          String
+  callbackSuccess      Boolean  @default(false)
+  configGeneral        String?
+  configGeneralSuccess Boolean  @default(false)
+  configClick          String?
+  configClickSuccess   Boolean  @default(false)
+  configOpen           String?
+  configOpenSuccess    Boolean  @default(false)
+  configFull           String?
+  configFullSuccess    Boolean  @default(false)
+  sesEmailRateLimit    Int      @default(1)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// Necessary for Next auth
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   Int
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? // @db.Text
+  access_token             String? // @db.Text
+  refresh_token_expires_in Int?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? // @db.Text
+  session_state            String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id               Int        @id @default(autoincrement())
+  name             String?
+  email            String?    @unique
+  emailVerified    DateTime?
+  image            String?
+  isBetaUser       Boolean    @default(false)
+  isWaitlisted     Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+  accounts         Account[]
+  sessions         Session[]
+  teamUsers        TeamUser[]
+  webhookEndpoints Webhook[]
+}
+
+enum Plan {
+  FREE
+  BASIC
+}
+
+model Team {
+  id               Int               @id @default(autoincrement())
+  name             String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  plan             Plan              @default(FREE)
+  stripeCustomerId String?           @unique
+  isActive         Boolean           @default(true)
+  apiRateLimit     Int               @default(2)
+  billingEmail     String?
+  sesTenantId      String?
+  isVerified       Boolean           @default(false)
+  dailyEmailLimit  Int               @default(10000)
+  isBlocked        Boolean           @default(false)
+  teamUsers        TeamUser[]
+  domains          Domain[]
+  apiKeys          ApiKey[]
+  emails           Email[]
+  contactBooks     ContactBook[]
+  campaigns        Campaign[]
+  templates        Template[]
+  dailyEmailUsages DailyEmailUsage[]
+  subscription     Subscription[]
+  invites          TeamInvite[]
+  suppressionList  SuppressionList[]
+  webhookEndpoints Webhook[]
+  webhookCalls     WebhookCall[]
+}
+
+model TeamInvite {
+  id        String   @id @default(cuid())
+  teamId    Int
+  email     String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, email])
+}
+
+model Subscription {
+  id                 String    @id
+  teamId             Int
+  status             String
+  priceId            String
+  priceIds           String[]
+  currentPeriodEnd   DateTime?
+  currentPeriodStart DateTime?
+  cancelAtPeriodEnd  DateTime?
+  paymentMethod      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model TeamUser {
+  teamId Int
+  userId Int
+  role   Role
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+enum DomainStatus {
+  NOT_STARTED
+  PENDING
+  SUCCESS
+  FAILED
+  TEMPORARY_FAILURE
+}
+
+model Domain {
+  id            Int          @id @default(autoincrement())
+  name          String       @unique
+  teamId        Int
+  status        DomainStatus @default(PENDING)
+  region        String       @default("us-east-1")
+  clickTracking Boolean      @default(false)
+  openTracking  Boolean      @default(false)
+  publicKey     String
+  dkimSelector  String?      @default("usesend")
+  dkimStatus    String?
+  spfDetails    String?
+  dmarcAdded    Boolean      @default(false)
+  errorMessage  String?
+  subdomain     String?
+  sesTenantId   String?
+  isVerifying   Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  team          Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  apiKeys       ApiKey[]
+}
+
+enum ApiPermission {
+  FULL
+  SENDING
+}
+
+model ApiKey {
+  id           Int           @id @default(autoincrement())
+  clientId     String        @unique
+  tokenHash    String
+  partialToken String
+  name         String
+  permission   ApiPermission @default(SENDING)
+  domainId     Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  lastUsed     DateTime?
+  teamId       Int
+  team         Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  domain       Domain?       @relation(fields: [domainId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+}
+
+enum EmailStatus {
+  SCHEDULED
+  QUEUED
+  SENT
+  DELIVERY_DELAYED
+  BOUNCED
+  REJECTED
+  RENDERING_FAILURE
+  DELIVERED
+  OPENED
+  CLICKED
+  COMPLAINED
+  FAILED
+  CANCELLED
+  SUPPRESSED
+}
+
+model Email {
+  id           String       @id @default(cuid())
+  sesEmailId   String?      @unique
+  from         String
+  to           String[]
+  replyTo      String[]
+  cc           String[]
+  bcc          String[]
+  subject      String
+  text         String?
+  html         String?
+  latestStatus EmailStatus  @default(QUEUED)
+  teamId       Int
+  domainId     Int?
+  apiId        Int?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  scheduledAt  DateTime?
+  attachments  String?
+  campaignId   String?
+  contactId    String?
+  inReplyToId  String?
+  headers      String?
+  team         Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  emailEvents  EmailEvent[]
+
+  @@index([campaignId, contactId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CampaignEmail {
+  campaignId String
+  contactId  String
+  emailId    String
+  createdAt  DateTime @default(now())
+
+  @@id([campaignId, contactId])
+}
+
+model EmailEvent {
+  id        String      @id @default(cuid())
+  emailId   String
+  status    EmailStatus
+  data      Json?
+  teamId    Int?
+  createdAt DateTime    @default(now())
+  email     Email       @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@index([teamId])
+}
+
+model ContactBook {
+  id                 String    @id @default(cuid())
+  name               String
+  teamId             Int
+  variables          String[]  @default([])
+  properties         Json
+  doubleOptInEnabled Boolean   @default(false)
+  doubleOptInFrom    String?
+  doubleOptInSubject String?
+  doubleOptInContent String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  emoji              String    @default("📙")
+  team               Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  contacts           Contact[]
+
+  @@index([teamId])
+}
+
+enum UnsubscribeReason {
+  BOUNCED
+  COMPLAINED
+  UNSUBSCRIBED
+}
+
+enum SuppressionReason {
+  HARD_BOUNCE
+  COMPLAINT
+  MANUAL
+}
+
+model Contact {
+  id                String             @id @default(cuid())
+  firstName         String?
+  lastName          String?
+  email             String
+  subscribed        Boolean            @default(true)
+  unsubscribeReason UnsubscribeReason?
+  properties        Json
+  contactBookId     String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  contactBook ContactBook @relation(fields: [contactBookId], references: [id], onDelete: Cascade)
+
+  @@unique([contactBookId, email])
+  @@index([contactBookId, id])
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  PAUSED
+  SENT
+}
+
+model Campaign {
+  id                 String         @id @default(cuid())
+  name               String
+  teamId             Int
+  from               String
+  cc                 String[]
+  bcc                String[]
+  replyTo            String[]
+  domainId           Int
+  subject            String
+  previewText        String?
+  html               String?
+  content            String?
+  contactBookId      String?
+  scheduledAt        DateTime?
+  total              Int            @default(0)
+  sent               Int            @default(0)
+  delivered          Int            @default(0)
+  opened             Int            @default(0)
+  clicked            Int            @default(0)
+  unsubscribed       Int            @default(0)
+  bounced            Int            @default(0)
+  hardBounced        Int            @default(0)
+  complained         Int            @default(0)
+  isApi              Boolean        @default(false)
+  status             CampaignStatus @default(DRAFT)
+  batchSize          Int            @default(500)
+  batchWindowMinutes Int            @default(0)
+  lastCursor         String?
+  lastSentAt         DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([status, scheduledAt])
+}
+
+model Template {
+  id        String   @id @default(cuid())
+  name      String
+  teamId    Int
+  subject   String
+  html      String?
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt(sort: Desc)])
+}
+
+enum EmailUsageType {
+  TRANSACTIONAL
+  MARKETING
+}
+
+model DailyEmailUsage {
+  teamId      Int
+  date        String
+  type        EmailUsageType
+  domainId    Int
+  sent        Int            @default(0)
+  delivered   Int            @default(0)
+  opened      Int            @default(0)
+  clicked     Int            @default(0)
+  bounced     Int            @default(0)
+  complained  Int            @default(0)
+  hardBounced Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, domainId, date, type])
+}
+
+model CumulatedMetrics {
+  teamId      Int
+  domainId    Int
+  delivered   BigInt @default(0)
+  hardBounced BigInt @default(0)
+  complained  BigInt @default(0)
+
+  @@id([teamId, domainId])
+}
+
+model SuppressionList {
+  id        String            @id @default(cuid())
+  email     String // The suppressed email address
+  teamId    Int // Team that owns this suppression
+  reason    SuppressionReason // Why it was suppressed
+  source    String? // Source email ID that triggered suppression
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, email])
+}
+
+enum WebhookStatus {
+  ACTIVE
+  PAUSED
+  AUTO_DISABLED
+}
+
+enum WebhookCallStatus {
+  PENDING
+  IN_PROGRESS
+  DELIVERED
+  FAILED
+  DISCARDED
+}
+
+model Webhook {
+  id                  String        @id @default(cuid())
+  teamId              Int
+  domainIds           Int[]         @default([])
+  url                 String
+  description         String?
+  secret              String
+  status              WebhookStatus @default(ACTIVE)
+  eventTypes          String[]
+  apiVersion          String?
+  consecutiveFailures Int           @default(0)
+  lastFailureAt       DateTime?
+  lastSuccessAt       DateTime?
+  createdByUserId     Int?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  team                Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  calls               WebhookCall[]
+  createdBy           User?         @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([teamId])
+}
+
+model WebhookCall {
+  id             String            @id @default(cuid())
+  webhookId      String
+  teamId         Int
+  type           String
+  payload        String
+  status         WebhookCallStatus @default(PENDING)
+  attempt        Int               @default(0)
+  nextAttemptAt  DateTime?
+  lastError      String?
+  responseStatus Int?
+  responseTimeMs Int?
+  responseText   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  webhook        Webhook           @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  team           Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, webhookId, status])
+  @@index([createdAt(sort: Desc)])
+}

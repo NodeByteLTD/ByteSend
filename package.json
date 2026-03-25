@@ -1,0 +1,59 @@
+{
+  "name": "bytesend",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "build:editor": "turbo build --filter=@bytesend/email-editor",
+    "build:web": "turbo build --filter=@bytesend/email-editor  --filter=web ",
+    "build:marketing": "turbo build --filter=@bytesend/email-editor --filter=marketing",
+    "build:smtp": "turbo build --filter=smtp-server",
+    "build:web:local": "pnpm load-env -- turbo build --filter=@bytesend/email-editor  --filter=web ",
+    "start:web:local": "pnpm load-env -- cd apps/web && pnpm start",
+    "dev": "pnpm load-env -- turbo dev",
+    "test:web": "pnpm --filter=web test",
+    "test:web:all": "pnpm test:infra:up && (pnpm --filter=web test:all; code=$?; pnpm test:infra:down; exit $code)",
+    "test:web:all:raw": "pnpm --filter=web test:all",
+    "test:web:unit": "pnpm --filter=web test:unit",
+    "test:web:trpc": "pnpm --filter=web test:trpc",
+    "test:web:api": "pnpm --filter=web test:api",
+    "test:web:integration": "pnpm --filter=web test:integration",
+    "test:web:integration:full": "pnpm test:infra:up && (pnpm --filter=web test:integration:full; code=$?; pnpm test:infra:down; exit $code)",
+    "test:infra:up": "docker compose -f docker/testing/compose.yml up -d --wait",
+    "test:infra:down": "docker compose -f docker/testing/compose.yml down -v",
+    "dev:docs": "cd apps/docs && mintlify dev",
+    "dev:marketing": "cd apps/marketing && turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:generate": "pnpm db db:generate",
+    "db:push": "pnpm db db:push",
+    "db:migrate-dev": "pnpm db db:migrate-dev",
+    "db:migrate-deploy": "pnpm db db:migrate-deploy",
+    "db:migrate-reset": "pnpm db db:migrate-reset",
+    "db:studio": "pnpm db db:studio",
+    "db": "pnpm load-env -- pnpm --filter=web",
+    "load-env": "dotenv -e .env",
+    "d": "pnpm dx && pnpm dev",
+    "dx": "pnpm i && pnpm dx:up && pnpm db:migrate-dev",
+    "dx:up": "docker compose -f docker/dev/compose.yml up -d",
+    "dx:down": "docker compose -f docker/dev/compose.yml down"
+  },
+  "devDependencies": {
+    "@bytesend/eslint-config": "workspace:*",
+    "@bytesend/typescript-config": "workspace:*",
+    "dotenv-cli": "^8.0.0",
+    "mintlify": "latest",
+    "prettier": "^3.5.3"
+  },
+  "packageManager": "pnpm@8.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "turbo": "^2.5.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "shiki": "3.3.0"
+    }
+  }
+}

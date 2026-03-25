@@ -1,0 +1,238 @@
+"use client";
+
+import { Button } from "@usesend/ui/src/button";
+import { Input } from "@usesend/ui/src/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@usesend/ui/src/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@usesend/ui/src/form";
+
+import { api } from "~/trpc/react";
+import { useEffect, useMemo, useState } from "react";
+import { Edit } from "lucide-react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@usesend/ui/src/toaster";
+import { Switch } from "@usesend/ui/src/switch";
+import { Contact } from "@prisma/client";
+import {
+  getContactPropertyValue,
+  replaceContactVariableValues,
+} from "~/lib/contact-properties";
+
+const contactSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  properties: z.record(z.string()).optional(),
+  subscribed: z.boolean().optional(),
+});
+
+export const EditContact: React.FC<{
+  contact: Partial<Contact> & { id: string; contactBookId: string };
+  contactBookVariables?: string[];
+}> = ({ contact, contactBookVariables }) => {
+  const [open, setOpen] = useState(false);
+  const updateContactMutation = api.contacts.updateContact.useMutation();
+  const initialVariableValues = useMemo(() => {
+    const contactProperties =
+      contact.properties && typeof contact.properties === "object"
+        ? (contact.properties as Record<string, unknown>)
+        : {};
+
+    return (contactBookVariables ?? []).reduce(
+      (acc, variable) => {
+        acc[variable] =
+          getContactPropertyValue(
+            contactProperties,
+            variable,
+            contactBookVariables ?? [],
+          ) ?? "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [contact.properties, contactBookVariables]);
+  const [variableValues, setVariableValues] = useState(initialVariableValues);
+
+  useEffect(() => {
+    setVariableValues((prev) =>
+      Object.keys(initialVariableValues).reduce(
+        (acc, key) => {
+          acc[key] = prev[key] ?? initialVariableValues[key] ?? "";
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
+    );
+  }, [initialVariableValues]);
+
+  const utils = api.useUtils();
+
+  const contactForm = useForm<z.infer<typeof contactSchema>>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      email: contact.email || "",
+      firstName: contact.firstName || "",
+      lastName: contact.lastName || "",
+      subscribed: contact.subscribed || false,
+    },
+  });
+
+  async function onContactUpdate(values: z.infer<typeof contactSchema>) {
+    const properties: Record<string, string> = Object.fromEntries(
+      Object.entries(variableValues).filter(([, value]) => value.trim()),
+    );
+
+    updateContactMutation.mutate(
+      {
+        contactId: contact.id,
+        contactBookId: contact.contactBookId,
+        ...values,
+        properties: replaceContactVariableValues(
+          (contact.properties as Record<string, unknown> | null | undefined) ??
+            {},
+          properties,
+          contactBookVariables ?? [],
+        ) as Record<string, string>,
+      },
+      {
+        onSuccess: async () => {
+          utils.contacts.contacts.invalidate();
+          setOpen(false);
+          toast.success("Contact updated successfully");
+        },
+        onError: async (error) => {
+          toast.error(error.message);
+        },
+      },
+    );
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(_open) => (_open !== open ? setOpen(_open) : null)}
+    >
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Edit className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Contact</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          <Form {...contactForm}>
+            <form
+              onSubmit={contactForm.handleSubmit(onContactUpdate)}
+              className="space-y-8"
+            >
+              <FormField
+                control={contactForm.control}
+                name="email"
+                render={({ field, formState }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@example.com" {...field} />
+                    </FormControl>
+                    {formState.errors.email ? <FormMessage /> : null}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={contactForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="First Name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={contactForm.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Last Name" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={contactForm.control}
+                name="subscribed"
+                render={({ field }) => (
+                  <FormItem className="fle flex-row gap-2">
+                    <div>
+                      <FormLabel>Subscribed</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-success"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              {(contactBookVariables ?? []).map((variable) => {
+                const variableInputId = `contact-variable-${contact.id}-${variable.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+                return (
+                  <FormItem key={variable}>
+                    <FormLabel htmlFor={variableInputId}>{variable}</FormLabel>
+                    <FormControl>
+                      <Input
+                        id={variableInputId}
+                        placeholder={variable}
+                        value={variableValues[variable] ?? ""}
+                        onChange={(e) => {
+                          setVariableValues((prev) => ({
+                            ...prev,
+                            [variable]: e.target.value,
+                          }));
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                );
+              })}
+              <div className="flex justify-end">
+                <Button
+                  className=" w-[100px] "
+                  type="submit"
+                  disabled={updateContactMutation.isPending}
+                >
+                  {updateContactMutation.isPending ? "Updating..." : "Update"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default EditContact;

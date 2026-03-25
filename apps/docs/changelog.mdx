@@ -1,0 +1,87 @@
+---
+title: "Changelog"
+description: "Product updates and announcements from Unsend"
+---
+
+<Update label="March 2026" description="v1.9.0">
+
+### Campaign Personalization with Contact Books
+
+Campaigns now support contact-book variables for personalization, so you can tailor each message with richer subscriber data.
+
+### Double Opt-In Customization
+
+Double opt-in now supports customizable confirmation flows and copy, making it easier to match your onboarding experience and compliance requirements.
+
+### API and SDK Coverage
+
+Contact book support has been expanded in the SDK, dashboard analytics is now available in both the public API and SDK, and a public endpoint to delete campaigns has been added.
+
+### Webhook Filtering by Domain
+
+Webhooks now support multi-domain filtering, making it easier to route, monitor, and manage events across different projects.
+
+</Update>
+
+<Update label="February 2025" description="v1.8.0">
+
+<Frame>
+  <img src="/images/changelog/webhook.png" alt="Schedule Campaigns" />
+</Frame>
+
+### Webhooks
+
+You can now receive real-time notifications for email events via webhooks. Configure webhook endpoints to track deliveries, bounces, complaints, and more. [Learn more](https://docs.usesend.com/guides/webhooks)
+
+### Contact Books API
+
+Manage your contact books programmatically with the new public API. Create, update, and organize contacts at scale.
+
+### Idempotency Support
+
+API requests now support idempotency keys, ensuring safe retries without duplicate sends.
+
+### Other improvements
+
+- Export contact books to CSV for offline use.
+- Security fixes for CVE-2025-55184 and CVE-2025-55183.
+- Various bug fixes and performance improvements.
+
+</Update>
+
+<Update label="October 2024" description="v1.7.0">
+
+<Frame>
+  <img src="/images/changelog/schedule-campaign.png" alt="Schedule Campaigns" />
+</Frame>
+
+### Schedule Campaigns
+
+You can now Schedule campaigns with natural language like "tomorrow at 9am" or "next Monday at 10am".
+
+### Campaigns API
+
+We're doubling down on APIs. Now you can create, schedule campaign emails from API. check [API documentation](/api-reference/introduction)
+
+### Other improvements
+
+- Camapign Emails are now sent in batches instead of a burst of emails.
+- You can bulk upload large amounts of contacts without ui slowness.
+- Added delete domain API.
+
+</Update>
+
+<Update label="September 2024" description="v1.6.0">
+<Frame>
+    <img src="https://usesend.com/hero-dark.webp" alt="Rebranded useSend hero" />
+</Frame>
+
+### Suppression List
+
+Hard bounce and complained email addresses are automatically added to the suppression list. Works for both transactional and marketing emails.
+
+### Rebranding to useSend
+
+From now on we [useSend](https://usesend.com). Make sure to update your docker image and sdks.
+
+</Update>

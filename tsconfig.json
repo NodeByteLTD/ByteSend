@@ -1,0 +1,3 @@
+{
+  "extends": "@bytesend/typescript-config/base.json"
+}

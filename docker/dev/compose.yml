@@ -1,0 +1,55 @@
+name: unsend-dev
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: unsend-db-dev
+    restart: always
+    environment:
+      - POSTGRES_USER=usesend
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=usesend
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - "54320:5432"
+
+  redis:
+    image: redis:7
+    container_name: unsend-redis-dev
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+
+  local-sen-sns:
+    image: usesend/local-ses-sns:latest
+    container_name: local-ses-sns
+    restart: always
+    ports:
+      - "5350:3000"
+    environment:
+      WEBHOOK_URL: http://host.docker.internal:3000/api/ses_callback
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  minio:
+    image: minio/minio
+    container_name: unsend-storage-dev
+    ports:
+      - 9002:9002
+      - 9001:9001
+    volumes:
+      - minio:/data
+    environment:
+      MINIO_ROOT_USER: unsend
+      MINIO_ROOT_PASSWORD: password
+    entrypoint: sh
+    command: -c 'mkdir -p /data/unsend && minio server /data --console-address ":9001" --address ":9002"'
+
+volumes:
+  database:
+  redis:
+  minio:
