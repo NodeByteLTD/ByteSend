@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@usesend/ui/src/button";
+import { Input } from "@usesend/ui/src/input";
 import Image from "next/image";
 import { useState } from "react";
 import { ClientSafeProvider, LiteralUnion, signIn } from "next-auth/react";
@@ -9,33 +10,22 @@ import Spinner from "@usesend/ui/src/spinner";
 import Link from "next/link";
 import { useSearchParams as useNextSearchParams } from "next/navigation";
 
-const providerSvgs = {
+const providerIcons: Record<string, React.ReactNode> = {
   github: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 496 512"
-      className="h-5 w-5 fill-primary-foreground"
-    >
-      <path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3 .3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5 .3-6.2 2.3zm44.2-1.7c-2.9 .7-4.9 2.6-4.6 4.9 .3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3 .7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3 .3 2.9 2.3 3.9 1.6 1 3.6 .7 4.3-.7 .7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3 .7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3 .7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
     </svg>
   ),
   google: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 488 512"
-      className="h-5 w-5 fill-primary-foreground"
-    >
-      <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
     </svg>
   ),
   discord: (
-    <svg
-      role="img"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      className="h-5 w-5 fill-primary-foreground"
-    >
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="size-5">
       <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
     </svg>
   ),
@@ -50,126 +40,156 @@ export default function LoginPage({
 }) {
   const [submittedProvider, setSubmittedProvider] =
     useState<LiteralUnion<BuiltInProviderType> | null>(null);
+  const [email, setEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
 
   const searchParams = useNextSearchParams();
   const inviteId = searchParams.get("inviteId");
 
-  const handleSubmit = (provider: LiteralUnion<BuiltInProviderType>) => {
+  const callbackUrl = inviteId
+    ? `/join-team?inviteId=${inviteId}`
+    : "/dashboard";
+
+  const handleOAuthSubmit = (provider: LiteralUnion<BuiltInProviderType>) => {
     setSubmittedProvider(provider);
-    const callbackUrl = inviteId
-      ? `/join-team?inviteId=${inviteId}`
-      : "/dashboard";
     signIn(provider, { callbackUrl });
   };
 
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setEmailLoading(true);
+    try {
+      await signIn("email", { email, callbackUrl, redirect: false });
+      setEmailSent(true);
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const hasEmailProvider = providers?.some((p) => p.type === "email");
+  const oauthProviders = providers?.filter((p) => p.type !== "email") ?? [];
+
   return (
-    <main className="min-h-screen flex bg-background">
-      {/* Left branding panel — desktop only */}
-      <div className="hidden lg:flex lg:w-5/12 bg-primary flex-col justify-between p-10 relative overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_top_right,hsl(var(--primary-light)/0.25),transparent)]" />
-        <div className="relative flex items-center gap-3">
+    <main className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-100 space-y-8">
+        {/* Logo & heading */}
+        <div className="flex flex-col items-center text-center space-y-4">
           <Image
             src="/logo-squircle.png"
             alt="ByteSend"
-            width={30}
-            height={30}
-            className="rounded-lg"
+            width={48}
+            height={48}
+            className="rounded-xl"
           />
-          <span className="text-primary-foreground text-lg font-bold tracking-tight">
-            ByteSend
-          </span>
-        </div>
-        <div className="relative space-y-5">
-          <div>
-            <h2 className="text-primary-foreground text-3xl font-bold leading-tight">
-              The email platform
-              <br />
-              built for developers
-            </h2>
-            <p className="text-primary-foreground/65 mt-3 text-sm leading-relaxed">
-              Send transactional and marketing emails at scale. Built on AWS
-              SES. Pay only for what you send.
-            </p>
-          </div>
-          <ul className="space-y-2.5">
-            {[
-              "Powered by AWS SES — pay as you go",
-              "Open source & fully self-hostable",
-              "Campaigns, contacts & suppression lists",
-              "Webhooks, SMTP relay & REST API",
-            ].map((item) => (
-              <li
-                key={item}
-                className="flex items-center gap-2.5 text-sm text-primary-foreground/75"
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground/50 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="relative text-xs text-primary-foreground/35">
-          © {new Date().getFullYear()} NodeByte LTD. All rights reserved.
-        </div>
-      </div>
-
-      {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm space-y-7">
-          {/* Mobile logo — hidden on lg+ */}
-          <div className="flex flex-col items-center gap-3 lg:hidden">
-            <Image
-              src="/logo-squircle.png"
-              alt="ByteSend"
-              width={44}
-              height={44}
-              className="rounded-xl"
-            />
-            <span className="text-xl font-bold tracking-tight">ByteSend</span>
-          </div>
-
           <div className="space-y-1.5">
-            <h1 className="text-2xl font-semibold text-foreground">
-              {isSignup ? "Create an account" : "Welcome back"}
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {isSignup ? "Create your account" : "Sign in to ByteSend"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {isSignup ? "Already have an account?" : "New to ByteSend?"}
-              <Link
-                href={isSignup ? "/login" : "/signup"}
-                className="text-primary hover:underline ml-1"
-              >
-                {isSignup ? "Sign in" : "Sign up free"}
-              </Link>
+              {isSignup
+                ? "Get started with email infrastructure that scales"
+                : "Welcome back, let's pick up where you left off"}
             </p>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-3">
-            {providers &&
-              Object.values(providers).map((provider) => {
-                if (provider.type === "email") return null;
-                return (
-                  <Button
-                    key={provider.id}
-                    className="w-full"
-                    size="lg"
-                    onClick={() => handleSubmit(provider.id)}
-                  >
-                    {submittedProvider === provider.id ? (
-                      <Spinner className="w-5 h-5" />
-                    ) : (
-                      providerSvgs[provider.id as keyof typeof providerSvgs]
-                    )}
-                    <span className="ml-3">
-                      {isSignup ? "Sign up with" : "Continue with"}{" "}
-                      {provider.name}
-                    </span>
-                  </Button>
-                );
-              })}
+        {/* Email check-your-inbox state */}
+        {emailSent ? (
+          <div className="rounded-xl border border-border/60 bg-card p-6 text-center space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
+              <svg className="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
+            <p className="text-sm text-muted-foreground">
+              We sent a sign-in link to <span className="font-medium text-foreground">{email}</span>
+            </p>
+            <button
+              onClick={() => setEmailSent(false)}
+              className="text-sm text-primary hover:underline mt-2"
+            >
+              Use a different email
+            </button>
           </div>
+        ) : (
+          <>
+            {/* Email form */}
+            {hasEmailProvider && (
+              <form onSubmit={handleEmailSubmit} className="space-y-3">
+                <Input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="h-11"
+                />
+                <Button type="submit" className="w-full h-11" disabled={emailLoading}>
+                  {emailLoading ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    <>
+                      <svg className="size-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                      </svg>
+                      Continue with email
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
 
-          <p className="text-center text-xs text-muted-foreground/60">
-            © {new Date().getFullYear()} NodeByte LTD. All rights reserved.
+            {/* Divider */}
+            {hasEmailProvider && oauthProviders.length > 0 && (
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/60" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-background px-3 text-muted-foreground/60">or</span>
+                </div>
+              </div>
+            )}
+
+            {/* OAuth buttons */}
+            <div className="flex flex-col gap-2.5">
+              {oauthProviders.map((provider) => (
+                <Button
+                  key={provider.id}
+                  variant="outline"
+                  className="w-full h-11 gap-3 font-medium"
+                  onClick={() => handleOAuthSubmit(provider.id)}
+                  disabled={submittedProvider === provider.id}
+                >
+                  {submittedProvider === provider.id ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    providerIcons[provider.id]
+                  )}
+                  Continue with {provider.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Footer */}
+        <div className="text-center space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {isSignup ? "Already have an account?" : "Don\u2019t have an account?"}
+            <Link
+              href={isSignup ? "/login" : "/signup"}
+              className="text-primary hover:underline ml-1 font-medium"
+            >
+              {isSignup ? "Sign in" : "Sign up"}
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground/40">
+            © {new Date().getFullYear()} NodeByte LTD
           </p>
         </div>
       </div>

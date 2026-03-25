@@ -111,11 +111,20 @@ export class SesSettingsService {
 
       await this.invalidateCache();
 
-      await sns.subscribeEndpoint(
-        topicArn!,
-        `${setting.callbackUrl}`,
-        setting.region
-      );
+      const isLocalEndpoint = isLocalhostUrl(setting.callbackUrl);
+      if (isLocalEndpoint) {
+        logger.warn(
+          { callbackUrl: setting.callbackUrl },
+          "Skipping SNS subscription — AWS does not allow subscribing to localhost/private endpoints. " +
+            "Use a public tunnel (e.g. ngrok) and re-add the SES configuration with the public URL to enable SNS callbacks."
+        );
+      } else {
+        await sns.subscribeEndpoint(
+          topicArn!,
+          `${setting.callbackUrl}`,
+          setting.region
+        );
+      }
 
       if (!setting) {
         throw new Error("Failed to create setting");
@@ -286,6 +295,23 @@ async function registerConfigurationSet(setting: SesSetting) {
       configFullSuccess: fullStatus,
     },
   });
+}
+
+function isLocalhostUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      hostname.endsWith(".local") ||
+      /^10\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function isValidUsesendUrl(url: string) {

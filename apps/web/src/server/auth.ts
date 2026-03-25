@@ -8,7 +8,9 @@ import { type Adapter } from "next-auth/adapters";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import DiscordProvider from "next-auth/providers/discord";
+import EmailProvider from "next-auth/providers/email";
 import { Provider } from "next-auth/providers/index";
+import { sendSignUpEmail } from "~/server/mailer";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
@@ -83,6 +85,25 @@ function getProviders() {
     );
   }
 
+  providers.push(
+    EmailProvider({
+      server: {},
+      from: env.FROM_EMAIL ?? "noreply@bytesend.cloud",
+      maxAge: 10 * 60,
+      generateVerificationToken() {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let token = "";
+        const bytes = new Uint8Array(6);
+        crypto.getRandomValues(bytes);
+        for (const b of bytes) token += chars[b % chars.length];
+        return token;
+      },
+      async sendVerificationRequest({ identifier: email, token, url }) {
+        await sendSignUpEmail(email, token, url);
+      },
+    })
+  );
+
   if (providers.length === 0 && process.env.SKIP_ENV_VALIDATION !== "true") {
     throw new Error("No auth providers found, need atleast one");
   }
@@ -111,6 +132,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db) as Adapter,
   pages: {
     signIn: "/login",
+    verifyRequest: "/login?verify=1",
   },
   events: {
     createUser: async ({ user }) => {

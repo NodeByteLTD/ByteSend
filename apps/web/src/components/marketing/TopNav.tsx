@@ -4,16 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@usesend/ui/src/button";
-
-const APP_URL = "/login";
 
 export function TopNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
   const isHome = pathname === "/";
   const featuresHref = isHome ? "#features" : "/#features";
   const pricingHref = isHome ? "#pricing" : "/#pricing";
+  const ctaHref = session ? "/dashboard" : "/login";
+  const ctaLabel = session ? "Dashboard" : "Get started";
 
   return (
     <header className="py-3 border-b border-border/50 sticky top-0 z-20 bg-background/80 backdrop-blur-lg">
@@ -29,7 +31,7 @@ export function TopNav() {
           <Link href={pricingHref} className="hover:text-foreground transition-colors text-[13px]">Pricing</Link>
           <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors text-[13px]">Docs</a>
           <Button size="sm" className="ml-2 rounded-lg" asChild>
-            <Link href={APP_URL}>Get started</Link>
+            <Link href={ctaHref}>{ctaLabel}</Link>
           </Button>
         </nav>
 
@@ -55,7 +57,7 @@ export function TopNav() {
             <Link href={pricingHref} className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>
             <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors">Docs</a>
             <Button className="w-full mt-2 rounded-lg" asChild>
-              <Link href={APP_URL}>Get started</Link>
+              <Link href={ctaHref}>{ctaLabel}</Link>
             </Button>
           </div>
         </div>

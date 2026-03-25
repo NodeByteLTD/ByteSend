@@ -20,8 +20,8 @@ export default function Page() {
     <main className="min-h-screen text-foreground bg-background">
       <Hero />
       <LogoStrip />
-      <Features />
-      <CodeExample />
+      {/**<Features /> */}
+      {/**<CodeExample /> */}
       <Pricing />
       <Cta />
     </main>
@@ -53,7 +53,7 @@ function Hero() {
         </h1>
 
         <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Transactional emails, marketing campaigns, and analytics — all in one
+          Transactional emails, marketing campaigns, and analytics all in one
           platform. Pay only for what you send.
         </p>
 
@@ -107,8 +107,8 @@ function Hero() {
 function LogoStrip() {
   const stats = [
     { value: "99.9%", label: "Uptime SLA" },
-    { value: "<1s", label: "Avg. delivery" },
-    { value: "10M+", label: "Emails sent" },
+    { value: "~2s", label: "Avg. delivery" },
+    { value: "1000+", label: "Emails sent" },
     { value: "24/7", label: "Monitoring" },
   ];
 
@@ -212,16 +212,16 @@ function Features() {
 
 function Pricing() {
   const freePerks = [
-    "Up to 3,000 emails per month",
-    "Up to 100 emails per day",
-    "1 contact book",
-    "1 domain",
-    "1 team member",
+    "5,000 emails / month",
+    "250 emails / day",
+    "Up to 5 contact books",
+    "Up to 3 domains",
+    "Up to 5 team members",
     "Community support",
   ];
 
   const paidPerks = [
-    "$10 monthly usage credits included",
+    "$5 monthly usage credits included",
     "Transactional at $0.0004 / email",
     "Marketing at $0.001 / email",
     "Unlimited contact books",
@@ -249,7 +249,7 @@ function Pricing() {
           <PricingCard title="Free" price="$0" note="forever" perks={freePerks} popular={false} />
           <PricingCard
             title="Pro"
-            price="$10"
+            price="$5"
             note="per month minimum"
             perks={paidPerks}
             popular
@@ -319,7 +319,7 @@ function Cta() {
           </h2>
           <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
             Create your free account in seconds. No credit card required, no
-            trial limits — just start sending.
+            trial limits just start sending.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>

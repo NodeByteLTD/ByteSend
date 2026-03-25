@@ -22,12 +22,12 @@ export const PLAN_LIMITS: Record<
   }
 > = {
   FREE: {
-    emailsPerMonth: 3000,
-    emailsPerDay: 100,
-    domains: 1,
-    contactBooks: 1,
-    teamMembers: 1,
-    webhooks: 1,
+    emailsPerMonth: 5000,
+    emailsPerDay: 250,
+    domains: 3,
+    contactBooks: 5,
+    teamMembers: 5,
+    webhooks: 3,
   },
   BASIC: {
     emailsPerMonth: -1, // unlimited

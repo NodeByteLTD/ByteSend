@@ -21,8 +21,8 @@ export default function PrivacyPage() {
         <section className="space-y-3 mb-8">
           <h2 className="text-xl font-medium">Who We Are</h2>
           <p className="text-muted-foreground">
-            NodeByte LTD operates bytesend.cloud. The application is hosted on
-            Railway. If you have questions about this policy or your data,
+            NodeByte LTD operates bytesend.cloud. The application is hosted
+            in-house on infrastructure provided by NodeByte Hosting. If you have questions about this policy or your data,
             contact us at{" "}
             <a href="mailto:hey@nodebyte.co.uk" className="underline decoration-dotted">
               hey@nodebyte.co.uk
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               <span className="text-foreground">Server and security logs:</span>{" "}
-              Our hosting provider (Railway) may process IP addresses and basic
+              Our hosting provider (NodeByte Hosting) may process IP addresses and basic
               request metadata transiently for security and debugging.
             </li>
             <li>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-medium">Sharing and Processors</h2>
           <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
             <li>
-              <span className="text-foreground">Hosting:</span> Railway for
+              <span className="text-foreground">Hosting:</span> NodeByte Hosting (a division of NodeByte LTD) for
               serving content, networking, and security.
             </li>
             <li>

@@ -11,23 +11,24 @@ export default function Dashboard() {
   const [domain, setDomain] = useUrlState("domain");
 
   return (
-    <div>
-      <div className="w-full">
-        <div className="flex justify-between items-center mb-10">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
           <H1>Analytics</H1>
-          <DashboardFilters
-            days={days ?? "30"}
-            setDays={setDays}
-            domain={domain}
-            setDomain={setDomain}
-          />
+          <p className="text-sm text-muted-foreground mt-1">Monitor your email delivery and engagement</p>
         </div>
-        <div className=" space-y-12">
+        <DashboardFilters
+          days={days ?? "30"}
+          setDays={setDays}
+          domain={domain}
+          setDomain={setDomain}
+        />
+      </div>
+      <div className="space-y-8">
           <EmailChart days={Number(days ?? "30")} domain={domain} />
 
           <ReputationMetrics days={Number(days ?? "30")} domain={domain} />
         </div>
       </div>
-    </div>
   );
 }

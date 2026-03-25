@@ -21,9 +21,9 @@ export const PlanDetails = () => {
   return (
     <div>
       <div className="capitalize text-lg">
-        {subscriptionQuery.data?.status === "active"
-          ? planKey.toLowerCase()
-          : "free"}
+        {subscriptionQuery.data?.status === "active" && planKey === "BASIC"
+          ? "Pro"
+          : "Free"}
       </div>
       <div className="flex items-center gap-2">
         <div className="text-muted-foreground text-sm">Current plan</div>
@@ -36,7 +36,7 @@ export const PlanDetails = () => {
       <ul className="mt-4 space-y-3">
         {perks.map((perk, index) => (
           <li key={index} className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green flex-shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-green shrink-0" />
             <span className="text-sm">{perk}</span>
           </li>
         ))}

@@ -93,11 +93,10 @@ export default function EmailChart({ days, domain }: EmailChartProps) {
   };
 
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-8">
       {!statusQuery.isLoading && statusQuery.data ? (
-        <div className="w-full h-[450px] border shadow rounded-xl p-4">
+        <div className="w-full h-[450px] border border-border/60 bg-card rounded-xl p-4 shadow-sm">
           <div className="p-2 overflow-x-auto">
-            {/* <div className="mb-4 text-sm">Emails</div> */}
 
             <div className="flex gap-10">
               <EmailChartItem
@@ -221,7 +220,7 @@ export default function EmailChart({ days, domain }: EmailChartProps) {
                   if (!hasAnyData) return null;
 
                   return (
-                    <div className=" bg-background border shadow-lg p-2 rounded-xl flex flex-col gap-2 px-4">
+                    <div className="bg-popover border border-border/60 shadow-lg p-3 rounded-lg flex flex-col gap-1.5 min-w-[140px]">
                       <p className="text-sm text-muted-foreground">
                         {data.date}
                       </p>

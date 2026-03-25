@@ -127,14 +127,6 @@ const settingsItems = [
     url: "/settings",
     icon: Cog,
   },
-  // Admin item shows if user is admin OR if it's self-hosted
-  {
-    title: "Admin",
-    url: "/admin",
-    icon: Server,
-    isAdmin: true,
-    isSelfHosted: true,
-  },
 ];
 
 export function AppSidebar() {
@@ -145,7 +137,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 py-3 border-b border-sidebar-border">
+      <SidebarHeader className="px-3 py-3.5 border-b border-sidebar-border/60">
         <div className="flex items-center gap-2.5">
           <Image
             src="/logo-squircle.png"
@@ -154,12 +146,12 @@ export function AppSidebar() {
             height={28}
             className="rounded-md shrink-0"
           />
-          <span className="font-bold text-[15px] tracking-tight text-sidebar-foreground">
+          <span className="font-semibold text-[15px] tracking-tight text-sidebar-foreground">
             ByteSend
           </span>
           <Badge
             variant="outline"
-            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none"
+            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-muted-foreground border-border/60"
           >
             Beta
           </Badge>
@@ -225,42 +217,52 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsItems.map((item) => {
-                const isActive = pathname?.startsWith(item.url);
-
-                // Special case for Admin item: show if user is admin OR if it's self-hosted
-                if (item.isAdmin && item.isSelfHosted) {
-                  if (!session?.user.isAdmin && !isSelfHosted()) {
-                    return null;
-                  }
-                } else {
-                  // Regular admin-only items
-                  if (item.isAdmin && !session?.user.isAdmin) {
-                    return null;
-                  }
-                  // Regular self-hosted-only items
-                  if (item.isSelfHosted && !isSelfHosted()) {
-                    return null;
-                  }
-                }
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={isActive}
-                    >
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {settingsItems
+                .filter((item) => !item.isAdmin && !item.isSelfHosted)
+                .map((item) => {
+                  const isActive = pathname?.startsWith(item.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive}
+                      >
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {(session?.user.isAdmin || isSelfHosted()) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              <span>Admin</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="Admin"
+                    isActive={pathname?.startsWith("/admin")}
+                  >
+                    <Link href="/admin">
+                      <Server />
+                      <span>Admin Panel</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SidebarGroupContent>
@@ -346,7 +348,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-56 rounded-xl"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-xl"
             side={isMobile ? "bottom" : "top"}
             sideOffset={4}
           >

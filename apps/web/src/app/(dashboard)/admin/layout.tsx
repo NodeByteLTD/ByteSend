@@ -9,9 +9,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <h1 className="text-lg font-bold">Admin</h1>
-      <div className="mt-4 flex gap-4">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Admin</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage infrastructure, users, and platform configuration
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-1 border-b border-border/60 pb-0">
         <SettingsNavButton href="/admin">
           SES Configurations
         </SettingsNavButton>
@@ -22,7 +27,7 @@ export default function AdminLayout({
         ) : null}
         {isCloud() ? (
           <SettingsNavButton href="/admin/email-analytics">
-            Email analytics
+            Email Analytics
           </SettingsNavButton>
         ) : null}
         {isCloud() ? (
@@ -31,7 +36,7 @@ export default function AdminLayout({
           </SettingsNavButton>
         ) : null}
       </div>
-      <div className="mt-8">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }

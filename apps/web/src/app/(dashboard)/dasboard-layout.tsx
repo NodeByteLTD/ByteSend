@@ -27,17 +27,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="h-full bg-sidebar-background">
+    <div className="h-full bg-background">
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="min-w-0">
+          {/* Top header bar */}
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-lg px-4 md:px-6">
+            {isMobile ? (
+              <SidebarTrigger className="h-7 w-7 text-muted-foreground" />
+            ) : (
+              <SidebarTrigger className="h-7 w-7 text-muted-foreground" />
+            )}
+            <span className="text-sm text-muted-foreground font-medium capitalize truncate">
+              {pathname?.split("/").filter(Boolean).pop()?.replace(/-/g, " ") ?? "Dashboard"}
+            </span>
+          </header>
           <main
             ref={mainRef}
-            className="h-full flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8"
+            className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8"
           >
-            {isMobile ? (
-              <SidebarTrigger className="mb-4 h-8 w-8 text-muted-foreground" />
-            ) : null}
             {children}
           </main>
         </SidebarInset>

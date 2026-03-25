@@ -6,9 +6,12 @@ import { H1 } from "@usesend/ui";
 
 export default function ApiKeysPage() {
   return (
-    <div>
-      <div className="flex justify-between items-center">
-        <H1>API Keys</H1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <H1>API Keys</H1>
+          <p className="text-sm text-muted-foreground mt-1">Manage API keys for programmatic access</p>
+        </div>
         <AddApiKey />
       </div>
       <ApiList />

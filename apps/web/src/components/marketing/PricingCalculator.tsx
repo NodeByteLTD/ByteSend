@@ -82,7 +82,7 @@ function Slider({
 export function PricingCalculator() {
   const MARKETING_RATE = 0.001;
   const TRANSACTIONAL_RATE = 0.0004;
-  const MINIMUM_SPEND = 10;
+  const MINIMUM_SPEND = 5;
 
   const [marketing, setMarketing] = React.useState<number>(5000);
   const [transactional, setTransactional] = React.useState<number>(12500);
@@ -146,7 +146,7 @@ export function PricingCalculator() {
                 <div className="text-xs text-muted-foreground">Estimated Total</div>
                 <div className="text-3xl text-primary font-semibold">${totalDue.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">
-                  {subtotal < MINIMUM_SPEND ? "Minimum $10 applies" : "before taxes"}
+                  {subtotal < MINIMUM_SPEND ? "Minimum $5 applies" : "before taxes"}
                 </div>
               </div>
             </div>

@@ -26,39 +26,39 @@ export const UpgradeModal = () => {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upgrade to Basic Plan</DialogTitle>
+          <DialogTitle>Upgrade to Pro</DialogTitle>
           <DialogDescription>
             {(() => {
               const messages: Record<LimitReason, string> = {
                 [LimitReason.DOMAIN]:
-                  "You've reached the domain limit for your current plan.",
+                  "You've reached the domain limit on the Free plan.",
                 [LimitReason.CONTACT_BOOK]:
-                  "You've reached the contact book limit for your current plan.",
+                  "You've reached the contact book limit on the Free plan.",
                 [LimitReason.TEAM_MEMBER]:
-                  "You've reached the team member limit for your current plan.",
+                  "You've reached the team member limit on the Free plan.",
                 [LimitReason.WEBHOOK]:
-                  "You've reached the webhook limit for your current plan.",
+                  "You've reached the webhook limit on the Free plan.",
                 [LimitReason.EMAIL_BLOCKED]:
-                  "You've reached the email sending limit for your current plan.",
+                  "You've reached the email sending limit on the Free plan.",
                 [LimitReason.EMAIL_DAILY_LIMIT_REACHED]:
-                  "You've reached the email sending limit for your current plan.",
+                  "You've reached the daily email limit on the Free plan.",
                 [LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED]:
-                  "You've reached the email sending limit for your current plan.",
+                  "You've reached the monthly email limit on the Free plan.",
               };
               return reason
-                ? `${messages[reason] ?? ""} Upgrade to unlock this feature and more.`
-                : "Unlock more features with our Basic plan.";
+                ? `${messages[reason] ?? ""} Upgrade to Pro to unlock unlimited sending and more.`
+                : "Unlock unlimited sending and priority support with Pro.";
             })()}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium mb-3">What you'll get:</h4>
+            <h4 className="font-medium mb-3">What&#39;s included in Pro:</h4>
             <ul className="space-y-2">
               {basicPlanPerks.map((perk, index) => (
                 <li key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-green shrink-0 mt-0.5" />
                   <span className="text-sm">{perk}</span>
                 </li>
               ))}

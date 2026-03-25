@@ -14,10 +14,13 @@ export default function SuppressionsPage() {
   const [showBulkAddDialog, setShowBulkAddDialog] = useState(false);
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10">
-        <H1>Suppression List</H1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <H1>Suppression List</H1>
+          <p className="text-sm text-muted-foreground mt-1">Manage bounced and unsubscribed addresses</p>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowBulkAddDialog(true)}>
             <Upload className="h-4 w-4 mr-2" />

@@ -20,7 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "ByteSend",
-  description: "Open source email platform",
+  description: "Email infrastructure for developers",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

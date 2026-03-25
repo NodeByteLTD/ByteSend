@@ -93,8 +93,8 @@ export const domainRouter = createTRPCRouter({
         to: user.email,
         from: `hello@${domain.name}`,
         subject: "ByteSend test email",
-        text: "hello,\n\nByteSend is the best open source sending platform\n\ncheck out https://bytesend.com",
-        html: "<p>hello,</p><p>ByteSend is the best open source sending platform<p><p>check out <a href='https://bytesend.com'>bytesend.com</a>",
+        text: "hello,\n\nByteSend — email infrastructure that just works.\n\ncheck out https://bytesend.cloud",
+        html: "<p>hello,</p><p>ByteSend — email infrastructure that just works.</p><p>check out <a href='https://bytesend.cloud'>bytesend.cloud</a></p>",
       });
     }
   ),

@@ -5,9 +5,10 @@ import { H1 } from "@usesend/ui";
 
 export default function EmailsPage() {
   return (
-    <div>
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div>
         <H1>Emails</H1>
+        <p className="text-sm text-muted-foreground mt-1">View and track all sent emails</p>
       </div>
       <EmailList />
     </div>

@@ -1,9 +1,6 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
 
-// Simple typography primitives: H1, H2, BodyText
-// H1/H2 use mono font, slightly bolder and larger per request
-
 export interface TypographyProps extends React.HTMLAttributes<HTMLElement> {
   asChild?: boolean;
 }
@@ -13,8 +10,7 @@ export const H1 = React.forwardRef<HTMLHeadingElement, TypographyProps>(
     <h1
       ref={ref}
       className={cn(
-        // font-mono, larger and a bit bolder
-        " font-mono text-xl font-medium text-primary",
+        "text-2xl font-semibold tracking-tight text-foreground",
         className
       )}
       {...props}
@@ -28,8 +24,7 @@ export const H2 = React.forwardRef<HTMLHeadingElement, TypographyProps>(
     <h2
       ref={ref}
       className={cn(
-        // font-mono, slightly smaller than H1, bold
-        "font-mono text-lg",
+        "text-lg font-semibold tracking-tight text-foreground",
         className
       )}
       {...props}
