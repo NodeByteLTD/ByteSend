@@ -1,5 +1,5 @@
-import { Button } from "@usesend/ui/src/button";
-import { cn } from "@usesend/ui/lib/utils";
+import { Button } from "@bytesend/ui/src/button";
+import { cn } from "@bytesend/ui/lib/utils";
 
 import { TextMenuItem } from "./TextMenu";
 

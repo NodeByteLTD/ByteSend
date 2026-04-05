@@ -2,12 +2,12 @@ name: usesend-smtp-server
 
 services:
   smtp-server:
-    container_name: usesend-smtp-server
-    image: usesend/smtp-proxy:latest
+    container_name: bytesend-smtp-server
+    image: bytesend/smtp-proxy:latest
     # Pass necessary environment variables
     environment:
-      SMTP_AUTH_USERNAME: "usesend" # can be anything, just use the same while sending emails
-      USESEND_BASE_URL: "https://app.usesend.com" # your self hosted useSend instance url
+      SMTP_AUTH_USERNAME: "bytesend" # can be anything, just use the same while sending emails
+      USESEND_BASE_URL: "https://bytesend.cloud" # your self hosted ByteSend instance url
 
       # Uncomment this if you have SSL certificates. port 465 and 2465 will be using SSL
       # USESEND_API_KEY_PATH: "/certs/server.key"

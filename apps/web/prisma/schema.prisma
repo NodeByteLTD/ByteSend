@@ -95,7 +95,10 @@ model User {
 
 enum Plan {
   FREE
+  LITE
+  HOBBY
   BASIC
+  LIFETIME
 }
 
 model Team {

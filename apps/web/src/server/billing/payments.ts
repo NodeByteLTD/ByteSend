@@ -1,9 +1,12 @@
 import Stripe from "stripe";
+import type { Plan } from "@prisma/client";
 import { env } from "~/env";
 import { db } from "../db";
 import { sendSubscriptionConfirmationEmail } from "../mailer";
 import { TeamService } from "../service/team-service";
 import { logger } from "../logger/log";
+
+export type CheckoutPlan = Extract<Plan, "LITE" | "HOBBY" | "BASIC" | "LIFETIME">;
 
 export function getStripe() {
   if (!env.STRIPE_SECRET_KEY) {
@@ -25,7 +28,10 @@ async function createCustomerForTeam(teamId: number) {
   return customer;
 }
 
-export async function createCheckoutSessionForTeam(teamId: number) {
+export async function createCheckoutSessionForTeam(
+  teamId: number,
+  plan: CheckoutPlan = "BASIC"
+) {
   const team = await db.team.findUnique({
     where: { id: teamId },
   });
@@ -47,45 +53,102 @@ export async function createCheckoutSessionForTeam(teamId: number) {
     customerId = customer.id;
   }
 
-  if (
-    !env.STRIPE_BASIC_PRICE_ID ||
-    !env.STRIPE_BASIC_USAGE_PRICE_ID ||
-    !customerId
-  ) {
-    throw new Error("Stripe prices are not set");
+  if (plan === "LIFETIME") {
+    if (!env.STRIPE_LIFETIME_PRICE_ID) {
+      throw new Error("STRIPE_LIFETIME_PRICE_ID is not set");
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer: customerId,
+      line_items: [{ price: env.STRIPE_LIFETIME_PRICE_ID, quantity: 1 }],
+      success_url: `${env.NEXTAUTH_URL}/payments?success=true&plan=LIFETIME&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
+      metadata: { teamId, plan },
+      client_reference_id: teamId.toString(),
+    });
+
+    return session;
+  }
+
+  if (plan === "LITE") {
+    if (!env.STRIPE_LITE_PRICE_ID) {
+      throw new Error("STRIPE_LITE_PRICE_ID is not set");
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: env.STRIPE_LITE_PRICE_ID, quantity: 1 }],
+      success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
+      metadata: { teamId, plan },
+      client_reference_id: teamId.toString(),
+    });
+
+    return session;
+  }
+
+  if (plan === "HOBBY") {
+    if (!env.STRIPE_HOBBY_PRICE_ID) {
+      throw new Error("STRIPE_HOBBY_PRICE_ID is not set");
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: env.STRIPE_HOBBY_PRICE_ID, quantity: 1 }],
+      success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
+      metadata: { teamId, plan },
+      client_reference_id: teamId.toString(),
+    });
+
+    return session;
+  }
+
+  // BASIC: monthly subscription + metered usage
+  if (!env.STRIPE_BASIC_PRICE_ID || !env.STRIPE_BASIC_USAGE_PRICE_ID) {
+    throw new Error(
+      "STRIPE_BASIC_PRICE_ID or STRIPE_BASIC_USAGE_PRICE_ID is not set"
+    );
   }
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [
-      {
-        price: env.STRIPE_BASIC_PRICE_ID,
-        quantity: 1,
-      },
-      {
-        price: env.STRIPE_BASIC_USAGE_PRICE_ID,
-      },
+      { price: env.STRIPE_BASIC_PRICE_ID, quantity: 1 },
+      { price: env.STRIPE_BASIC_USAGE_PRICE_ID },
     ],
     success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
-    metadata: {
-      teamId,
-    },
+    metadata: { teamId, plan },
     client_reference_id: teamId.toString(),
   });
 
   return session;
 }
 
-function getPlanFromPriceIds(priceIds: string[]) {
+function getPlanFromPriceIds(priceIds: string[]): Plan {
+  if (env.STRIPE_LIFETIME_PRICE_ID && priceIds.includes(env.STRIPE_LIFETIME_PRICE_ID)) {
+    return "LIFETIME";
+  }
+
   if (
-    (env.STRIPE_BASIC_PRICE_ID &&
-      priceIds.includes(env.STRIPE_BASIC_PRICE_ID)) ||
+    (env.STRIPE_BASIC_PRICE_ID && priceIds.includes(env.STRIPE_BASIC_PRICE_ID)) ||
     (env.STRIPE_LEGACY_BASIC_PRICE_ID &&
       priceIds.includes(env.STRIPE_LEGACY_BASIC_PRICE_ID))
   ) {
     return "BASIC";
+  }
+
+  if (env.STRIPE_LITE_PRICE_ID && priceIds.includes(env.STRIPE_LITE_PRICE_ID)) {
+    return "LITE";
+  }
+
+  if (env.STRIPE_HOBBY_PRICE_ID && priceIds.includes(env.STRIPE_HOBBY_PRICE_ID)) {
+    return "HOBBY";
   }
 
   return "FREE";
@@ -209,5 +272,44 @@ export async function syncStripeData(customerId: string) {
         "[Billing]: Failed sending subscription confirmation email"
       );
     }
+  }
+}
+
+/**
+ * Handles a completed LIFETIME one-time payment checkout.
+ * Sets the team's plan to LIFETIME permanently — no subscription involved.
+ */
+export async function syncLifetimePayment(customerId: string) {
+  const team = await db.team.findUnique({
+    where: { stripeCustomerId: customerId },
+  });
+
+  if (!team) {
+    logger.warn({ customerId }, "[Billing]: LIFETIME payment — team not found for customer");
+    return;
+  }
+
+  if (team.plan === "LIFETIME") {
+    return; // Already upgraded, nothing to do
+  }
+
+  await TeamService.updateTeam(team.id, {
+    plan: "LIFETIME",
+    isActive: true,
+  });
+
+  try {
+    const teamUsers = await TeamService.getTeamUsers(team.id);
+    await Promise.all(
+      teamUsers
+        .map((tu) => tu.user?.email)
+        .filter((email): email is string => Boolean(email))
+        .map((email) => sendSubscriptionConfirmationEmail(email))
+    );
+  } catch (err) {
+    logger.error(
+      { err, teamId: team.id },
+      "[Billing]: Failed sending LIFETIME confirmation email"
+    );
   }
 }

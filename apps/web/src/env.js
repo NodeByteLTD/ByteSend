@@ -1,4 +1,3 @@
-import { EmailStatus } from "@prisma/client";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
@@ -64,6 +63,9 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_BASIC_PRICE_ID: z.string().optional(),
     STRIPE_BASIC_USAGE_PRICE_ID: z.string().optional(),
+    STRIPE_LITE_PRICE_ID: z.string().optional(),
+    STRIPE_HOBBY_PRICE_ID: z.string().optional(),
+    STRIPE_LIFETIME_PRICE_ID: z.string().optional(),
     STRIPE_LEGACY_BASIC_PRICE_ID: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
     SMTP_HOST: z.string().default("smtp.bytesend.cloud"),
@@ -131,6 +133,9 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_BASIC_PRICE_ID: process.env.STRIPE_BASIC_PRICE_ID,
     STRIPE_BASIC_USAGE_PRICE_ID: process.env.STRIPE_BASIC_USAGE_PRICE_ID,
+    STRIPE_LITE_PRICE_ID: process.env.STRIPE_LITE_PRICE_ID,
+    STRIPE_HOBBY_PRICE_ID: process.env.STRIPE_HOBBY_PRICE_ID,
+    STRIPE_LIFETIME_PRICE_ID: process.env.STRIPE_LIFETIME_PRICE_ID,
     STRIPE_LEGACY_BASIC_PRICE_ID: process.env.STRIPE_LEGACY_BASIC_PRICE_ID,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     SMTP_HOST: process.env.SMTP_HOST,

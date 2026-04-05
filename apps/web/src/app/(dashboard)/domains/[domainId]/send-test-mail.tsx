@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { api } from "~/trpc/react";
 import React from "react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { SendHorizonal } from "lucide-react";
 import type { DomainWithDnsRecords } from "~/types/domain";
 // Removed dialog and example code. Clicking the button now sends the email directly.

@@ -10,17 +10,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@usesend/ui/src/dialog";
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
-import { Label } from "@usesend/ui/src/label";
+} from "@bytesend/ui/src/dialog";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
+import { Label } from "@bytesend/ui/src/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
+} from "@bytesend/ui/src/select";
 
 interface AddSuppressionDialogProps {
   open: boolean;

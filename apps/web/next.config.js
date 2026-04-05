@@ -8,7 +8,7 @@ await import("./src/env.js");
 const config = {
   output: process.env.DOCKER_OUTPUT ? "standalone" : undefined,
   serverExternalPackages: ["bullmq"],
-  transpilePackages: ["@usesend/ui", "@usesend/email-editor"],
+  transpilePackages: ["@bytesend/ui", "@bytesend/email-editor"],
   images: {
     remotePatterns: [
       {

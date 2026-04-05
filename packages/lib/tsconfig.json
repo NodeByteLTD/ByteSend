@@ -1,6 +1,7 @@
 {
-  "extends": "@usesend/typescript-config/base.json",
+  "extends": "@bytesend/typescript-config/base.json",
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "dist"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

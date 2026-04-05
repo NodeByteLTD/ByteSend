@@ -1,6 +1,6 @@
-import { Button } from "@usesend/ui/src/button";
-import { CodeBlock } from "@usesend/ui/src/code-block";
-import { CodeBlockWithCopy } from "@usesend/ui/src/code-block-with-copy";
+import { Button } from "@bytesend/ui/src/button";
+import { CodeBlock } from "@bytesend/ui/src/code-block";
+import { CodeBlockWithCopy } from "@bytesend/ui/src/code-block-with-copy";
 import { LangToggle } from "./CodeLangToggle";
 
 const TS_CODE = `import { ByteSend } from "bytesend-js";

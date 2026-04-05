@@ -6,9 +6,8 @@ import DeleteContactBook from "./delete-contact-book";
 import Link from "next/link";
 import EditContactBook from "./edit-contact-book";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { useUrlState } from "~/hooks/useUrlState";
-import { Input } from "@usesend/ui/src/input";
+import { Input } from "@bytesend/ui/src/input";
 import { useDebouncedCallback } from "use-debounce";
 
 export default function ContactBooksList() {
@@ -24,56 +23,45 @@ export default function ContactBooksList() {
   }, 1000);
 
   return (
-    <div className="mt-10">
+    <div className="space-y-4">
       <Input
-        placeholder="Search contact book"
-        className="w-[300px] mr-4 mb-4"
+        placeholder="Search contact books..."
+        className="w-full sm:w-72"
         defaultValue={search ?? ""}
         onChange={(e) => debouncedSearch(e.target.value)}
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {contactBooksQuery.data?.map((contactBook) => (
-          <motion.div
+          <div
             key={contactBook.id}
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 200, damping: 10 }}
-            whileTap={{ scale: 0.99 }}
-            className="border rounded-xl shadow hover:shadow-lg"
+            className="border border-border/60 rounded-xl overflow-hidden hover:border-border transition-colors"
           >
-            <div className="flex flex-col">
-              <Link href={`/contacts/${contactBook.id}`} key={contactBook.id}>
-                <div className="flex justify-between items-center p-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div>{contactBook.emoji}</div>
-                    <div className="font-semibold truncate whitespace-nowrap overflow-ellipsis w-[180px]">
-                      {contactBook.name}
-                    </div>
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-mono">
-                      {contactBook._count.contacts}
-                    </span>{" "}
-                    contacts
-                  </div>
+            <Link href={`/contacts/${contactBook.id}`}>
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-lg shrink-0">{contactBook.emoji || "📋"}</span>
+                  <span className="font-medium text-sm truncate">
+                    {contactBook.name}
+                  </span>
                 </div>
-              </Link>
-
-              <div className="flex justify-between items-center border-t  bg-muted/50">
-                <div
-                  className="text-muted-foreground text-xs cursor-pointer w-full py-3 pl-4"
-                  onClick={() => router.push(`/contacts/${contactBook.id}`)}
-                >
-                  {formatDistanceToNow(contactBook.createdAt, {
-                    addSuffix: true,
-                  })}
-                </div>
-                <div className="flex gap-3 pr-4">
-                  <EditContactBook contactBook={contactBook} />
-                  <DeleteContactBook contactBook={contactBook} />
-                </div>
+                <span className="text-xs text-muted-foreground shrink-0 ml-3 font-mono">
+                  {contactBook._count.contacts}
+                </span>
+              </div>
+            </Link>
+            <div className="flex items-center justify-between border-t border-border/40 bg-muted/30 px-4 py-2.5">
+              <span
+                className="text-xs text-muted-foreground cursor-pointer"
+                onClick={() => router.push(`/contacts/${contactBook.id}`)}
+              >
+                {formatDistanceToNow(contactBook.createdAt, { addSuffix: true })}
+              </span>
+              <div className="flex gap-2">
+                <EditContactBook contactBook={contactBook} />
+                <DeleteContactBook contactBook={contactBook} />
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>

@@ -19,7 +19,7 @@ Webhooks allow you to receive HTTP POST requests to your server when events occu
 
   </Step>
   <Step title="Add webhook in dashboard">
-    Go to [Webhooks](https://app.usesend.com/webhooks) in your useSend dashboard and create a new webhook:
+    Go to [Webhooks](https://app.bytesend.cloud/webhooks) in your ByteSend dashboard and create a new webhook:
 
     - Enter your endpoint URL
     - Select which events you want to receive
@@ -127,19 +127,19 @@ HMAC-SHA256(secret, "${timestamp}.${rawBody}")
 
 <CodeGroup>
 ```bash npm
-npm install usesend-js
+npm install bytesend-js
 ```
 
 ```bash yarn
-yarn add usesend-js
+yarn add bytesend-js
 ```
 
 ```bash pnpm
-pnpm add usesend-js
+pnpm add bytesend-js
 ```
 
 ```bash bun
-bun add usesend-js
+bun add bytesend-js
 ```
 
 </CodeGroup>
@@ -147,7 +147,7 @@ bun add usesend-js
 ### Next.js App Router
 
 ```typescript
-import { UseSend } from "usesend-js";
+import { UseSend } from "bytesend-js";
 
 const usesend = new UseSend("us_your_api_key");
 const webhooks = usesend.webhooks(process.env.USESEND_WEBHOOK_SECRET!);
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
 
 ```typescript
 import express from "express";
-import { Webhooks } from "usesend-js";
+import { Webhooks } from "bytesend-js";
 
 const webhooks = new Webhooks(process.env.USESEND_WEBHOOK_SECRET!);
 
@@ -310,7 +310,7 @@ After 6 failed attempts, the webhook call is marked as failed.
 
 You can send a test webhook from the dashboard to verify your endpoint is working correctly:
 
-1. Go to [Webhooks](https://app.usesend.com/webhooks)
+1. Go to [Webhooks](https://app.bytesend.cloud/webhooks)
 2. Click on your webhook
 3. Click "Send Test" to send a test event
 

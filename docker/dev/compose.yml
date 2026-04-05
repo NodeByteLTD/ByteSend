@@ -1,14 +1,14 @@
-name: unsend-dev
+name: bytesend-dev
 
 services:
   postgres:
     image: postgres:16
-    container_name: unsend-db-dev
+    container_name: bytesend-db-dev
     restart: always
     environment:
-      - POSTGRES_USER=usesend
+      - POSTGRES_USER=bytesend
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=usesend
+      - POSTGRES_DB=bytesend
     volumes:
       - database:/var/lib/postgresql/data
     ports:
@@ -16,7 +16,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: unsend-redis-dev
+    container_name: bytesend-redis-dev
     restart: always
     ports:
       - "6379:6379"
@@ -24,9 +24,54 @@ services:
       - redis:/data
     command: ["redis-server", "--maxmemory-policy", "noeviction"]
 
-  local-sen-sns:
-    image: usesend/local-ses-sns:latest
-    container_name: local-ses-sns
+  web:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.web
+    container_name: bytesend-web-dev
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://bytesend:password@postgres:5432/bytesend
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-secret-key-here
+      - AWS_ACCESS_KEY=minioadmin
+      - AWS_SECRET_KEY=minioadmin
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_SES_ENDPOINT=http://local-ses-sns:3000
+      - S3_COMPATIBLE_API_URL=http://minio:9002
+      - S3_COMPATIBLE_PUBLIC_URL=http://localhost:9002
+      - S3_COMPATIBLE_ACCESS_KEY=bytesend
+      - S3_COMPATIBLE_SECRET_KEY=password
+    depends_on:
+      - postgres
+      - redis
+      - minio
+
+  smtp:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.smtp
+    container_name: bytesend-smtp-dev
+    restart: always
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "2465:2465"
+      - "2587:2587"
+    environment:
+      - BYTESEND_BASE_URL=http://web:3000
+      - SMTP_AUTH_USERNAME=bytesend
+    depends_on:
+      - web
+
+  local-ses-sns:
+    image: bytesend/local-ses-sns:latest
+    container_name: bytesend-local-ses-sns
     restart: always
     ports:
       - "5350:3000"
@@ -37,17 +82,17 @@ services:
 
   minio:
     image: minio/minio
-    container_name: unsend-storage-dev
+    container_name: bytesend-storage-dev
     ports:
       - 9002:9002
       - 9001:9001
     volumes:
       - minio:/data
     environment:
-      MINIO_ROOT_USER: unsend
+      MINIO_ROOT_USER: bytesend
       MINIO_ROOT_PASSWORD: password
     entrypoint: sh
-    command: -c 'mkdir -p /data/unsend && minio server /data --console-address ":9001" --address ":9002"'
+    command: -c 'mkdir -p /data/bytesend && minio server /data --console-address ":9001" --address ":9002"'
 
 volumes:
   database:

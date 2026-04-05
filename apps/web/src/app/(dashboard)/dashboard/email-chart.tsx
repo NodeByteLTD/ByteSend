@@ -14,8 +14,8 @@ import {
 import { EmailStatusIcon } from "../emails/email-status-badge";
 import { EmailStatus } from "@prisma/client";
 import { api } from "~/trpc/react";
-import Spinner from "@usesend/ui/src/spinner";
-import { useTheme } from "@usesend/ui";
+import Spinner from "@bytesend/ui/src/spinner";
+import { useTheme } from "@bytesend/ui";
 import { useColors } from "./hooks/useColors";
 
 interface EmailChartProps {

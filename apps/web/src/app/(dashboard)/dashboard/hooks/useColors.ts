@@ -1,4 +1,4 @@
-import { useTheme } from "@usesend/ui";
+import { useTheme } from "@bytesend/ui";
 
 export function useColors() {
   const { resolvedTheme } = useTheme();

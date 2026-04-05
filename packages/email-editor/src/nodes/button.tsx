@@ -11,12 +11,12 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
-import { cn } from "@usesend/ui/lib/utils";
-import { Input } from "@usesend/ui/src/input";
-import { Button } from "@usesend/ui/src/button";
+} from "@bytesend/ui/src/popover";
+import { cn } from "@bytesend/ui/lib/utils";
+import { Input } from "@bytesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
 import { AllowedAlignments, ButtonOptions } from "../types";
-import { Separator } from "@usesend/ui/src/separator";
+import { Separator } from "@bytesend/ui/src/separator";
 import { BorderWidth } from "../components/ui/icons/BorderWidth";
 import { ColorPickerPopup } from "../components/ui/ColorPicker";
 import { LinkEditorPanel } from "../components/panels/LinkEditorPanel";
@@ -26,7 +26,7 @@ import {
   TooltipProvider,
   TooltipContent,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 
 const alignments: Array<AllowedAlignments> = ["left", "center", "right"];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import { api } from "~/trpc/react";
 import React, { useState } from "react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { Copy } from "lucide-react";
 import { Campaign } from "@prisma/client";
 

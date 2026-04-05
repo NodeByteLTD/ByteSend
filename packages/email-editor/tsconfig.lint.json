@@ -1,5 +1,5 @@
 {
-  "extends": "@usesend/typescript-config/react-library.json",
+  "extends": "@bytesend/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist"
   },

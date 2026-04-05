@@ -7,13 +7,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
-import Spinner from "@usesend/ui/src/spinner";
+} from "@bytesend/ui/src/table";
+import Spinner from "@bytesend/ui/src/spinner";
 import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { Edit3, MoreVertical, Pause, Play } from "lucide-react";
-import { Button } from "@usesend/ui/src/button";
-import { toast } from "@usesend/ui/src/toaster";
+import { Button } from "@bytesend/ui/src/button";
+import { toast } from "@bytesend/ui/src/toaster";
 import { DeleteWebhook } from "./delete-webhook";
 import { useState } from "react";
 import { EditWebhookDialog } from "./webhook-update-dialog";
@@ -22,7 +22,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
+} from "@bytesend/ui/src/popover";
 import { type Webhook } from "@prisma/client";
 import { WebhookStatusBadge } from "./webhook-status-badge";
 

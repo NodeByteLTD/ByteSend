@@ -1,17 +1,17 @@
-name: unsend-test
+name: bytesend-test
 
 services:
   postgres:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: usesend
+      POSTGRES_USER: bytesend
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: usesend_test
+      POSTGRES_DB: bytesend_test
     ports:
       - "54329:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U usesend -d usesend_test"]
+      test: ["CMD-SHELL", "pg_isready -U bytesend -d bytesend_test"]
       interval: 5s
       timeout: 5s
       retries: 20

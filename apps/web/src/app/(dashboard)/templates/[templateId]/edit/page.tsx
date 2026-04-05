@@ -1,12 +1,12 @@
 "use client";
 
 import { api } from "~/trpc/react";
-import { Spinner } from "@usesend/ui/src/spinner";
-import { Input } from "@usesend/ui/src/input";
-import { Editor } from "@usesend/email-editor";
+import { Spinner } from "@bytesend/ui/src/spinner";
+import { Input } from "@bytesend/ui/src/input";
+import { Editor } from "@bytesend/email-editor";
 import { useState } from "react";
 import { Template } from "@prisma/client";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { useDebouncedCallback } from "use-debounce";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";

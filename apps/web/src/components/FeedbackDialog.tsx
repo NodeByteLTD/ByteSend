@@ -1,7 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, type ReactNode, useEffect, useState } from "react";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Form,
   FormControl,
@@ -18,9 +18,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Textarea } from "@usesend/ui/src/textarea";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/form";
+import { Textarea } from "@bytesend/ui/src/textarea";
+import { toast } from "@bytesend/ui/src/toaster";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

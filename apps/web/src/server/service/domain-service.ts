@@ -14,7 +14,7 @@ import { ApiKey, DomainStatus, type Domain } from "@prisma/client";
 import {
   type DomainPayload,
   type DomainWebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import { LimitService } from "./limit-service";
 import type { DomainDnsRecord } from "~/types/domain";
 import { WebhookService } from "./webhook-service";

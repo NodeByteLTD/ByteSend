@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Form,
   FormControl,
@@ -18,9 +18,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Input } from "@usesend/ui/src/input";
-import { Button } from "@usesend/ui/src/button";
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
 import { ChevronDown } from "lucide-react";
 import { api } from "~/trpc/react";
 import {
@@ -29,14 +29,14 @@ import {
   EmailEvents,
   WebhookEvents,
   type WebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@usesend/ui/src/dropdown-menu";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/dropdown-menu";
+import { toast } from "@bytesend/ui/src/toaster";
 import type { Webhook } from "@prisma/client";
 
 const EVENT_TYPES_ENUM = z.enum(WebhookEvents);

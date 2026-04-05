@@ -2,7 +2,7 @@ import { Email, EmailStatus, Prisma } from "@prisma/client";
 import { format, subDays } from "date-fns";
 import { z } from "zod";
 import { DEFAULT_QUERY_LIMIT } from "~/lib/constants";
-import { BOUNCE_ERROR_MESSAGES } from "@usesend/lib/src";
+import { BOUNCE_ERROR_MESSAGES } from "@bytesend/lib/src";
 import type { SesBounce } from "~/types/aws-types";
 
 import {

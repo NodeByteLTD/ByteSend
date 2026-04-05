@@ -7,17 +7,17 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { api } from "~/trpc/react";
 import { useUrlState } from "~/hooks/useUrlState";
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
 import { formatDistanceToNow } from "date-fns";
 // import DeleteCampaign from "./delete-campaign";
 import Link from "next/link";
 // import DuplicateCampaign from "./duplicate-campaign";
 
-import { TextWithCopyButton } from "@usesend/ui/src/text-with-copy";
+import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
 import DeleteTemplate from "./delete-template";
 import DuplicateTemplate from "./duplicate-template";
 

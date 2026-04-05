@@ -2,10 +2,18 @@ import { Plan } from "@prisma/client";
 import { PLAN_PERKS } from "~/lib/constants/payments";
 import { CheckCircle2 } from "lucide-react";
 import { api } from "~/trpc/react";
-import Spinner from "@usesend/ui/src/spinner";
+import Spinner from "@bytesend/ui/src/spinner";
 import { useTeam } from "~/providers/team-context";
-import { Badge } from "@usesend/ui/src/badge";
+import { Badge } from "@bytesend/ui/src/badge";
 import { format } from "date-fns";
+
+const PLAN_DISPLAY_NAMES: Record<string, string> = {
+  FREE: "Free",
+  HOBBY: "Hobby",
+  LITE: "Lite",
+  BASIC: "Professional",
+  LIFETIME: "Lifetime",
+};
 
 export const PlanDetails = () => {
   const subscriptionQuery = api.billing.getSubscriptionDetails.useQuery();
@@ -17,14 +25,11 @@ export const PlanDetails = () => {
 
   const planKey = currentTeam.plan as keyof typeof PLAN_PERKS;
   const perks = PLAN_PERKS[planKey] || [];
+  const displayName = PLAN_DISPLAY_NAMES[planKey] || planKey;
 
   return (
     <div>
-      <div className="capitalize text-lg">
-        {subscriptionQuery.data?.status === "active" && planKey === "BASIC"
-          ? "Pro"
-          : "Free"}
-      </div>
+      <div className="text-lg font-semibold">{displayName}</div>
       <div className="flex items-center gap-2">
         <div className="text-muted-foreground text-sm">Current plan</div>
         {subscriptionQuery.data?.cancelAtPeriodEnd && (

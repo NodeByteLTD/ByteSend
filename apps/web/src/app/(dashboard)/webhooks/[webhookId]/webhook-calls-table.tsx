@@ -9,16 +9,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
+} from "@bytesend/ui/src/select";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
 import { api } from "~/trpc/react";
 import { formatDistanceToNow } from "date-fns";
 import { WebhookCallStatusBadge } from "../webhook-call-status-badge";

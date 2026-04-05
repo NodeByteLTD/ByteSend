@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import { CheckCircle2 } from "lucide-react";
 import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { PLAN_PERKS } from "~/lib/constants/payments";

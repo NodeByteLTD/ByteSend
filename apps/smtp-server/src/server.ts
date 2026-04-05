@@ -16,11 +16,11 @@ const SSL_KEY_PATH =
 const SSL_CERT_PATH =
   process.env.BYTESEND_API_CERT_PATH ?? process.env.BYTESEND_API_CERT_PATH;
 
-async function sendEmailToUseSend(emailData: any, apiKey: string) {
+async function sendEmailToByteSend(emailData: any, apiKey: string) {
   try {
     const apiEndpoint = "/api/v1/emails";
-    const url = new URL(apiEndpoint, BASE_URL); // Combine base URL with endpoint
-    console.log("Sending email to useSend API at:", url.href); // Debug statement
+    const url = new URL(apiEndpoint, BASE_URL);
+    console.log("Sending email to ByteSend API at:", url.href);
 
     const emailDataText = JSON.stringify(emailData);
 
@@ -36,7 +36,7 @@ async function sendEmailToUseSend(emailData: any, apiKey: string) {
     if (!response.ok) {
       const errorData = await response.text();
       console.error(
-        "useSend API error response: error:",
+        "ByteSend API error response: error:",
         JSON.stringify(errorData, null, 4),
         `\nemail data: ${emailDataText}`,
       );
@@ -46,7 +46,7 @@ async function sendEmailToUseSend(emailData: any, apiKey: string) {
     }
 
     const responseData = await response.json();
-    console.log("useSend API response:", responseData);
+    console.log("ByteSend API response:", responseData);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error message:", error.message);
@@ -101,7 +101,7 @@ const serverOptions: SMTPServerOptions = {
         replyTo: parsed.replyTo?.text,
       };
 
-      sendEmailToUseSend(emailObject, session.user)
+      sendEmailToByteSend(emailObject, session.user)
         .then(() => callback())
         .then(() => console.log("Email sent successfully to: ", emailObject.to))
         .catch((error) => {

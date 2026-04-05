@@ -1,28 +1,28 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
+} from "@bytesend/ui/src/popover";
 import * as chrono from "chrono-node";
 import { api } from "~/trpc/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { Calendar } from "@usesend/ui/src/calendar";
+import { Calendar } from "@bytesend/ui/src/calendar";
 import { Campaign } from "@prisma/client";
 import { format } from "date-fns";
-import { Spinner } from "@usesend/ui/src/spinner";
+import { Spinner } from "@bytesend/ui/src/spinner";
 
 export const ScheduleCampaign: React.FC<{
   campaign: Partial<Campaign> & { id: string };

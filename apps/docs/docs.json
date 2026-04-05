@@ -164,13 +164,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hey@usesend.com"
+        "href": "mailto:hey@bytesend.cloud"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.usesend.com"
+      "href": "https://app.bytesend.cloud"
     }
   },
   "footer": {

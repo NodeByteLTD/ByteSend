@@ -4,7 +4,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Form,
   FormControl,
@@ -12,12 +12,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Input } from "@usesend/ui/src/input";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
-import { Switch } from "@usesend/ui/src/switch";
-import { Badge } from "@usesend/ui/src/badge";
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
+import { Switch } from "@bytesend/ui/src/switch";
+import { Badge } from "@bytesend/ui/src/badge";
 import { formatDistanceToNow } from "date-fns";
 
 import { api } from "~/trpc/react";

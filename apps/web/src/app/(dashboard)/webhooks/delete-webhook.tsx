@@ -1,10 +1,10 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { DeleteResource } from "~/components/DeleteResource";
 import { api } from "~/trpc/react";
 import { type Webhook } from "@prisma/client";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { z } from "zod";
 import { Trash2 } from "lucide-react";
 

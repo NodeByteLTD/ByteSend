@@ -4,7 +4,7 @@ import type {
   WebhookEventData,
   WebhookEventPayloadMap,
   WebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 
 type RawBody = string | Buffer | ArrayBuffer | ArrayBufferView | Uint8Array;
 

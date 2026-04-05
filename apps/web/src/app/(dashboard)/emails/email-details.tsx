@@ -2,7 +2,7 @@
 
 import { UAParser } from "ua-parser-js";
 import { api } from "~/trpc/react";
-import { Separator } from "@usesend/ui/src/separator";
+import { Separator } from "@bytesend/ui/src/separator";
 import { EmailStatusBadge, EmailStatusIcon } from "./email-status-badge";
 import { formatDate } from "date-fns";
 import { motion } from "framer-motion";
@@ -19,7 +19,7 @@ import {
   BOUNCE_ERROR_MESSAGES,
   COMPLAINT_ERROR_MESSAGES,
   DELIVERY_DELAY_ERRORS,
-} from "@usesend/lib/src/constants/ses-errors";
+} from "@bytesend/lib/src/constants/ses-errors";
 import CancelEmail from "./cancel-email";
 import { useEffect } from "react";
 import { useState } from "react";

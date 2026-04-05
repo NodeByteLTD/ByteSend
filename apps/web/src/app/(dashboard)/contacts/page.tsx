@@ -2,7 +2,7 @@
 
 import AddContactBook from "./add-contact-book";
 import ContactBooksList from "./contact-books-list";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function ContactsPage() {
   return (

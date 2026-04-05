@@ -7,19 +7,19 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@usesend/ui/src/breadcrumb";
+} from "@bytesend/ui/src/breadcrumb";
 import Link from "next/link";
-import { H2 } from "@usesend/ui";
+import { H2 } from "@bytesend/ui";
 
-import Spinner from "@usesend/ui/src/spinner";
+import Spinner from "@bytesend/ui/src/spinner";
 import { api } from "~/trpc/react";
 import { use } from "react";
 import { CampaignStatus } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import TogglePauseCampaign from "../toggle-pause-campaign";
 import CampaignStatusBadge from "../../campaigns/campaign-status-badge";
-import { Button } from "@usesend/ui/src/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@usesend/ui/src/card";
+import { Button } from "@bytesend/ui/src/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
 import { EmailStatusBadge } from "../../emails/email-status-badge";
 import { AnimatePresence, motion } from "framer-motion";
 

@@ -1,4 +1,4 @@
-import { EmailRenderer } from "@usesend/email-editor/src/renderer";
+import { EmailRenderer } from "@bytesend/email-editor/src/renderer";
 
 export const dynamic = "force-dynamic";
 

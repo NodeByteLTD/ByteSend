@@ -1,69 +1,165 @@
-# Docker Setup for useSend
+# Docker Setup for ByteSend
 
-The following guide will walk you through setting up useSend using Docker. You can choose between a production setup using Docker Compose or a standalone container.
+ByteSend uses a monorepo structure with separate services for the web application and SMTP server. This guide walks you through setting up both services using Docker.
+
+## Architecture
+
+- **`Dockerfile.web`**: Builds the Next.js web application with all workspace dependencies
+- **`Dockerfile.smtp`**: Builds the SMTP server with workspace dependencies
+- Both respect the pnpm workspace and share package layers
 
 ## Prerequisites
 
 Before you begin, ensure that you have the following installed:
 
 - Docker
-- Docker Compose (if using the Docker Compose setup)
-- Node.js 20.19 or newer (Prisma requires at least v20.19 in the build image)
+- Docker Compose
+- Node.js 20.19 or newer (for local development)
 
-## Option 1: Production Docker Compose Setup
+## Building Docker Images
 
-This setup includes PostgreSQL, Redis and the useSend application.
+To build both images:
 
-1. Download the Docker Compose file from the useSend repository: [compose.yml](https://github.com/usesend/usesend/blob/main/docker/prod/compose.yml)
-2. Navigate to the directory containing the `compose.yml` file.
-3. Create a `.env` file in the same directory. Copy the contents of `.env.selfhost.example`
-4. Run the following command to start the containers:
-
-```
-docker-compose --env-file ./.env up -d
+```bash
+./docker/build.sh
 ```
 
-This will start the PostgreSQL database, Redis and the useSend application containers.
+This builds:
+- `bytesend/web:latest` - The ByteSend web application
+- `bytesend/smtp:latest` - The SMTP server
 
-5. Access the useSend application by visiting `http://localhost:3000` in your web browser.
+## Option 1: Development Setup with Docker Compose
 
-## Option 2: Standalone Docker Container
+Start the complete development environment with Docker:
 
-If you prefer to host the useSend application on your container provider of choice, you can use the pre-built Docker image from DockerHub or GitHub's Package Registry. Note that you will need to provide your own database and SMTP host.
-
-1. Pull the useSend Docker image:
-
-```
-docker pull usesend/usesend
-```
-
-Or, if using GitHub's Package Registry:
-
-```
-docker pull ghcr.io/usesend/usesend
+```bash
+cd docker/dev
+docker-compose up -d
 ```
 
-2. Run the Docker container, providing the necessary environment variables for your database and SMTP host:
+This starts:
+- PostgreSQL database
+- Redis
+- ByteSend web application (port 3000)
+- ByteSend SMTP server (ports 25, 465, 587, 2465, 2587)
+- Local S3 (MinIO) for storage
+- Local SES/SNS mock service
 
-```
+## Option 2: Production Setup with Docker Compose
+
+1. Download or copy the production compose file:
+   ```bash
+   cd docker/prod
+   ```
+
+2. Create a `.env` file with your configuration:
+   ```env
+   # Database
+   POSTGRES_USER=bytesend
+   POSTGRES_PASSWORD=<secure-password>
+   POSTGRES_DB=bytesend
+   DATABASE_URL=postgresql://bytesend:<password>@postgres:5432/bytesend
+
+   # Redis
+   REDIS_URL=redis://redis:6379
+
+   # NextAuth
+   NEXTAUTH_URL=https://app.bytesend.cloud
+   NEXTAUTH_SECRET=<secure-secret>
+
+   # AWS/SES
+   AWS_ACCESS_KEY=<your-key>
+   AWS_SECRET_KEY=<your-secret>
+   AWS_DEFAULT_REGION=us-east-1
+
+   # GitHub OAuth
+   GITHUB_ID=<your-github-id>
+   GITHUB_SECRET=<your-github-secret>
+
+   # SMTP Configuration
+   BYTESEND_BASE_URL=http://web:3000
+   SMTP_AUTH_USERNAME=bytesend
+   ```
+
+3. Start the services:
+   ```bash
+   docker-compose --env-file ./.env up -d
+   ```
+
+This starts a production-ready setup with separate web and SMTP containers.
+
+## Option 3: Standalone Web Container
+
+To run just the web application:
+
+```bash
+docker pull bytesend/web:latest
+
 docker run -d \
   -p 3000:3000 \
-  -e NEXTAUTH_URL="<your-nextauth-url>" \
-  -e NEXTAUTH_SECRET="<your-nextauth-secret>" \
-  -e DATABASE_URL="<your-database-url>" \
-  -e REDIS_URL="<your-redis-url>" \
-  -e AWS_ACCESS_KEY="<your-aws-access-key-id>" \
-  -e AWS_SECRET_KEY="<your-aws-secret-access-key>" \
-  -e AWS_DEFAULT_REGION="<your-aws-region>" \
-  -e GITHUB_ID="<your-github-client-id>" \
-  -e GITHUB_SECRET="<your-github-client-secret>" \
-  usesend/usesend
+  -e NEXTAUTH_URL="https://your-domain.com" \
+  -e NEXTAUTH_SECRET="your-secret" \
+  -e DATABASE_URL="your-database-url" \
+  -e REDIS_URL="your-redis-url" \
+  -e AWS_ACCESS_KEY="your-key" \
+  -e AWS_SECRET_KEY="your-secret" \
+  -e AWS_DEFAULT_REGION="us-east-1" \
+  -e GITHUB_ID="your-github-id" \
+  -e GITHUB_SECRET="your-github-secret" \
+  bytesend/web:latest
 ```
 
-Replace the placeholders with your actual database and aws details.
+## Option 4: Standalone SMTP Server
 
-1. Access the useSend application by visiting the URL you provided in the `NEXTAUTH_URL` environment variable in your web browser.
+To run just the SMTP server:
+
+```bash
+docker pull bytesend/smtp:latest
+
+docker run -d \
+  -p 25:25 \
+  -p 465:465 \
+  -p 587:587 \
+  -p 2465:2465 \
+  -p 2587:2587 \
+  -e BYTESEND_BASE_URL="http://your-web-server:3000" \
+  -e SMTP_AUTH_USERNAME="bytesend" \
+  bytesend/smtp:latest
+```
+
+## SMTP Server Ports
+
+The SMTP server exposes the following ports:
+
+| Port | Protocol | Purpose |
+|------|----------|---------|
+| 25   | SMTP     | Unencrypted email submission |
+| 465  | SMTPS    | Implicit SSL/TLS |
+| 587  | Submission | STARTTLS |
+| 2465 | SMTPS    | Alternative implicit SSL/TLS |
+| 2587 | Submission | Alternative STARTTLS |
+
+## Workspace Respect
+
+Both Dockerfiles respect the pnpm monorepo structure by:
+
+1. Using `pnpm turbo prune` to optimize build layers
+2. Installing all workspace dependencies from `packages/*`
+3. Building only the necessary app while maintaining symlinks to shared packages
+4. Sharing a common base image layer for efficiency
+
+## Troubleshooting
+
+**SMTP server can't reach the web server:**
+- Ensure the `BYTESEND_BASE_URL` is set to the correct service name or IP
+- In Docker Compose, use `http://web:3000` for service-to-service communication
+- For external deployments, use the full URL of your web server
+
+**Database connection issues:**
+- Verify `DATABASE_URL` is correctly set
+- Ensure the database container is healthy before starting the web app
+- Check the `depends_on` condition in compose files
 
 ## Success
 
-You have now successfully set up useSend using Docker. You can start sending emails efficiently. If you encounter any issues or have further questions, please refer to the official useSend documentation or seek assistance from the community.
+You have now set up ByteSend with Docker. The web application listens on port 3000 and the SMTP server on ports 25/465/587/2465/2587. For more information, refer to the [ByteSend documentation](https://docs.bytesend.cloud).

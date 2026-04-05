@@ -1,9 +1,9 @@
 "use client";
 
-import { Editor } from "@usesend/email-editor";
-import { Spinner } from "@usesend/ui/src/spinner";
-import { Input } from "@usesend/ui/src/input";
-import { toast } from "@usesend/ui/src/toaster";
+import { Editor } from "@bytesend/email-editor";
+import { Spinner } from "@bytesend/ui/src/spinner";
+import { Input } from "@bytesend/ui/src/input";
+import { toast } from "@bytesend/ui/src/toaster";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";

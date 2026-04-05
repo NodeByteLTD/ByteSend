@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 
 import { Plus } from "lucide-react";
 import { useState } from "react";

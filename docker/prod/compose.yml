@@ -1,9 +1,9 @@
-name: usesend-prod
+name: bytesend-prod
 
 services:
   postgres:
     image: postgres:16
-    container_name: usesend-db-prod
+    container_name: bytesend-db-prod
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER:?err}
@@ -21,7 +21,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: usesend-redis-prod
+    container_name: bytesend-redis-prod
     restart: always
     # ports:
     #   - "6379:6379"
@@ -31,26 +31,26 @@ services:
 
   minio:
     image: minio/minio
-    container_name: usesend-storage-prod
+    container_name: bytesend-storage-prod
     ports:
       - 9002:9002
       - 9001:9001
     volumes:
       - storage:/data
     environment:
-      MINIO_ROOT_USER: unsend
+      MINIO_ROOT_USER: bytesend
       MINIO_ROOT_PASSWORD: password
     entrypoint: sh
-    command: -c 'mkdir -p /data/unsend && minio server /data --console-address ":9001" --address ":9002"'
+    command: -c 'mkdir -p /data/bytesend && minio server /data --console-address ":9001" --address ":9002"'
 
-  usesend:
-    image: usesend/usesend:latest
-    container_name: usesend
+  web:
+    image: bytesend/web:latest
+    container_name: bytesend-web
     restart: always
     ports:
-      - ${PORT:-3000}:${PORT:-3000}
+      - ${PORT:-3000}:3000
     environment:
-      - PORT=${PORT:-3000}
+      - PORT=3000
       - DATABASE_URL=${DATABASE_URL:?err}
       - NEXTAUTH_URL=${NEXTAUTH_URL:?err}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?err}
@@ -63,13 +63,31 @@ services:
       - REDIS_KEY_PREFIX=${REDIS_KEY_PREFIX:-}
       - NEXT_PUBLIC_IS_CLOUD=${NEXT_PUBLIC_IS_CLOUD:-false}
       - API_RATE_LIMIT=${API_RATE_LIMIT:-1}
-      - SMTP_HOST=${SMTP_HOST:-smtp.usesend.com}
-      - SMTP_USER=${SMTP_USER:-usesend}
+      - SMTP_HOST=${SMTP_HOST:-smtp.bytesend.cloud}
+      - SMTP_USER=${SMTP_USER:-noreply@bytesend.cloud}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
+
+  smtp:
+    image: bytesend/smtp:latest
+    container_name: bytesend-smtp
+    restart: always
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "2465:2465"
+      - "2587:2587"
+    environment:
+      - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-http://web:3000}
+      - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
+      - BYTESEND_API_KEY_PATH=${BYTESEND_API_KEY_PATH:-}
+      - BYTESEND_API_CERT_PATH=${BYTESEND_API_CERT_PATH:-}
+    depends_on:
+      - web
 
 volumes:
   database:

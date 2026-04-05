@@ -3,10 +3,10 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
-import { cn } from "@usesend/ui/lib/utils";
-import { Input } from "@usesend/ui/src/input";
-import { Button } from "@usesend/ui/src/button";
+} from "@bytesend/ui/src/popover";
+import { cn } from "@bytesend/ui/lib/utils";
+import { Input } from "@bytesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { SuggestionOptions } from "@tiptap/suggestion";
 import tippy, { GetReferenceClientRect } from "tippy.js";

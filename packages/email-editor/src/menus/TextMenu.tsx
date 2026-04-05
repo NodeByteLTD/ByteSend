@@ -21,13 +21,13 @@ import {
   UnderlineIcon,
 } from "lucide-react";
 import { TextMenuButton } from "./TextMenuButton";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
-import { Separator } from "@usesend/ui/src/separator";
+} from "@bytesend/ui/src/popover";
+import { Separator } from "@bytesend/ui/src/separator";
 import { useMemo, useState } from "react";
 import { LinkEditorPanel } from "../components/panels/LinkEditorPanel";
 // import { allowedLogoAlignment } from "../nodes/logo";

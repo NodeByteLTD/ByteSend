@@ -4,6 +4,6 @@ export default defineConfig({
   entry: ["index.ts"],
   format: ["esm", "cjs"],
   dts: true,
-  noExternal: ["@usesend/lib"],
+  noExternal: ["@bytesend/lib"],
   clean: true,
 });

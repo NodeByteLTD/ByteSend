@@ -13,15 +13,13 @@ RUN apk add --no-cache libc6-compat
 RUN apk update
 # Set working directory
 WORKDIR /app
-# Replace <your-major-version> with the major version installed in your repository. For example:
-# RUN yarn global add turbo@^2
+# Copy monorepo files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY ./apps/web ./apps/web
 COPY ./packages ./packages
 RUN pnpm add turbo@^2.5.2 -g
 
-# Generate a partial monorepo with a pruned lockfile for a target workspace.
-# Assuming "web" is the name entered in the project's package.json: { name: "web" }
+# Prune dependencies for web app to optimize layer caching
 RUN pnpm turbo prune web --docker
 
 # Add lockfile and package.json's of isolated subworkspace

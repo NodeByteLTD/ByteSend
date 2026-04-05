@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 import DeleteCampaign from "./delete-campaign";
 import DuplicateCampaign from "./duplicate-campaign";
 import TogglePauseCampaign from "./toggle-pause-campaign";
@@ -38,10 +38,10 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
   const pendingCount = campaign.total - campaign.sent;
 
   return (
-    <div className="border border-border rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-      {/* Header: Campaign name + status badge */}
-      <div className="flex items-center justify-between ">
-        <div className="w-1/3">
+    <div className="border border-border/60 rounded-xl p-4 hover:border-border transition-colors">
+      {/* Mobile: stacked */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        <div className="flex items-center justify-between">
           <Link
             href={
               campaign.status === CampaignStatus.DRAFT ||
@@ -49,55 +49,69 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
                 ? `/campaigns/${campaign.id}/edit`
                 : `/campaigns/${campaign.id}`
             }
+            className="text-sm font-medium underline decoration-dashed underline-offset-2 truncate"
           >
-            <div className="text-ellipsis text-sm font-medium underline decoration-dashed  underline-offset-2">
-              {campaign.name}
-            </div>
+            {campaign.name}
           </Link>
+          <CampaignStatusBadge status={campaign.status} />
+        </div>
 
-          <div className="text-sm font-mono  text-muted-foreground mt-2">
+        <div className="text-xs font-mono text-muted-foreground">
+          {campaign.status === CampaignStatus.SCHEDULED ? (
+            campaign.scheduledAt && (
+              <span>At <strong>{format(new Date(campaign.scheduledAt), "MMM do, hh:mm a")}</strong></span>
+            )
+          ) : campaign.status === CampaignStatus.SENT ? (
+            <span>Delivered <strong>{campaign.delivered}</strong> · Unsub <strong>{campaign.unsubscribed}</strong></span>
+          ) : (
+            <span>Sent <strong>{campaign.sent}</strong>{pendingCount > 0 && <> · Pending <strong>{pendingCount}</strong></>}</span>
+          )}
+        </div>
+
+        <TooltipProvider>
+          <div className="flex gap-3 items-center">
+            {(campaign.status === CampaignStatus.SCHEDULED ||
+              campaign.status === CampaignStatus.RUNNING ||
+              campaign.status === CampaignStatus.PAUSED) && (
+              <TogglePauseCampaign campaign={campaign} />
+            )}
+            <DuplicateCampaign campaign={campaign} />
+            <DeleteCampaign campaign={campaign} />
+          </div>
+        </TooltipProvider>
+      </div>
+
+      {/* Desktop: row */}
+      <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <Link
+            href={
+              campaign.status === CampaignStatus.DRAFT ||
+              campaign.status === CampaignStatus.SCHEDULED
+                ? `/campaigns/${campaign.id}/edit`
+                : `/campaigns/${campaign.id}`
+            }
+            className="text-sm font-medium underline decoration-dashed underline-offset-2"
+          >
+            {campaign.name}
+          </Link>
+          <div className="text-xs font-mono text-muted-foreground mt-1.5">
             {campaign.status === CampaignStatus.SCHEDULED ? (
               campaign.scheduledAt && (
-                <div className="">
-                  At{" "}
-                  <strong>
-                    {format(new Date(campaign.scheduledAt), "MMM do, hh:mm a")}
-                  </strong>
-                </div>
+                <span>At <strong>{format(new Date(campaign.scheduledAt), "MMM do, hh:mm a")}</strong></span>
               )
             ) : campaign.status === CampaignStatus.SENT ? (
-              <div className="flex items-center gap-2">
-                <span>
-                  Delivered <strong>{campaign.delivered},</strong>
-                </span>
-                {/* <span className="text-muted-foreground/50 text-opacity-20">
-                  |
-                </span> */}
-                <span>
-                  Unsubscribed <strong>{campaign.unsubscribed}</strong>
-                </span>
-              </div>
+              <span>Delivered <strong>{campaign.delivered}</strong> · Unsub <strong>{campaign.unsubscribed}</strong></span>
             ) : (
-              <div className="flex items-center gap-2">
-                <span>
-                  Sent <strong>{campaign.sent},</strong>
-                </span>
-
-                {pendingCount > 0 && (
-                  <span>
-                    Pending <strong>{pendingCount}</strong>
-                  </span>
-                )}
-              </div>
+              <span>Sent <strong>{campaign.sent}</strong>{pendingCount > 0 && <> · Pending <strong>{pendingCount}</strong></>}</span>
             )}
           </div>
         </div>
 
         <CampaignStatusBadge status={campaign.status} />
 
-        {/* Actions */}
         <TooltipProvider>
-          <div className="flex gap-4 items-center justify-end w-[150px]">
+          <div className="flex gap-3 items-center shrink-0">
             {(campaign.status === CampaignStatus.SCHEDULED ||
               campaign.status === CampaignStatus.RUNNING ||
               campaign.status === CampaignStatus.PAUSED) && (
@@ -108,9 +122,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent className="text-xs">
-                  {campaign.status === CampaignStatus.PAUSED
-                    ? "Resume campaign"
-                    : "Pause campaign"}
+                  {campaign.status === CampaignStatus.PAUSED ? "Resume campaign" : "Pause campaign"}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -120,9 +132,7 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
                   <DuplicateCampaign campaign={campaign} />
                 </span>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Duplicate campaign
-              </TooltipContent>
+              <TooltipContent className="text-xs">Duplicate</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -130,17 +140,11 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
                   <DeleteCampaign campaign={campaign} />
                 </span>
               </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Delete campaign
-              </TooltipContent>
+              <TooltipContent className="text-xs">Delete</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
       </div>
-
-      {/* Scheduled date for scheduled campaigns */}
-
-      {/* Mini stats */}
     </div>
   );
 }

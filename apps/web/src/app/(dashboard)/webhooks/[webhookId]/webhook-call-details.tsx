@@ -2,11 +2,11 @@
 
 import { formatDate } from "date-fns";
 import { RefreshCw } from "lucide-react";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { api } from "~/trpc/react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { WebhookCallStatusBadge } from "../webhook-call-status-badge";
-import { WEBHOOK_EVENT_VERSION } from "@usesend/lib/src/webhook/webhook-events";
+import { WEBHOOK_EVENT_VERSION } from "@bytesend/lib/src/webhook/webhook-events";
 
 import { CodeDisplay } from "~/components/code-display";
 

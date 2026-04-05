@@ -1,15 +1,15 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { api } from "~/trpc/react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { Copy, RotateCw } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 import { isSelfHosted } from "~/utils/common";
 
 export const ResendTeamInvite: React.FC<{

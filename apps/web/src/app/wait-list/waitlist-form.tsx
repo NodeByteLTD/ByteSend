@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Form,
   FormControl,
@@ -11,11 +11,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Input } from "@usesend/ui/src/input";
-import { Textarea } from "@usesend/ui/src/textarea";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import { Textarea } from "@bytesend/ui/src/textarea";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
 
 import {
   WAITLIST_EMAIL_TYPES,

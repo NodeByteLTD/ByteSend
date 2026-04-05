@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Form,
   FormControl,
@@ -12,19 +12,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Input } from "@usesend/ui/src/input";
-import { Switch } from "@usesend/ui/src/switch";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
-import { Badge } from "@usesend/ui/src/badge";
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import { Switch } from "@bytesend/ui/src/switch";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
+import { Badge } from "@bytesend/ui/src/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
+} from "@bytesend/ui/src/select";
 import { formatDistanceToNow } from "date-fns";
 
 import { api } from "~/trpc/react";
@@ -48,7 +48,7 @@ const updateSchema = z.object({
   apiRateLimit: z.coerce.number().int().min(1).max(10_000),
   dailyEmailLimit: z.coerce.number().int().min(0).max(10_000_000),
   isBlocked: z.boolean(),
-  plan: z.enum(["FREE", "BASIC"]),
+  plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
 });
 
 type UpdateInput = z.infer<typeof updateSchema>;
@@ -315,7 +315,10 @@ export default function AdminTeamsPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="FREE">Free</SelectItem>
-                            <SelectItem value="BASIC">Basic</SelectItem>
+                            <SelectItem value="HOBBY">Hobby</SelectItem>
+                            <SelectItem value="LITE">Lite</SelectItem>
+                            <SelectItem value="BASIC">Professional</SelectItem>
+                            <SelectItem value="LIFETIME">Lifetime</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>

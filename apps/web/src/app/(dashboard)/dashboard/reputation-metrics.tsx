@@ -3,7 +3,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 import {
   CheckCircle2,
   CheckCircle2Icon,

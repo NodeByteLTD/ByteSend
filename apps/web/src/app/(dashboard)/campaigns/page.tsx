@@ -2,7 +2,7 @@
 
 import CampaignList from "./campaign-list";
 import CreateCampaign from "./create-campaign";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function ContactsPage() {
   return (

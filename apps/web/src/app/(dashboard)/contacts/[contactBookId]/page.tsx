@@ -8,7 +8,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@usesend/ui/src/breadcrumb";
+} from "@bytesend/ui/src/breadcrumb";
 import Link from "next/link";
 import AddContact from "./add-contact";
 import BulkUploadContacts from "./bulk-upload-contacts";
@@ -19,14 +19,14 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
-import { Button } from "@usesend/ui/src/button";
-import { Switch } from "@usesend/ui/src/switch";
-import { useTheme } from "@usesend/ui";
+} from "@bytesend/ui/src/popover";
+import { Button } from "@bytesend/ui/src/button";
+import { Switch } from "@bytesend/ui/src/switch";
+import { useTheme } from "@bytesend/ui";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@usesend/ui/src/card";
-import { TextWithCopyButton } from "@usesend/ui/src/text-with-copy";
+import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
+import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
 import {
   Users,
   MailX,

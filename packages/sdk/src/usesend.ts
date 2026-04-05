@@ -7,9 +7,9 @@ import { Campaigns } from "./campaign";
 import { Analytics } from "./analytics";
 import { Webhooks } from "./webhooks";
 
-const defaultBaseUrl = "https://app.usesend.com";
+const defaultBaseUrl = "https://app.bytesend.cloud";
 // eslint-disable-next-line turbo/no-undeclared-env-vars
-const baseUrl = `${process?.env?.USESEND_BASE_URL ?? process?.env?.UNSEND_BASE_URL ?? defaultBaseUrl}/api/v1`;
+const baseUrl = `${process?.env?.BYTESEND_BASE_URL ?? process?.env?.USESEND_BASE_URL ?? process?.env?.UNSEND_BASE_URL ?? defaultBaseUrl}/api/v1`;
 
 function isUseSendErrorResponse(error: { error: ErrorResponse }) {
   return error.error.code !== undefined;
@@ -36,7 +36,7 @@ export class UseSend {
   ) {
     if (!key) {
       if (typeof process !== "undefined" && process.env) {
-        this.key = process.env.USESEND_API_KEY ?? process.env.UNSEND_API_KEY;
+        this.key = process.env.BYTESEND_API_KEY ?? process.env.USESEND_API_KEY ?? process.env.UNSEND_API_KEY;
       }
 
       if (!this.key) {

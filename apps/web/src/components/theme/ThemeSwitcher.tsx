@@ -1,5 +1,5 @@
-import { cn, useTheme } from "@usesend/ui";
-import { Button } from "@usesend/ui/src/button";
+import { cn, useTheme } from "@bytesend/ui";
+import { Button } from "@bytesend/ui/src/button";
 import { Monitor, Sun, Moon, SunMoonIcon } from "lucide-react";
 
 export const ThemeSwitcher = () => {

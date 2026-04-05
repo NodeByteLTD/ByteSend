@@ -7,10 +7,10 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { api } from "~/trpc/react";
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
 import { formatDistanceToNow } from "date-fns";
 import { Role } from "@prisma/client";
 import { EditTeamMember } from "./edit-team-member";

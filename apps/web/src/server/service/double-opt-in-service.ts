@@ -1,6 +1,6 @@
 import { DomainStatus } from "@prisma/client";
 import { createHash, timingSafeEqual } from "crypto";
-import { EmailRenderer } from "@usesend/email-editor/src/renderer";
+import { EmailRenderer } from "@bytesend/email-editor/src/renderer";
 import { env } from "~/env";
 import {
   DEFAULT_DOUBLE_OPT_IN_CONTENT,

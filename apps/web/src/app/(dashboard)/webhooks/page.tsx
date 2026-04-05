@@ -1,6 +1,6 @@
 "use client";
 
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 import { AddWebhook } from "./add-webhook";
 import { WebhookList } from "./webhook-list";
 

@@ -1,5 +1,5 @@
 {
-  "extends": "@usesend/typescript-config/base.json",
+  "extends": "@bytesend/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "dist"
   },

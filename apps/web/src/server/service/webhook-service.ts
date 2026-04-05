@@ -8,7 +8,7 @@ import {
   type WebhookEvent,
   type WebhookEventPayloadMap,
   type WebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import { db } from "../db";
 import { getRedis, BULL_PREFIX, redisKey } from "../redis";
 import {

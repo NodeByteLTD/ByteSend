@@ -41,7 +41,7 @@ vi.mock("~/server/service/domain-service", () => ({
   validateDomainFromEmail: mockValidateDomainFromEmail,
 }));
 
-vi.mock("@usesend/email-editor/src/renderer", () => ({
+vi.mock("@bytesend/email-editor/src/renderer", () => ({
   EmailRenderer: vi.fn().mockImplementation(() => ({
     render: mockRendererRender,
   })),

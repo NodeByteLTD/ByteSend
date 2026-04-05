@@ -41,7 +41,7 @@ Double opt-in requires new contacts to confirm their email address before they b
 
 ### Via the dashboard
 
-1. Go to [Contacts](https://app.usesend.com/contacts) and select a contact book
+1. Go to [Contacts](https://app.bytesend.cloud/contacts) and select a contact book
 2. Click on the **Double Opt-In** tab
 3. Toggle double opt-in on
 4. Customize the confirmation email (optional)
@@ -52,7 +52,7 @@ Double opt-in requires new contacts to confirm their email address before they b
 Create a contact book with double opt-in enabled:
 
 ```bash
-curl -X POST https://app.usesend.com/api/v1/contactBooks \
+curl -X POST https://app.bytesend.cloud/api/v1/contactBooks \
   -H "Authorization: Bearer us_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,7 +66,7 @@ curl -X POST https://app.usesend.com/api/v1/contactBooks \
 Or enable it on an existing contact book:
 
 ```bash
-curl -X PATCH https://app.usesend.com/api/v1/contactBooks/{contactBookId} \
+curl -X PATCH https://app.bytesend.cloud/api/v1/contactBooks/{contactBookId} \
   -H "Authorization: Bearer us_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{

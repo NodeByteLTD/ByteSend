@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
 import Image from "next/image";
 import { useState } from "react";
 import { ClientSafeProvider, LiteralUnion, signIn } from "next-auth/react";
 import { BuiltInProviderType } from "next-auth/providers/index";
-import Spinner from "@usesend/ui/src/spinner";
+import Spinner from "@bytesend/ui/src/spinner";
 import Link from "next/link";
 import { useSearchParams as useNextSearchParams } from "next/navigation";
 

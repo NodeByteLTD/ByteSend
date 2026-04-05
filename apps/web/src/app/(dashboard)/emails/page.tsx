@@ -1,7 +1,7 @@
 "use client";
 
 import EmailList from "./email-list";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function EmailsPage() {
   return (

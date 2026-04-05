@@ -1,10 +1,10 @@
 "use client";
 
 import { api } from "~/trpc/react";
-import { Spinner } from "@usesend/ui/src/spinner";
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
-import { Editor } from "@usesend/email-editor";
+import { Spinner } from "@bytesend/ui/src/spinner";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
+import { Editor } from "@bytesend/email-editor";
 import { use, useMemo, useState } from "react";
 import { Campaign } from "@prisma/client";
 import {
@@ -12,7 +12,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@usesend/ui/src/select";
+} from "@bytesend/ui/src/select";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,8 +31,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/form";
+import { toast } from "@bytesend/ui/src/toaster";
 import { useDebouncedCallback } from "use-debounce";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -40,7 +40,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@usesend/ui/src/accordion";
+} from "@bytesend/ui/src/accordion";
 import ScheduleCampaign from "../../schedule-campaign";
 import { useRouter } from "next/navigation";
 

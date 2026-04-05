@@ -9,7 +9,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@usesend/ui/src/breadcrumb";
+} from "@bytesend/ui/src/breadcrumb";
 import { DomainStatusBadge } from "../domain-badge";
 import {
   Table,
@@ -18,15 +18,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
-import { TextWithCopyButton } from "@usesend/ui/src/text-with-copy";
+} from "@bytesend/ui/src/table";
+import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
 import React, { use } from "react";
-import { Switch } from "@usesend/ui/src/switch";
+import { Switch } from "@bytesend/ui/src/switch";
 import DeleteDomain from "./delete-domain";
 import SendTestMail from "./send-test-mail";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import Link from "next/link";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "~/server/api/root";
 

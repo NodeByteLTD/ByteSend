@@ -7,7 +7,7 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { api } from "~/trpc/react";
 import {
   Mail,
@@ -24,34 +24,33 @@ import { EmailStatusBadge } from "./email-status-badge";
 import EmailDetails from "./email-details";
 import dynamic from "next/dynamic";
 import { useUrlState } from "~/hooks/useUrlState";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@usesend/ui/src/select";
-import Spinner from "@usesend/ui/src/spinner";
+} from "@bytesend/ui/src/select";
+import Spinner from "@bytesend/ui/src/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
-import { Input } from "@usesend/ui/src/input";
+} from "@bytesend/ui/src/tooltip";
+import { Input } from "@bytesend/ui/src/input";
 import { DEFAULT_QUERY_LIMIT } from "~/lib/constants";
 import { useDebouncedCallback } from "use-debounce";
 import { useState } from "react";
-import { SheetTitle, SheetDescription } from "@usesend/ui/src/sheet";
+import { SheetTitle, SheetDescription } from "@bytesend/ui/src/sheet";
 
-/* Stupid hydrating error. And I so stupid to understand the stupid NextJS docs */
 const DynamicSheetWithNoSSR = dynamic(
-  () => import("@usesend/ui/src/sheet").then((mod) => mod.Sheet),
+  () => import("@bytesend/ui/src/sheet").then((mod) => mod.Sheet),
   { ssr: false },
 );
 
 const DynamicSheetContentWithNoSSR = dynamic(
-  () => import("@usesend/ui/src/sheet").then((mod) => mod.SheetContent),
+  () => import("@bytesend/ui/src/sheet").then((mod) => mod.SheetContent),
   { ssr: false },
 );
 
@@ -163,11 +162,11 @@ export default function EmailsList() {
   };
 
   return (
-    <div className="mt-10 flex flex-col gap-4">
-      <div className="flex flex-col  sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <Input
           placeholder="Search by subject or email"
-          className="w-full sm:w-[350px] sm:mr-4"
+          className="w-full sm:w-72"
           defaultValue={search ?? ""}
           onChange={(e) => debouncedSearch(e.target.value)}
         />

@@ -1,4 +1,4 @@
-import { CodeBlock } from "@usesend/ui/src/code-block";
+import { CodeBlock } from "@bytesend/ui/src/code-block";
 
 interface WebhookPayloadDisplayProps {
   payload: string;

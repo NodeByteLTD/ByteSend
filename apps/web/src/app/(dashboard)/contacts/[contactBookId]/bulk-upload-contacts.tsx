@@ -11,11 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
-import { Button } from "@usesend/ui/src/button";
-import { Label } from "@usesend/ui/src/label";
-import { Textarea } from "@usesend/ui/src/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@usesend/ui/src/tabs";
+} from "@bytesend/ui/src/dialog";
+import { Button } from "@bytesend/ui/src/button";
+import { Label } from "@bytesend/ui/src/label";
+import { Textarea } from "@bytesend/ui/src/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@bytesend/ui/src/tabs";
 import {
   Table,
   TableBody,
@@ -23,9 +23,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { Upload, FileText, Check, X } from "lucide-react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 
 interface BulkUploadContactsProps {
   contactBookId: string;

@@ -9,14 +9,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
+} from "@bytesend/ui/src/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "~/trpc/react";
-import { Input } from "@usesend/ui/src/input";
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
+import { Input } from "@bytesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
 import { isLocalhost } from "~/utils/client";
 
 const FormSchema = z.object({

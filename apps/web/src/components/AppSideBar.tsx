@@ -46,14 +46,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@usesend/ui/src/sidebar";
+} from "@bytesend/ui/src/sidebar";
 import Link from "next/link";
 import { MiniThemeSwitcher, ThemeSwitcher } from "./theme/ThemeSwitcher";
 import { useSession } from "next-auth/react";
 import { isCloud, isSelfHosted } from "~/utils/common";
 import { usePathname } from "next/navigation";
-import { Badge } from "@usesend/ui/src/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@usesend/ui/src/avatar";
+import { Badge } from "@bytesend/ui/src/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@bytesend/ui/src/avatar";
 import Image from "next/image";
 import {
   DropdownMenu,
@@ -63,7 +63,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@usesend/ui/src/dropdown-menu";
+} from "@bytesend/ui/src/dropdown-menu";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { env } from "~/env";
 
@@ -146,12 +146,12 @@ export function AppSidebar() {
             height={28}
             className="rounded-md shrink-0"
           />
-          <span className="font-semibold text-[15px] tracking-tight text-sidebar-foreground">
+          <span className="font-semibold text-[15px] tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             ByteSend
           </span>
           <Badge
             variant="outline"
-            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-muted-foreground border-border/60"
+            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-muted-foreground border-border/60 group-data-[collapsible=icon]:hidden"
           >
             Beta
           </Badge>

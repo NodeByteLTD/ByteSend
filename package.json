@@ -1,5 +1,6 @@
 {
   "name": "bytesend",
+  "license": "AGPL-3.0-only",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -32,6 +33,10 @@
     "db:studio": "pnpm db db:studio",
     "db": "pnpm load-env -- pnpm --filter=web",
     "load-env": "dotenv -e .env",
+    "stripe:seed": "pnpm load-env -- tsx scripts/stripe-seed.ts",
+    "stripe:seed:dev": "pnpm load-env -- tsx scripts/stripe-seed.ts dev",
+    "stripe:seed:staging": "pnpm load-env -- tsx scripts/stripe-seed.ts staging",
+    "stripe:seed:prod": "pnpm load-env -- tsx scripts/stripe-seed.ts production",
     "d": "pnpm dx && pnpm dev",
     "dx": "pnpm i && pnpm dx:up && pnpm db:migrate-dev",
     "dx:up": "docker compose -f docker/dev/compose.yml up -d",
@@ -42,7 +47,9 @@
     "@bytesend/typescript-config": "workspace:*",
     "dotenv-cli": "^8.0.0",
     "mintlify": "latest",
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "stripe": "^17.7.0",
+    "tsx": "^4.19.2"
   },
   "packageManager": "pnpm@8.9.0",
   "engines": {

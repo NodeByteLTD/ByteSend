@@ -80,9 +80,11 @@ function Slider({
 }
 
 export function PricingCalculator() {
-  const MARKETING_RATE = 0.001;
-  const TRANSACTIONAL_RATE = 0.0004;
-  const MINIMUM_SPEND = 5;
+  // Rates are defined in the ByteSend Stripe lib
+  // See: packages/lib/src/stripe/plans.ts (BASIC plan usageMetering)
+  const MARKETING_RATE = 0.001;      // $0.001 per marketing email
+  const TRANSACTIONAL_RATE = 0.0004; // $0.0004 per transactional email
+  const BASE_MONTHLY = 5;             // $5/month minimum for BASIC plan
 
   const [marketing, setMarketing] = React.useState<number>(5000);
   const [transactional, setTransactional] = React.useState<number>(12500);
@@ -90,7 +92,7 @@ export function PricingCalculator() {
   const marketingCost = marketing * MARKETING_RATE;
   const transactionalCost = transactional * TRANSACTIONAL_RATE;
   const subtotal = marketingCost + transactionalCost;
-  const totalDue = Math.max(subtotal, MINIMUM_SPEND);
+  const totalDue = Math.max(subtotal, BASE_MONTHLY);
 
   return (
     <div className="rounded-[18px] bg-primary/20 p-1">
@@ -146,7 +148,7 @@ export function PricingCalculator() {
                 <div className="text-xs text-muted-foreground">Estimated Total</div>
                 <div className="text-3xl text-primary font-semibold">${totalDue.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">
-                  {subtotal < MINIMUM_SPEND ? "Minimum $5 applies" : "before taxes"}
+                  {subtotal < BASE_MONTHLY ? `Minimum $${BASE_MONTHLY} applies` : "before taxes"}
                 </div>
               </div>
             </div>

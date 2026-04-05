@@ -13,14 +13,29 @@ import {
 import {
   createCheckoutSessionForTeam,
   getManageSessionUrl,
+  type CheckoutPlan,
 } from "~/server/billing/payments";
 import { db } from "~/server/db";
 import { TeamService } from "~/server/service/team-service";
 
+const checkoutPlanSchema = z.enum(["LITE", "HOBBY", "BASIC", "LIFETIME"]);
+
 export const billingRouter = createTRPCRouter({
-  createCheckoutSession: teamAdminProcedure.mutation(async ({ ctx }) => {
-    return (await createCheckoutSessionForTeam(ctx.team.id)).url;
-  }),
+  createCheckoutSession: teamAdminProcedure
+    .input(
+      z
+        .object({ plan: checkoutPlanSchema })
+        .optional()
+        .default({ plan: "BASIC" })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return (
+        await createCheckoutSessionForTeam(
+          ctx.team.id,
+          input.plan as CheckoutPlan
+        )
+      ).url;
+    }),
 
   getManageSessionUrl: teamAdminProcedure.mutation(async ({ ctx }) => {
     return await getManageSessionUrl(ctx.team.id);

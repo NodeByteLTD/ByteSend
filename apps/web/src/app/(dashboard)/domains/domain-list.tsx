@@ -3,34 +3,32 @@
 import { Domain } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { Switch } from "@usesend/ui/src/switch";
+import { Switch } from "@bytesend/ui/src/switch";
 import { api } from "~/trpc/react";
 import React from "react";
 import { StatusIndicator } from "./status-indicator";
 import { DomainStatusBadge } from "./domain-badge";
-import Spinner from "@usesend/ui/src/spinner";
+import Spinner from "@bytesend/ui/src/spinner";
 
 export default function DomainsList() {
   const domainsQuery = api.domain.domains.useQuery();
 
   return (
-    <div className="mt-10">
-      <div className="flex flex-col gap-6">
-        {domainsQuery.isLoading ? (
-          <div className="flex justify-center mt-10">
-            <Spinner
-              className="w-6 h-6 mx-auto"
-              innerSvgClass="stroke-primary"
-            />
-          </div>
-        ) : domainsQuery.data?.length ? (
-          domainsQuery.data?.map((domain) => (
-            <DomainItem key={domain.id} domain={domain} />
-          ))
-        ) : (
-          <div className="text-center mt-20">No domains Added</div>
-        )}
-      </div>
+    <div className="flex flex-col gap-4">
+      {domainsQuery.isLoading ? (
+        <div className="flex justify-center py-16">
+          <Spinner
+            className="w-6 h-6 mx-auto"
+            innerSvgClass="stroke-primary"
+          />
+        </div>
+      ) : domainsQuery.data?.length ? (
+        domainsQuery.data?.map((domain) => (
+          <DomainItem key={domain.id} domain={domain} />
+        ))
+      ) : (
+        <div className="text-center py-16 text-muted-foreground">No domains added</div>
+      )}
     </div>
   );
 }
@@ -69,51 +67,87 @@ const DomainItem: React.FC<{ domain: Domain }> = ({ domain }) => {
   }
 
   return (
-    <div key={domain.id}>
-      <div className=" pr-8 border rounded-lg flex items-stretch shadow">
+    <div className="border border-border/60 rounded-xl overflow-hidden hover:border-border transition-colors">
+      <div className="flex items-stretch">
         <StatusIndicator status={domain.status} />
-        <div className="flex justify-between w-full pl-8 py-4">
-          <div className="flex flex-col gap-4 w-1/5">
-            <Link
-              href={`/domains/${domain.id}`}
-              className="text-lg font-medium underline underline-offset-4 decoration-dashed"
-            >
-              {domain.name}
-            </Link>
-            <DomainStatusBadge status={domain.status} />
+        <div className="flex-1 p-4 sm:p-5">
+          {/* Mobile: stacked layout */}
+          <div className="flex flex-col gap-4 sm:hidden">
+            <div className="flex items-center justify-between">
+              <Link
+                href={`/domains/${domain.id}`}
+                className="text-sm font-medium underline underline-offset-4 decoration-dashed truncate"
+              >
+                {domain.name}
+              </Link>
+              <DomainStatusBadge status={domain.status} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Created</p>
+                <p>{formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Region</p>
+                <p>{domain.region}</p>
+              </div>
+            </div>
+            <div className="flex gap-5">
+              <label className="flex items-center gap-2 text-sm">
+                <Switch
+                  checked={clickTracking}
+                  onCheckedChange={handleClickTrackingChange}
+                  className="data-[state=checked]:bg-success"
+                />
+                Click
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch
+                  checked={openTracking}
+                  onCheckedChange={handleOpenTrackingChange}
+                  className="data-[state=checked]:bg-success"
+                />
+                Open
+              </label>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Created at</p>
-              <p className="text-sm">
-                {formatDistanceToNow(new Date(domain.createdAt), {
-                  addSuffix: true,
-                })}
-              </p>
+          {/* Desktop: row layout */}
+          <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex flex-col gap-1.5 min-w-0 flex-shrink">
+              <Link
+                href={`/domains/${domain.id}`}
+                className="text-sm font-medium underline underline-offset-4 decoration-dashed truncate"
+              >
+                {domain.name}
+              </Link>
+              <DomainStatusBadge status={domain.status} />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Region</p>
-
-              <p className="text-sm flex items-center gap-2">{domain.region}</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-6">
-            <div className="flex gap-2 items-center">
-              <p className="text-sm">Click tracking</p>
-              <Switch
-                checked={clickTracking}
-                onCheckedChange={handleClickTrackingChange}
-                className="data-[state=checked]:bg-success"
-              />
-            </div>
-            <div className="flex gap-2 items-center">
-              <p className="text-sm">Open tracking</p>
-              <Switch
-                checked={openTracking}
-                onCheckedChange={handleOpenTrackingChange}
-                className="data-[state=checked]:bg-success"
-              />
+            <div className="flex items-center gap-8 shrink-0 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Created</p>
+                <p>{formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Region</p>
+                <p>{domain.region}</p>
+              </div>
+              <label className="flex items-center gap-2">
+                <Switch
+                  checked={clickTracking}
+                  onCheckedChange={handleClickTrackingChange}
+                  className="data-[state=checked]:bg-success"
+                />
+                <span className="text-xs text-muted-foreground">Click</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <Switch
+                  checked={openTracking}
+                  onCheckedChange={handleOpenTrackingChange}
+                  className="data-[state=checked]:bg-success"
+                />
+                <span className="text-xs text-muted-foreground">Open</span>
+              </label>
             </div>
           </div>
         </div>

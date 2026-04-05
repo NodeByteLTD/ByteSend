@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import { EmailRenderer } from "@usesend/email-editor/src/renderer";
+import { EmailRenderer } from "@bytesend/email-editor/src/renderer";
 import { z } from "zod";
 import { env } from "~/env";
 import {

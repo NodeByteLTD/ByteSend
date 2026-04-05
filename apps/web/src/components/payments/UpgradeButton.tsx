@@ -1,5 +1,5 @@
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
 import { api } from "~/trpc/react";
 
 export const UpgradeButton = () => {

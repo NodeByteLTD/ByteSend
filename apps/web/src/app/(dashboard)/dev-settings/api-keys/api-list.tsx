@@ -7,15 +7,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "~/trpc/react";
 import DeleteApiKey from "./delete-api-key";
 import { EditApiKeyDialog } from "./edit-api-key";
-import Spinner from "@usesend/ui/src/spinner";
+import Spinner from "@bytesend/ui/src/spinner";
 import { useState } from "react";
 import { Edit3 } from "lucide-react";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 
 export default function ApiList() {
   const apiKeysQuery = api.apiKey.getApiKeys.useQuery();

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, teamProcedure } from "~/server/api/trpc";
 import { WebhookCallStatus, WebhookStatus } from "@prisma/client";
-import { WebhookEvents } from "@usesend/lib/src/webhook/webhook-events";
+import { WebhookEvents } from "@bytesend/lib/src/webhook/webhook-events";
 import { WebhookService } from "~/server/service/webhook-service";
 
 const EVENT_TYPES_ENUM = z.enum(WebhookEvents);

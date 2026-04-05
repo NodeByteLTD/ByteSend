@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Form,
   FormControl,
@@ -20,10 +20,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
+} from "@bytesend/ui/src/form";
 import { api } from "~/trpc/react";
 import { useForm } from "react-hook-form";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { ChevronDown, Plus } from "lucide-react";
 import {
   ContactEvents,
@@ -31,13 +31,13 @@ import {
   EmailEvents,
   WebhookEvents,
   type WebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@usesend/ui/src/dropdown-menu";
+} from "@bytesend/ui/src/dropdown-menu";
 import { LimitReason } from "~/lib/constants/plans";
 import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 

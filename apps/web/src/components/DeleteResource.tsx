@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 
 import {
   Form,
@@ -19,11 +19,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
+} from "@bytesend/ui/src/form";
 
 import { Copy, Check } from "lucide-react";
 import React, { useState, type ReactNode } from "react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { z } from "zod";
 import { useForm, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

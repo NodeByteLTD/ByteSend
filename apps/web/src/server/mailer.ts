@@ -1,5 +1,5 @@
 import { env } from "~/env";
-import { UseSend } from "usesend-js";
+import { UseSend } from "bytesend-js";
 import { isSelfHosted } from "~/utils/common";
 import { db } from "./db";
 import { getDomains } from "./service/domain-service";
@@ -7,13 +7,13 @@ import { sendEmail } from "./service/email-service";
 import { logger } from "./logger/log";
 import { renderOtpEmail, renderTeamInviteEmail } from "./email-templates";
 
-let usesend: UseSend | undefined;
+let bytesend: UseSend | undefined;
 
 const getClient = () => {
-  if (!usesend) {
-    usesend = new UseSend(env.USESEND_API_KEY ?? env.UNSEND_API_KEY);
+  if (!bytesend) {
+    bytesend = new UseSend(env.USESEND_API_KEY ?? env.UNSEND_API_KEY);
   }
-  return usesend;
+  return bytesend;
 };
 
 export async function sendSignUpEmail(
@@ -146,12 +146,12 @@ export async function sendMail(
     });
 
     if (resp.data) {
-      logger.info("Email sent using usesend");
+      logger.info("Email sent using bytesend");
       return;
     } else {
       logger.error(
         { code: resp.error?.code, message: resp.error?.message },
-        "Error sending email using usesend"
+        "Error sending email using bytesend"
       );
     }
   } else {

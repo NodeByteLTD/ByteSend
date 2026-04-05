@@ -5,9 +5,9 @@ import AddSuppressionDialog from "./add-suppression";
 import BulkAddSuppressionsDialog from "./bulk-add-suppressions";
 import SuppressionList from "./suppression-list";
 import SuppressionStats from "./suppression-stats";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { Plus, Upload } from "lucide-react";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function SuppressionsPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);

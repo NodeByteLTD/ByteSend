@@ -6,8 +6,8 @@ icon: golang
 
 ## Prerequisites
 
-- [useSend API key](https://app.usesend.com/dev-settings/api-keys)
-- [Verified domain](https://app.usesend.com/domains)
+- [ByteSend API key](https://app.bytesend.cloud/dev-settings/api-keys)
+- [Verified domain](https://app.bytesend.cloud/domains)
 
 ## Installation
 
@@ -45,7 +45,7 @@ If you are running a self-hosted version of useSend, provide the base URL using 
 ```go
 client, err := usesend.NewClient(
     "us_12345",
-    usesend.WithBaseURL("https://app.usesend.com"),
+    usesend.WithBaseURL("https://app.bytesend.cloud"),
 )
 if err != nil {
     log.Fatal(err)

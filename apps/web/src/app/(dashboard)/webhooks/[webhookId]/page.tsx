@@ -10,8 +10,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@usesend/ui/src/breadcrumb";
-import { Button } from "@usesend/ui/src/button";
+} from "@bytesend/ui/src/breadcrumb";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Edit3,
   Key,
@@ -21,7 +21,7 @@ import {
   TestTube,
   CircleEllipsis,
 } from "lucide-react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 import { WebhookInfo } from "./webhook-info";
 import { WebhookCallsTable } from "./webhook-calls-table";
 import { WebhookCallDetails } from "./webhook-call-details";
@@ -31,7 +31,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@usesend/ui/src/popover";
+} from "@bytesend/ui/src/popover";
 import { type Webhook } from "@prisma/client";
 
 function WebhookDetailActions({

@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-} from "@usesend/ui/src/select";
-import Spinner from "@usesend/ui/src/spinner";
+} from "@bytesend/ui/src/select";
+import Spinner from "@bytesend/ui/src/spinner";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
+} from "@bytesend/ui/src/table";
 import { formatDistanceToNow } from "date-fns";
 import Image from "next/image";
 import { useUrlState } from "~/hooks/useUrlState";
@@ -24,7 +24,7 @@ import { getGravatarUrl } from "~/utils/gravatar-utils";
 import DeleteContact from "./delete-contact";
 import EditContact from "./edit-contact";
 import { ResendDoubleOptInConfirmation } from "./resend-double-opt-in-confirmation";
-import { Input } from "@usesend/ui/src/input";
+import { Input } from "@bytesend/ui/src/input";
 import { useDebouncedCallback } from "use-debounce";
 import { getContactPropertyValue } from "~/lib/contact-properties";
 import {
@@ -32,7 +32,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 import { UnsubscribeReason } from "@prisma/client";
 import { Download } from "lucide-react";
 

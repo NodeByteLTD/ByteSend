@@ -5,61 +5,59 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@usesend/ui/src/card";
-import { TextWithCopyButton } from "@usesend/ui/src/text-with-copy";
+} from "@bytesend/ui/src/card";
+import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
 import { env } from "~/env";
 
 export const dynamic = "force-dynamic";
 
-export default function ExampleCard() {
-  const host = env.SMTP_HOST;
-  const user = env.SMTP_USER;
+const SMTP_FIELDS = [
+  { label: "Host", key: "host" },
+  { label: "Port", key: "port", hint: "For encrypted/TLS connections use 2465, 587, or 2587" },
+  { label: "Username", key: "user" },
+  { label: "Password", key: "password", hint: "Use any of your API keys as the password" },
+] as const;
+
+export default function SmtpPage() {
+  const values: Record<string, string> = {
+    host: env.SMTP_HOST,
+    port: "465",
+    user: env.SMTP_USER,
+    password: "YOUR_API_KEY",
+  };
 
   return (
-    <Card className="mt-9 max-w-xl">
+    <Card className="max-w-2xl border-border/50">
       <CardHeader>
-        <CardTitle>SMTP</CardTitle>
+        <CardTitle className="text-base">SMTP credentials</CardTitle>
         <CardDescription>
-          Send emails using SMTP instead of the REST API. See documentation for
-          more information.
+          Send emails using SMTP instead of the REST API.{" "}
+          <a
+            href="https://docs.bytesend.cloud/get-started/smtp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Learn more
+          </a>
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <div>
-            <strong>Host:</strong>
-            <TextWithCopyButton
-              className="ml-1 border bg-primary/10  rounded-lg mt-1 p-2 w-full "
-              value={host}
-            ></TextWithCopyButton>
-          </div>
-          <div>
-            <strong>Port:</strong>
-            <TextWithCopyButton
-              className="ml-1 rounded-lg mt-1 p-2 w-full bg-primary/10 font-mono"
-              value={"465"}
-            ></TextWithCopyButton>
-            <p className="ml-1 mt-1 text-zinc-500 text-sm ">
-              For encrypted/TLS connections use{" "}
-              <strong className="font-mono">2465</strong>,{" "}
-              <strong className="font-mono">587</strong> or{" "}
-              <strong className="font-mono">2587</strong>
-            </p>
-          </div>
-          <div>
-            <strong>User:</strong>
-            <TextWithCopyButton
-              className="ml-1 rounded-lg mt-1 p-2 w-full bg-primary/10"
-              value={user}
-            ></TextWithCopyButton>
-          </div>
-          <div>
-            <strong>Password:</strong>
-            <TextWithCopyButton
-              className="ml-1 rounded-lg mt-1 p-2 w-full bg-primary/10"
-              value={"YOUR_API_KEY"}
-            ></TextWithCopyButton>
-          </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {SMTP_FIELDS.map((field) => (
+            <div key={field.key}>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {field.label}
+              </label>
+              <TextWithCopyButton
+                className="mt-1.5 rounded-lg p-2.5 w-full bg-muted/50 border border-border/50 font-mono text-sm"
+                value={values[field.key]!}
+              />
+              {field.hint && (
+                <p className="mt-1.5 text-xs text-muted-foreground">{field.hint}</p>
+              )}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

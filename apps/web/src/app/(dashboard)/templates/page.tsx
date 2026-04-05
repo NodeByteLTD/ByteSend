@@ -2,7 +2,7 @@
 
 import TemplateList from "./template-list";
 import CreateTemplate from "./create-template";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function TemplatesPage() {
   return (

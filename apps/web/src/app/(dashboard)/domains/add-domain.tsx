@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
-import { Input } from "@usesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
+import { Input } from "@bytesend/ui/src/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Form,
   FormControl,
@@ -17,7 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
+} from "@bytesend/ui/src/form";
 
 import { api } from "~/trpc/react";
 import { useEffect, useState } from "react";
@@ -33,8 +33,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/select";
+import { toast } from "@bytesend/ui/src/toaster";
 import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { LimitReason } from "~/lib/constants/plans";
 

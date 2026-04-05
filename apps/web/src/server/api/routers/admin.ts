@@ -8,7 +8,7 @@ import { getAccount } from "~/server/aws/ses";
 import { db } from "~/server/db";
 import { sendMail } from "~/server/mailer";
 import { logger } from "~/server/logger/log";
-import { UseSend } from "usesend-js";
+import { UseSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
 
@@ -386,7 +386,7 @@ export const adminRouter = createTRPCRouter({
         apiRateLimit: z.number().int().min(1).max(10_000),
         dailyEmailLimit: z.number().int().min(0).max(10_000_000),
         isBlocked: z.boolean(),
-        plan: z.enum(["FREE", "BASIC"]),
+        plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
       }),
     )
     .mutation(async ({ input }) => {

@@ -14,9 +14,14 @@ export default function ApiKeysPage({
   const { currentIsAdmin } = useTeam();
 
   return (
-    <div>
-      <h1 className="font-bold text-lg">Settings</h1>
-      <div className="flex gap-4 mt-4">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Usage, billing, and team management
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-1 border-b border-border/60">
         {isCloud() ? (
           <SettingsNavButton href="/settings">Usage</SettingsNavButton>
         ) : null}
@@ -27,7 +32,7 @@ export default function ApiKeysPage({
         ) : null}
         <SettingsNavButton href="/settings/team">Team</SettingsNavButton>
       </div>
-      <div className="mt-8">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }

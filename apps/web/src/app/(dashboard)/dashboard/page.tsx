@@ -2,7 +2,7 @@
 
 import EmailChart from "./email-chart";
 import DashboardFilters from "./dashboard-filters";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 import { useUrlState } from "~/hooks/useUrlState";
 import { ReputationMetrics } from "./reputation-metrics";
 

@@ -1,4 +1,4 @@
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import { Edit2Icon, EditIcon, Trash2Icon } from "lucide-react";
 
 export type LinkPreviewPanelProps = {

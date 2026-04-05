@@ -2,7 +2,11 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { env } from "~/env";
-import { getStripe, syncStripeData } from "~/server/billing/payments";
+import {
+  getStripe,
+  syncStripeData,
+  syncLifetimePayment,
+} from "~/server/billing/payments";
 
 const allowedEvents: Stripe.Event.Type[] = [
   "checkout.session.completed",
@@ -50,6 +54,22 @@ export async function POST(req: Request) {
 
     if (!allowedEvents.includes(event.type)) {
       return new NextResponse("OK", { status: 200 });
+    }
+
+    // Handle LIFETIME one-time payment checkout separately —
+    // these have no subscription so syncStripeData would be a no-op.
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.mode === "payment" && session.metadata?.plan === "LIFETIME") {
+        const customerId =
+          typeof session.customer === "string"
+            ? session.customer
+            : session.customer?.id;
+        if (customerId) {
+          await syncLifetimePayment(customerId);
+        }
+        return new NextResponse("OK", { status: 200 });
+      }
     }
 
     // All the events I track have a customerId

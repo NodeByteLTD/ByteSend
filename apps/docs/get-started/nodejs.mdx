@@ -6,8 +6,8 @@ icon: node-js
 
 ## Prerequisites
 
-- [useSend API key](https://app.usesend.com/dev-settings/api-keys)
-- [Verified domain](https://app.usesend.com/domains)
+- [ByteSend API key](https://app.bytesend.cloud/dev-settings/api-keys)
+- [Verified domain](https://app.bytesend.cloud/domains)
 
 ## Using SDK
 
@@ -15,28 +15,28 @@ icon: node-js
   <Step title="Install SDK">
     <CodeGroup>
       ```bash npm
-      npm install usesend-js
+      npm install bytesend-js
       ```
 
       ```bash yarn
-      yarn add usesend-js
+      yarn add bytesend-js
       ```
 
       ```bash pnpm
-      pnpm add usesend-js
+      pnpm add bytesend-js
       ```
 
       ```bash bun
-      bun add usesend-js
+      bun add bytesend-js
       ```
     </CodeGroup>
 
   </Step>
   <Step title="Initialize SDK">
-    Get the API key from the [useSend dashboard](https://app.usesend.com/dev-settings/api-keys) and initialize the SDK
+    Get the API key from the [ByteSend dashboard](https://app.bytesend.cloud/dev-settings/api-keys) and initialize the SDK
 
     ```javascript
-    import { UseSend } from "usesend-js";
+    import { UseSend } from "bytesend-js";
 
     const usesend = new UseSend("us_12345");
     ```
@@ -45,7 +45,7 @@ icon: node-js
     second argument:
 
     ```javascript
-    const usesend = new UseSend("us_12345", "https://app.usesend.com");
+    const usesend = new UseSend("us_12345", "https://app.bytesend.cloud");
     ```
 
   </Step>
@@ -71,7 +71,7 @@ icon: node-js
 
 <Steps>
   <Step title="Get the contact book id">
-    Get the contact book id from the [useSend dashboard](https://app.usesend.com/contacts/). Copy the contact book id
+    Get the contact book id from the [ByteSend dashboard](https://app.bytesend.cloud/contacts/). Copy the contact book id
   </Step>
   <Step title="Add contacts">
 

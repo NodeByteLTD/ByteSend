@@ -2,7 +2,7 @@
 
 import DomainsList from "./domain-list";
 import AddDomain from "./add-domain";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function DomainsPage() {
   return (

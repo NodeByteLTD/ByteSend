@@ -1,9 +1,9 @@
 "use client";
 
 import { Contact } from "@prisma/client";
-import { Button } from "@usesend/ui/src/button";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
+import { Button } from "@bytesend/ui/src/button";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
 import { useState } from "react";
 import { api } from "~/trpc/react";
 

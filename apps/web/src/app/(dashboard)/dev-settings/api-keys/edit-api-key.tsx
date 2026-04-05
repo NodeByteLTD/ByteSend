@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 import {
   Form,
   FormControl,
@@ -18,18 +18,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
-import { Input } from "@usesend/ui/src/input";
-import { Button } from "@usesend/ui/src/button";
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
+} from "@bytesend/ui/src/select";
 import { api } from "~/trpc/react";
-import { toast } from "@usesend/ui/src/toaster";
+import { toast } from "@bytesend/ui/src/toaster";
 
 const editApiKeySchema = z.object({
   name: z

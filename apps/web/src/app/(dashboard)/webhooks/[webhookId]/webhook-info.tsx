@@ -4,10 +4,10 @@ import { WebhookCallStatus, type Webhook } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { Copy, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@usesend/ui/src/button";
-import { toast } from "@usesend/ui/src/toaster";
+import { Button } from "@bytesend/ui/src/button";
+import { toast } from "@bytesend/ui/src/toaster";
 import { api } from "~/trpc/react";
-import { Badge } from "@usesend/ui/src/badge";
+import { Badge } from "@bytesend/ui/src/badge";
 import { WebhookStatusBadge } from "../webhook-status-badge";
 
 export function WebhookInfo({ webhook }: { webhook: Webhook }) {

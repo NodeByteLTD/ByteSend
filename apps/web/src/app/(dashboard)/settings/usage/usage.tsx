@@ -1,8 +1,8 @@
 "use client";
 
 import { api } from "~/trpc/react";
-import { Card } from "@usesend/ui/src/card";
-import Spinner from "@usesend/ui/src/spinner";
+import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
+import Spinner from "@bytesend/ui/src/spinner";
 import { format } from "date-fns";
 import {
   getCost,
@@ -14,9 +14,11 @@ import { useTeam } from "~/providers/team-context";
 import { EmailUsageType } from "@prisma/client";
 import { PlanDetails } from "~/components/payments/PlanDetails";
 import { UpgradeButton } from "~/components/payments/UpgradeButton";
-import { Progress } from "@usesend/ui/src/progress";
+import { Progress } from "@bytesend/ui/src/progress";
 
 const FREE_PLAN_LIMIT = 3000;
+
+/* ────────── Free-tier usage ────────── */
 
 function FreePlanUsage({
   usage,
@@ -27,90 +29,77 @@ function FreePlanUsage({
 }) {
   const DAILY_LIMIT = 100;
   const totalSent = usage?.reduce((acc, item) => acc + item.sent, 0) || 0;
-  const monthlyPercentageUsed = (totalSent / FREE_PLAN_LIMIT) * 100;
-
-  // Calculate daily usage - this is a simplified version, you might want to adjust based on actual daily tracking
+  const monthlyPct = Math.min((totalSent / FREE_PLAN_LIMIT) * 100, 100);
   const dailyUsage = dayUsage?.reduce((acc, item) => acc + item.sent, 0) || 0;
-  const dailyPercentageUsed = (dailyUsage / DAILY_LIMIT) * 100;
+  const dailyPct = Math.min((dailyUsage / DAILY_LIMIT) * 100, 100);
 
   return (
-    <Card className="p-6">
-      <div className="flex w-full">
-        <div className="space-y-4 w-full">
+    <div className="grid gap-4 sm:grid-cols-2">
+      {/* Monthly gauge */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Monthly limit</span>
+            <span className="text-sm font-mono text-muted-foreground">
+              {totalSent.toLocaleString()}/{FREE_PLAN_LIMIT.toLocaleString()}
+            </span>
+          </div>
+          <Progress value={monthlyPct} className="h-2" />
+          <p className="mt-2 text-xs text-muted-foreground">
+            {(FREE_PLAN_LIMIT - totalSent).toLocaleString()} emails remaining
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Daily gauge */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Daily limit</span>
+            <span className="text-sm font-mono text-muted-foreground">
+              {dailyUsage.toLocaleString()}/{DAILY_LIMIT.toLocaleString()}
+            </span>
+          </div>
+          <Progress value={dailyPct} className="h-2" />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Resets at midnight UTC
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Breakdown */}
+      <Card className="sm:col-span-2 border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {usage?.map((item) => (
             <div
               key={item.type}
-              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0"
+              className="flex items-center justify-between text-sm"
             >
               <div>
-                <div className="font-medium capitalize">
+                <span className="font-medium capitalize">
                   {item.type.toLowerCase()}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
+                </span>
+                <span className="ml-2 text-xs text-muted-foreground">
                   {item.type === "TRANSACTIONAL"
-                    ? "Mails sent using the send api or SMTP"
-                    : "Mails designed sent from useSend editor"}
-                </div>
+                    ? "API & SMTP"
+                    : "Campaign editor"}
+                </span>
               </div>
-              <div className="font-mono font-medium">
-                {item.sent.toLocaleString()} emails
-              </div>
+              <span className="font-mono">
+                {item.sent.toLocaleString()}
+              </span>
             </div>
           ))}
-          <div className="flex justify-between items-center pt-3 ">
-            <div className="font-medium">Total</div>
-            <div className="font-mono font-medium">
-              {usage
-                ?.reduce((acc, item) => acc + item.sent, 0)
-                .toLocaleString()}{" "}
-              emails
-            </div>
-          </div>
-        </div>
-        <div className="w-full flex justify-center items-center">
-          <div className="w-[300px] space-y-8">
-            <div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <div className="">Monthly Limit</div>
-                  <div className="font-mono font-medium">
-                    {totalSent.toLocaleString()}/
-                    {FREE_PLAN_LIMIT.toLocaleString()}
-                  </div>
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 ease-in-out"
-                    style={{
-                      width: `${Math.min(monthlyPercentageUsed, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <div className="">Daily Limit</div>
-                  <div className="font-mono">
-                    {dailyUsage.toLocaleString()}/{DAILY_LIMIT.toLocaleString()}
-                  </div>
-                </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300 ease-in-out"
-                    style={{ width: `${Math.min(dailyPercentageUsed, 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+
+/* ────────── Paid-tier usage ────────── */
 
 function PaidPlanUsage({
   usage,
@@ -118,128 +107,138 @@ function PaidPlanUsage({
   usage: { type: EmailUsageType; sent: number }[];
 }) {
   const { currentTeam } = useTeam();
-
   if (currentTeam?.plan === "FREE") return null;
 
   const totalCost =
     usage?.reduce((acc, item) => acc + getCost(item.sent, item.type), 0) || 0;
   const planCreditCost = PLAN_CREDIT_UNITS[currentTeam?.plan!] * UNIT_PRICE;
+  const creditRemaining = Math.max(planCreditCost - totalCost, 0);
+  const amountDue = Math.max(totalCost - planCreditCost, 0);
+  const creditPct = planCreditCost > 0 ? Math.min(100, 100 - (totalCost / planCreditCost) * 100) : 0;
 
   return (
-    <Card className="p-6">
-      <div className="flex w-full">
-        <div className="space-y-4 w-full">
-          {usage?.map((item) => (
-            <div
-              key={item.type}
-              className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0"
-            >
-              <div>
-                <div className="font-medium capitalize">
-                  {item.type.toLowerCase()}
+    <div className="grid gap-4 sm:grid-cols-3">
+      {/* Amount due */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Amount due
+          </p>
+          <p className="mt-2 text-3xl font-bold font-mono">
+            ${amountDue.toFixed(2)}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Credit remaining */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Credit remaining
+          </p>
+          <p className="mt-2 text-3xl font-bold font-mono">
+            ${creditRemaining.toFixed(2)}
+          </p>
+          <Progress value={creditPct} className="mt-3 h-1.5" />
+        </CardContent>
+      </Card>
+
+      {/* Total emails */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Emails sent
+          </p>
+          <p className="mt-2 text-3xl font-bold font-mono">
+            {usage?.reduce((a, i) => a + i.sent, 0).toLocaleString() || "0"}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Detailed breakdown */}
+      <Card className="sm:col-span-3 border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Cost breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border/50">
+            {usage?.map((item) => (
+              <div
+                key={item.type}
+                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+              >
+                <div>
+                  <span className="text-sm font-medium capitalize">
+                    {item.type.toLowerCase()}
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {item.sent.toLocaleString()} × ${USAGE_UNIT_PRICE[item.type]}
+                  </span>
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  <span className="font-mono">
-                    {item.sent.toLocaleString()}
-                  </span>{" "}
-                  emails at{" "}
-                  <span className="font-mono">
-                    ${USAGE_UNIT_PRICE[item.type]}
-                  </span>{" "}
-                  each
-                </div>
+                <span className="text-sm font-mono font-medium">
+                  ${getCost(item.sent, item.type).toFixed(2)}
+                </span>
               </div>
-              <div className="font-mono font-medium">
-                ${getCost(item.sent, item.type).toFixed(2)}
-              </div>
-            </div>
-          ))}
-          <div>
-            <div className="flex justify-between items-center border-b pb-3 last:border-0 last:pb-0">
-              <div>
-                <div className="font-medium capitalize">Available credit</div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {currentTeam?.plan}
-                </div>
-              </div>
-              <div className="font-mono font-medium">
-                {totalCost > planCreditCost
-                  ? "0"
-                  : `$${(planCreditCost - totalCost).toFixed(2)}`}
-              </div>
-            </div>
-            <Progress
-              value={100 - Math.min(100, (totalCost / planCreditCost) * 100)}
-            />
+            ))}
           </div>
-        </div>
-        <div className="w-full flex justify-center items-center">
-          <div>
-            <div className="font-medium">Amount Due</div>
-            <div className="">
-              <div className="text-2xl font-mono">
-                {planCreditCost < totalCost
-                  ? `$${(totalCost - planCreditCost).toFixed(2)}`
-                  : `$${(0.0).toFixed(2)}`}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+
+/* ────────── Main page ────────── */
 
 export default function UsagePage() {
   const { data: usage, isLoading } = api.billing.getThisMonthUsage.useQuery();
   const { currentTeam } = useTeam();
-
   const { data: subscription } = api.billing.getSubscriptionDetails.useQuery();
 
-  // Calculate the billing period based on subscription if available
   const today = new Date();
   const billingPeriod =
     subscription?.currentPeriodStart && subscription?.currentPeriodEnd
-      ? `${format(new Date(subscription.currentPeriodStart), "MMM dd")} - ${format(new Date(subscription.currentPeriodEnd), "MMM dd")}`
-      : `${format(new Date(today.getFullYear(), today.getMonth(), 1), "MMM dd")} - ${format(new Date(today.getFullYear(), today.getMonth() + 1, 1), "MMM dd")}`;
+      ? `${format(new Date(subscription.currentPeriodStart), "MMM dd")} – ${format(new Date(subscription.currentPeriodEnd), "MMM dd")}`
+      : `${format(new Date(today.getFullYear(), today.getMonth(), 1), "MMM dd")} – ${format(new Date(today.getFullYear(), today.getMonth() + 1, 1), "MMM dd")}`;
 
   return (
-    <div>
+    <div className="space-y-8">
+      {/* Usage section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Usage</h1>
-            <div className="text-sm text-muted-foreground mt-1">
-              <span className="font-medium">{billingPeriod}</span>
-            </div>
-          </div>
+        <div>
+          <h2 className="text-lg font-semibold">Usage</h2>
+          <p className="text-sm text-muted-foreground">{billingPeriod}</p>
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner className="w-8 h-8" innerSvgClass="stroke-primary" />
+          <div className="flex justify-center py-12">
+            <Spinner className="w-6 h-6" innerSvgClass="stroke-primary" />
           </div>
         ) : usage?.month.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground">
-            No usage data available
+          <Card className="border-border/50">
+            <CardContent className="py-12 text-center text-sm text-muted-foreground">
+              No usage data available
+            </CardContent>
           </Card>
         ) : currentTeam?.plan === "FREE" ? (
-          <FreePlanUsage
-            usage={usage?.month ?? []}
-            dayUsage={usage?.day ?? []}
-          />
+          <FreePlanUsage usage={usage?.month ?? []} dayUsage={usage?.day ?? []} />
         ) : (
           <PaidPlanUsage usage={usage?.month ?? []} />
         )}
       </div>
-      {currentTeam?.plan ? (
-        <Card className=" rounded-xl mt-10 p-4 px-8">
-          <PlanDetails />
-          <div className="mt-4">
-            {currentTeam?.plan === "FREE" ? <UpgradeButton /> : null}
-          </div>
+
+      {/* Current plan section */}
+      {currentTeam?.plan && (
+        <Card className="border-border/50">
+          <CardContent className="pt-6">
+            <PlanDetails />
+            {currentTeam.plan === "FREE" && (
+              <div className="mt-6">
+                <UpgradeButton />
+              </div>
+            )}
+          </CardContent>
         </Card>
-      ) : null}
+      )}
     </div>
   );
 }

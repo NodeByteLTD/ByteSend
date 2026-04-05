@@ -99,7 +99,19 @@ export async function addDomain(
       DomainSigningPrivateKey: privateKey,
     },
   });
-  const response = await sesClient.send(command);
+
+  let response;
+  try {
+    response = await sesClient.send(command);
+  } catch (error: any) {
+    if (error.name === "AlreadyExistsException") {
+      logger.info({ domain, region }, "SES identity already exists, deleting and recreating");
+      await sesClient.send(new DeleteEmailIdentityCommand({ EmailIdentity: domain }));
+      response = await sesClient.send(command);
+    } else {
+      throw error;
+    }
+  }
 
   const emailIdentityCommand = new PutEmailIdentityMailFromAttributesCommand({
     EmailIdentity: domain,

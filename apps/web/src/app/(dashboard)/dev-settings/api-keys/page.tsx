@@ -2,7 +2,7 @@
 
 import AddApiKey from "./add-api-key";
 import ApiList from "./api-list";
-import { H1 } from "@usesend/ui";
+import { H1 } from "@bytesend/ui";
 
 export default function ApiKeysPage() {
   return (

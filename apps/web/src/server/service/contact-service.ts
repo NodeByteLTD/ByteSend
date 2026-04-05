@@ -2,7 +2,7 @@ import { Prisma, type Contact, UnsubscribeReason } from "@prisma/client";
 import {
   type ContactPayload,
   type ContactWebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import {
   mergeContactProperties,
   normalizeContactProperties,

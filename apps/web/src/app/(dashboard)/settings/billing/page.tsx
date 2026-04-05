@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@usesend/ui/src/button";
-import { Card } from "@usesend/ui/src/card";
-import { Spinner } from "@usesend/ui/src/spinner";
+import { Button } from "@bytesend/ui/src/button";
+import { Card } from "@bytesend/ui/src/card";
+import { Spinner } from "@bytesend/ui/src/spinner";
 import { format } from "date-fns";
 import { useTeam } from "~/providers/team-context";
 import { api } from "~/trpc/react";

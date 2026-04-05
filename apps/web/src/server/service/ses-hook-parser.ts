@@ -8,7 +8,7 @@ import {
   type EmailBasePayload,
   type EmailEventPayloadMap,
   type EmailWebhookEventType,
-} from "@usesend/lib/src/webhook/webhook-events";
+} from "@bytesend/lib/src/webhook/webhook-events";
 import {
   SesBounce,
   SesClick,

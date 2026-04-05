@@ -2,8 +2,8 @@ import "./globals.css";
 
 import { Inter } from "next/font/google";
 import { JetBrains_Mono } from "next/font/google";
-import { ThemeProvider } from "@usesend/ui";
-import { Toaster } from "@usesend/ui/src/toaster";
+import { ThemeProvider } from "@bytesend/ui";
+import { Toaster } from "@bytesend/ui/src/toaster";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { Metadata } from "next";

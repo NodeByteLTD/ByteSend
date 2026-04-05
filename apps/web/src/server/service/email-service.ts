@@ -6,7 +6,7 @@ import {
   validateDomainFromEmail,
   validateApiKeyDomainAccess,
 } from "./domain-service";
-import { EmailRenderer } from "@usesend/email-editor/src/renderer";
+import { EmailRenderer } from "@bytesend/email-editor/src/renderer";
 import { logger } from "../logger/log";
 import { SuppressionService } from "./suppression-service";
 import { sanitizeCustomHeaders } from "~/server/utils/email-headers";

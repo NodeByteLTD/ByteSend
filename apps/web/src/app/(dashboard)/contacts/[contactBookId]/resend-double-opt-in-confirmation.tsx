@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@usesend/ui/src/dialog";
-import Spinner from "@usesend/ui/src/spinner";
-import { toast } from "@usesend/ui/src/toaster";
+} from "@bytesend/ui/src/dialog";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@usesend/ui/src/tooltip";
+} from "@bytesend/ui/src/tooltip";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { api } from "~/trpc/react";

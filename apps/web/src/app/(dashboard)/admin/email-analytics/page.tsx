@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@usesend/ui/src/card";
-import { Label } from "@usesend/ui/src/label";
-import { Switch } from "@usesend/ui/src/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
+import { Label } from "@bytesend/ui/src/label";
+import { Switch } from "@bytesend/ui/src/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@usesend/ui/src/select";
+} from "@bytesend/ui/src/select";
 import {
   Table,
   TableBody,
@@ -18,8 +18,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@usesend/ui/src/table";
-import Spinner from "@usesend/ui/src/spinner";
+} from "@bytesend/ui/src/table";
+import Spinner from "@bytesend/ui/src/spinner";
 import { api } from "~/trpc/react";
 import { isCloud } from "~/utils/common";
 import { timeframeOptions } from "./constants";

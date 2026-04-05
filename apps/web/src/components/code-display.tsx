@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { BundledLanguage, codeToHtml } from "shiki";
 import { Check, Copy } from "lucide-react";
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 
 interface CodeDisplayProps {
   code: string;

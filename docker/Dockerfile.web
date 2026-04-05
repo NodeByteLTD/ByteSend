@@ -1,0 +1,71 @@
+FROM node:20.19-alpine3.20 AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV SKIP_ENV_VALIDATION="true"
+ENV DOCKER_OUTPUT=1
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_IS_CLOUD="false"
+
+RUN corepack enable
+
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+RUN apk update
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY ./apps/web ./apps/web
+COPY ./packages ./packages
+RUN pnpm add turbo@^2.5.2 -g
+
+# Prune monorepo for web app dependencies
+RUN pnpm turbo prune web --docker
+
+FROM base AS installer
+RUN apk add --no-cache libc6-compat
+RUN apk update
+WORKDIR /app
+
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+ARG APP_VERSION=unknown
+ARG GIT_SHA=unknown
+
+ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
+ENV NEXT_PUBLIC_GIT_SHA=$GIT_SHA
+
+COPY --from=builder /app/out/full/ .
+
+RUN pnpm turbo run build --filter=web...
+
+FROM base AS runner
+WORKDIR /app
+
+COPY --from=installer /app/apps/web/next.config.js .
+COPY --from=installer /app/apps/web/package.json .
+COPY --from=installer /app/pnpm-lock.yaml .
+
+# Copy Next.js build output
+COPY --from=installer /app/apps/web/.next/standalone ./
+COPY --from=installer /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer /app/apps/web/public ./apps/web/public
+
+# Copy Prisma files for migrations
+COPY --from=installer /app/apps/web/prisma/schema.prisma ./apps/web/prisma/schema.prisma
+COPY --from=installer /app/apps/web/prisma/migrations ./apps/web/prisma/migrations
+COPY --from=installer /app/apps/web/node_modules/prisma ./node_modules/prisma
+COPY --from=installer /app/apps/web/node_modules/@prisma ./node_modules/@prisma
+
+RUN mkdir -p node_modules/.bin && ln -s /app/node_modules/prisma/build/index.js ./node_modules/.bin/prisma
+
+ENV SKIP_ENV_VALIDATION="false"
+
+COPY ./docker/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+EXPOSE 3000
+
+CMD ["sh", "start.sh"]

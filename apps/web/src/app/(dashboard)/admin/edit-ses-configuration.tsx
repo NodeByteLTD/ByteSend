@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "@usesend/ui/src/button";
+import { Button } from "@bytesend/ui/src/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@usesend/ui/src/dialog";
+} from "@bytesend/ui/src/dialog";
 
 import { Edit } from "lucide-react";
 import { useState } from "react";
@@ -20,13 +20,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@usesend/ui/src/form";
+} from "@bytesend/ui/src/form";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "~/trpc/react";
-import { Input } from "@usesend/ui/src/input";
-import { toast } from "@usesend/ui/src/toaster";
-import Spinner from "@usesend/ui/src/spinner";
+import { Input } from "@bytesend/ui/src/input";
+import { toast } from "@bytesend/ui/src/toaster";
+import Spinner from "@bytesend/ui/src/spinner";
 import { SesSetting } from "@prisma/client";
 
 const FormSchema = z.object({
