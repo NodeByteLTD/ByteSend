@@ -4,11 +4,68 @@ import { useState } from "react";
 import { Button } from "@bytesend/ui/src/button";
 import { Card } from "@bytesend/ui/src/card";
 import { Spinner } from "@bytesend/ui/src/spinner";
+import { CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { useTeam } from "~/providers/team-context";
 import { api } from "~/trpc/react";
 import { PlanDetails } from "~/components/payments/PlanDetails";
 import { UpgradeButton } from "~/components/payments/UpgradeButton";
+
+type PaidPlan = "HOBBY" | "LITE" | "BASIC" | "LIFETIME";
+
+const PLAN_OPTIONS: {
+  plan: PaidPlan;
+  name: string;
+  price: string;
+  perks: string[];
+  highlight?: boolean;
+}[] = [
+  {
+    plan: "HOBBY",
+    name: "Hobby",
+    price: "$5 / mo",
+    perks: [
+      "15,000 emails / month",
+      "500 emails / day",
+      "5 domains",
+      "Usage-based billing",
+    ],
+  },
+  {
+    plan: "LITE",
+    name: "Lite",
+    price: "$10 / mo",
+    perks: [
+      "50,000 emails / month",
+      "2,000 emails / day",
+      "10 domains",
+      "Priority support",
+    ],
+  },
+  {
+    plan: "BASIC",
+    name: "Professional",
+    price: "$30 / mo",
+    perks: [
+      "Unlimited emails",
+      "No per-email charges",
+      "100 domains · 50 members",
+      "Advanced analytics",
+    ],
+    highlight: true,
+  },
+  {
+    plan: "LIFETIME",
+    name: "Lifetime",
+    price: "$60 one-time",
+    perks: [
+      "Unlimited emails forever",
+      "No recurring charges",
+      "500 domains · 200 members",
+      "All future features",
+    ],
+  },
+];
 
 export default function SettingsPage() {
   const { currentTeam, currentIsAdmin } = useTeam();
@@ -71,7 +128,7 @@ export default function SettingsPage() {
           {currentTeam?.plan !== "FREE" ? (
             <Button
               onClick={onManageClick}
-              className="mt-4 w-[120px]"
+              className="mt-4 w-30"
               disabled={manageSessionUrl.isPending}
             >
               {manageSessionUrl.isPending ? (
@@ -80,11 +137,44 @@ export default function SettingsPage() {
                 "Manage"
               )}
             </Button>
-          ) : (
-            <UpgradeButton />
-          )}
+          ) : null}
         </div>
       </Card>
+
+      {currentTeam?.plan === "FREE" && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Upgrade Your Plan</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PLAN_OPTIONS.map(({ plan, name, price, perks, highlight }) => (
+              <div
+                key={plan}
+                className={`rounded-lg border p-4 flex flex-col gap-3 ${
+                  highlight ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-sm">{name}</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {price}
+                  </span>
+                </div>
+                <ul className="space-y-1.5 flex-1">
+                  {perks.map((perk, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-xs text-muted-foreground"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+                <UpgradeButton plan={plan} label={`Choose ${name}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <Card className="p-6">
           <div>
