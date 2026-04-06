@@ -499,8 +499,7 @@ function Cta() {
             Ready to send?
           </h2>
           <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
-            Create your free account in seconds. No credit card required — just
-            start sending.
+            Create your free account in seconds. No credit card required just start sending.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
