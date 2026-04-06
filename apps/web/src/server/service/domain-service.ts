@@ -402,6 +402,7 @@ export async function createDomain(
   name: string,
   region: string,
   sesTenantId?: string,
+  allowReserved?: boolean,
 ) {
   const domainStr = tldts.getDomain(name);
 
@@ -411,7 +412,7 @@ export async function createDomain(
     throw new Error("Invalid domain");
   }
 
-  if (RESERVED_DOMAINS.some((r) => name === r || name.endsWith(`.${r}`))) {
+  if (!allowReserved && RESERVED_DOMAINS.some((r) => name === r || name.endsWith(`.${r}`))) {
     throw new UnsendApiError({
       code: "BAD_REQUEST",
       message: "This domain is reserved and cannot be added.",

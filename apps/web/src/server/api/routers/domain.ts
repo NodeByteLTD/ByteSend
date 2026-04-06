@@ -16,6 +16,12 @@ import {
 } from "~/server/service/domain-service";
 import { sendEmail } from "~/server/service/email-service";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
+import { env } from "~/env";
+
+function isAdminOrFounder(email: string | null | undefined) {
+  const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean);
+  return !!email && adminEmails.includes(email);
+}
 
 export const domainRouter = createTRPCRouter({
   getAvailableRegions: protectedProcedure.query(async () => {
@@ -26,11 +32,13 @@ export const domainRouter = createTRPCRouter({
   createDomain: teamProcedure
     .input(z.object({ name: z.string(), region: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const allowReserved = isAdminOrFounder(ctx.session.user.email);
       return createDomain(
         ctx.team.id,
         input.name,
         input.region,
-        ctx.team.sesTenantId ?? undefined
+        ctx.team.sesTenantId ?? undefined,
+        allowReserved,
       );
     }),
 
