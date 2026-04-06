@@ -2,6 +2,7 @@
 
 import { api } from "~/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
+import { Button } from "@bytesend/ui/src/button";
 import Spinner from "@bytesend/ui/src/spinner";
 import { format } from "date-fns";
 import {
@@ -13,8 +14,19 @@ import {
 import { useTeam } from "~/providers/team-context";
 import { EmailUsageType } from "@prisma/client";
 import { PlanDetails } from "~/components/payments/PlanDetails";
-import { UpgradeButton } from "~/components/payments/UpgradeButton";
+import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { Progress } from "@bytesend/ui/src/progress";
+
+const UNLIMITED_PLANS = new Set(["BASIC", "LIFETIME"]);
+
+function ChoosePlanButton() {
+  const { action: { openModal } } = useUpgradeModalStore();
+  return (
+    <Button className="w-full" onClick={() => openModal()}>
+      Choose Plan
+    </Button>
+  );
+}
 
 const FREE_PLAN_LIMIT = 3000;
 
@@ -109,12 +121,19 @@ function PaidPlanUsage({
   const { currentTeam } = useTeam();
   if (currentTeam?.plan === "FREE") return null;
 
+  const plan = currentTeam?.plan ?? "FREE";
+  const isUnlimited = UNLIMITED_PLANS.has(plan);
   const totalCost =
     usage?.reduce((acc, item) => acc + getCost(item.sent, item.type), 0) || 0;
-  const planCreditCost = PLAN_CREDIT_UNITS[currentTeam?.plan!] * UNIT_PRICE;
-  const creditRemaining = Math.max(planCreditCost - totalCost, 0);
-  const amountDue = Math.max(totalCost - planCreditCost, 0);
-  const creditPct = planCreditCost > 0 ? Math.min(100, 100 - (totalCost / planCreditCost) * 100) : 0;
+  const planCreditCost = isUnlimited
+    ? 0
+    : (PLAN_CREDIT_UNITS[plan as keyof typeof PLAN_CREDIT_UNITS] ?? 0) * UNIT_PRICE;
+  const creditRemaining = isUnlimited ? null : Math.max(planCreditCost - totalCost, 0);
+  const amountDue = isUnlimited ? 0 : Math.max(totalCost - planCreditCost, 0);
+  const creditPct =
+    !isUnlimited && planCreditCost > 0
+      ? Math.min(100, 100 - (totalCost / planCreditCost) * 100)
+      : 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
@@ -125,8 +144,11 @@ function PaidPlanUsage({
             Amount due
           </p>
           <p className="mt-2 text-3xl font-bold font-mono">
-            ${amountDue.toFixed(2)}
+            {isUnlimited ? "$0.00" : `$${amountDue.toFixed(2)}`}
           </p>
+          {isUnlimited && (
+            <p className="mt-1 text-xs text-muted-foreground">Included in plan</p>
+          )}
         </CardContent>
       </Card>
 
@@ -137,9 +159,9 @@ function PaidPlanUsage({
             Credit remaining
           </p>
           <p className="mt-2 text-3xl font-bold font-mono">
-            ${creditRemaining.toFixed(2)}
+            {isUnlimited ? "∞" : `$${(creditRemaining ?? 0).toFixed(2)}`}
           </p>
-          <Progress value={creditPct} className="mt-3 h-1.5" />
+          {!isUnlimited && <Progress value={creditPct} className="mt-3 h-1.5" />}
         </CardContent>
       </Card>
 
@@ -233,7 +255,7 @@ export default function UsagePage() {
             <PlanDetails />
             {currentTeam.plan === "FREE" && (
               <div className="mt-6">
-                <UpgradeButton />
+                <ChoosePlanButton />
               </div>
             )}
           </CardContent>
