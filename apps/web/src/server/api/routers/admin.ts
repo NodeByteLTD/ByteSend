@@ -379,6 +379,48 @@ export const adminRouter = createTRPCRouter({
       return team ?? null;
     }),
 
+  listTeams: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, query } = input;
+      const skip = (page - 1) * pageSize;
+
+      const where: Prisma.TeamWhereInput = query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { billingEmail: { contains: query, mode: "insensitive" } },
+              {
+                teamUsers: {
+                  some: {
+                    user: { email: { contains: query, mode: "insensitive" } },
+                  },
+                },
+              },
+            ],
+          }
+        : {};
+
+      const [teams, total] = await Promise.all([
+        db.team.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { createdAt: "desc" },
+          select: teamAdminSelection,
+        }),
+        db.team.count({ where }),
+      ]);
+
+      return { teams, total, page, pageSize };
+    }),
+
   updateTeamSettings: adminProcedure
     .input(
       z.object({

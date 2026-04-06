@@ -3,7 +3,7 @@ title: Self hosting with Railway
 description: Deploy ByteSend on Railway with one click.
 ---
 
-useSend is a [Railway Partner](https://railway.app/partners?utm_medium=integration&utm_source=docs&utm_campaign=usesend) and Railway offers the quickest way to get a useSend instance running.
+ByteSend is a [Railway Partner](https://railway.app/partners?utm_medium=integration&utm_source=docs&utm_campaign=bytesend) and Railway offers the quickest way to get a ByteSend instance running.
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.com/deploy/usesend?utm_medium=integration&utm_source=docs&utm_campaign=usesend)
 
@@ -23,7 +23,7 @@ If you have any questions join [#self-host](https://discord.gg/gbsvjb9MqV) on di
 
 ## Step 2: Environment variables
 
-useSend depends on AWS SES to send emails and SNS to receive email status. The Railway template provisions Postgres (database) and Redis (queue) automatically—no action needed for those. Add the following variables under your service’s Variables tab.
+ByteSend depends on AWS SES to send emails and SNS to receive email status. The Railway template provisions Postgres (database) and Redis (queue) automatically—no action needed for those. Add the following variables under your service's Variables tab.
 
 <Steps>
   <Step title="AWS credentials">
@@ -43,7 +43,7 @@ AWS_SECRET_KEY=<secret-access-key>
   </Step>
 
   <Step title="GitHub app credentials for login">
-  useSend uses GitHub authentication for login.
+  ByteSend uses GitHub authentication for login.
 
 Use this link to [create a GitHub app](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps)
 
@@ -83,13 +83,13 @@ NEXTAUTH_URL="https://<your-railway-domain>"
 - Update `NEXTAUTH_URL` to your new domain (e.g., `https://mail.yourdomain.com`).
 - Redeploy to apply the change.
 
-## Step 4: Set up SES region in useSend
+## Step 4: Set up SES region in ByteSend
 
-In order to send emails, you need to select a region in AWS. Use a region where your users are located / where useSend is hosted. If you're unsure, use `us-east-1`.
+In order to send emails, you need to select a region in AWS. Use a region where your users are located / where ByteSend is hosted. If you're unsure, use `us-east-1`.
 
 You can check available regions [here](https://docs.aws.amazon.com/general/latest/gr/ses.html)
 
-Once you log in to useSend, it will prompt you add SES configuration.
+Once you log in to ByteSend, it will prompt you add SES configuration.
 
 - Add the region
 - Add the callback url, which is basically the app url. Note this should be accessible from the internet. This is how you get the delivery status of the emails.

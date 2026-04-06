@@ -37,7 +37,7 @@ async function UnsubscribePage({
       <div className=" fixed bottom-10  p-4">
         <p>
           Powered by{" "}
-          <a href="https://bytesend.com" className="font-bold" target="_blank">
+          <a href="https://bytesend.cloud" className="font-bold" target="_blank">
             ByteSend
           </a>
         </p>

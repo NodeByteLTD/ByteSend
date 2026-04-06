@@ -387,7 +387,6 @@ const comparisonRows = [
   { feature: "Webhooks", bytesend: "✓", unsend: "✓", resend: "✓", sendgrid: "✓", postmark: "✓", ses: "Via SNS" },
   { feature: "Lifetime plan", bytesend: "✓ $60", unsend: "✗", resend: "✗", sendgrid: "✗", postmark: "✗", ses: "✗" },
   { feature: "Self-hostable", bytesend: "✓ Docker", unsend: "✓ Docker", resend: "✗", sendgrid: "✗", postmark: "✗", ses: "✗" },
-  { feature: "Open source", bytesend: "✓", unsend: "✓", resend: "✗", sendgrid: "✗", postmark: "✗", ses: "✗" },
   { feature: "Open API", bytesend: "✓ REST", unsend: "✓ REST", resend: "✓ REST", sendgrid: "✓ REST", postmark: "✓ REST", ses: "✓ AWS SDK" },
   { feature: "Multiple plans", bytesend: "5 plans", unsend: "2 plans", resend: "3 plans", sendgrid: "4 plans", postmark: "1 plan", ses: "Pay-as-you-go" },
 ];

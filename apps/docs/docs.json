@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "useSend",
+  "name": "ByteSend",
   "colors": {
     "primary": "#21453D",
     "light": "#E6FAF5",
@@ -120,15 +120,7 @@
           }
         ]
       },
-      {
-        "tab": "Changelog",
-        "groups": [
-          {
-            "group": "Updates",
-            "pages": ["changelog"]
-          }
-        ]
-      }
+
     ],
     "global": {
       "anchors": [

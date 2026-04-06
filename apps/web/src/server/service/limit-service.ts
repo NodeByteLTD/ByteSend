@@ -17,6 +17,22 @@ function getActivePlan(team: { plan: Plan; isActive: boolean }): Plan {
 }
 
 export class LimitService {
+  /**
+   * Returns true if the team has the admin or founder as a member.
+   * These teams are exempt from all limits.
+   */
+  private static async isAdminOrFounderTeam(teamId: number): Promise<boolean> {
+    const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean) as string[];
+    if (adminEmails.length === 0) return false;
+    const count = await db.teamUser.count({
+      where: {
+        teamId,
+        user: { email: { in: adminEmails } },
+      },
+    });
+    return count > 0;
+  }
+
   static async checkDomainLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;
@@ -24,6 +40,11 @@ export class LimitService {
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
+    // Admin/founder teams have no limits
+    if (await LimitService.isAdminOrFounderTeam(teamId)) {
       return { isLimitReached: false, limit: -1 };
     }
 
@@ -55,6 +76,11 @@ export class LimitService {
       return { isLimitReached: false, limit: -1 };
     }
 
+    // Admin/founder teams have no limits
+    if (await LimitService.isAdminOrFounderTeam(teamId)) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
     const team = await TeamService.getTeamCached(teamId);
     const currentCount = await db.contactBook.count({ where: { teamId } });
 
@@ -83,6 +109,11 @@ export class LimitService {
       return { isLimitReached: false, limit: -1 };
     }
 
+    // Admin/founder teams have no limits
+    if (await LimitService.isAdminOrFounderTeam(teamId)) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
     const team = await TeamService.getTeamCached(teamId);
     const currentCount = await db.teamUser.count({ where: { teamId } });
 
@@ -108,6 +139,11 @@ export class LimitService {
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
+    // Admin/founder teams have no limits
+    if (await LimitService.isAdminOrFounderTeam(teamId)) {
       return { isLimitReached: false, limit: -1 };
     }
 
@@ -144,6 +180,11 @@ export class LimitService {
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
+    // Admin/founder teams have no limits
+    if (await LimitService.isAdminOrFounderTeam(teamId)) {
       return { isLimitReached: false, limit: -1 };
     }
 

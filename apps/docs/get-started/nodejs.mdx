@@ -6,8 +6,8 @@ icon: node-js
 
 ## Prerequisites
 
-- [ByteSend API key](https://app.bytesend.cloud/dev-settings/api-keys)
-- [Verified domain](https://app.bytesend.cloud/domains)
+- [ByteSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- [Verified domain](https://bytesend.cloud/domains)
 
 ## Using SDK
 
@@ -33,7 +33,7 @@ icon: node-js
 
   </Step>
   <Step title="Initialize SDK">
-    Get the API key from the [ByteSend dashboard](https://app.bytesend.cloud/dev-settings/api-keys) and initialize the SDK
+    Get the API key from the [ByteSend dashboard](https://bytesend.cloud/dev-settings/api-keys) and initialize the SDK
 
     ```javascript
     import { UseSend } from "bytesend-js";
@@ -41,11 +41,11 @@ icon: node-js
     const usesend = new UseSend("us_12345");
     ```
 
-    If you are running a self-hosted version of useSend, pass the base URL as the
+    If you are running a self-hosted version of ByteSend, pass the base URL as the
     second argument:
 
     ```javascript
-    const usesend = new UseSend("us_12345", "https://app.bytesend.cloud");
+    const usesend = new UseSend("us_12345", "https://your-bytesend-instance.com");
     ```
 
   </Step>
@@ -54,16 +54,16 @@ icon: node-js
     usesend.emails.send({
       to: "hello@acme.com",
       from: "hello@company.com",
-      subject: "useSend email",
-      html: "<p>useSend is the best open source product to send emails</p>",
-      text: "useSend is the best open source product to send emails",
+      subject: "ByteSend email",
+      html: "<p>ByteSend is the best way to send emails</p>",
+      text: "ByteSend is the best way to send emails",
       headers: {
         "X-Campaign": "welcome",
       },
     });
     ```
 
-    > Custom headers are forwarded as-is. useSend only manages the `X-Usesend-Email-ID` and `References` headers.
+    > Custom headers are forwarded as-is. ByteSend only manages the `X-ByteSend-Email-ID` and `References` headers.
   </Step>
 </Steps>
 
@@ -71,7 +71,7 @@ icon: node-js
 
 <Steps>
   <Step title="Get the contact book id">
-    Get the contact book id from the [ByteSend dashboard](https://app.bytesend.cloud/contacts/). Copy the contact book id
+    Get the contact book id from the [ByteSend dashboard](https://bytesend.cloud/contacts/). Copy the contact book id
   </Step>
   <Step title="Add contacts">
 

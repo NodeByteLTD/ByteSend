@@ -1,7 +1,11 @@
 ---
-title: Self hosting useSend
-description: "An end-to-end guide on how to self-host ByteSend. An open-source sending infrastructure for developers."
+title: Self hosting ByteSend
+description: "An end-to-end guide on how to self-host ByteSend."
 ---
+
+<Warning>
+  Self-hosting support is a work in progress. Some steps may be incomplete or change before the official release.
+</Warning>
 
 ## Prerequisites
 
@@ -12,7 +16,7 @@ If you have any questions join [#self-host](https://discord.gg/gbsvjb9MqV) on di
 
 ## Step 1: Environment variables
 
-useSend depends on AWS SES to send emails and SNS to receive email status. Along with that it also depends on Postgres as a database and Redis for queue. Copy the `.env.selfhost.example` file to `.env` and fill in the values.
+ByteSend depends on AWS SES to send emails and SNS to receive email status. Along with that it also depends on Postgres as a database and Redis for queue. Copy the `.env.selfhost.example` file to `.env` and fill in the values.
 
 <Steps>
   <Step title="AWS credentials">
@@ -32,11 +36,11 @@ Add the following environment variables.
 
   </Step>
   <Step title="GitHub app credentials for login">
-  useSend uses GitHub authentication for login.
+  ByteSend uses GitHub authentication for login.
 
 Use this link to [create an github app](https://docs.github.com/en/apps/creating-github-apps/about-creating-github-apps/about-creating-github-apps)
 
-Callback URL : `https://<your-usesend-instance>/api/auth/callback/github`
+Callback URL : `https://<your-bytesend-instance>/api/auth/callback/github`
 
 ![github app](/images/github-callback.png)
 
@@ -50,7 +54,7 @@ GITHUB_SECRET="<your-github-client-secret>"
   <Info>If you want email/password login, please help us out with the [code](https://github.com/usesend/usesend) </Info>  
   </Step>
   <Step title="Database & Redis">
-  useSend uses Postgres as a database and Redis as a queue. You need to create a new database and add the following environment variables.
+  ByteSend uses Postgres as a database and Redis as a queue. You need to create a new database and add the following environment variables.
 
 If you're using docker-compose, it's all automatically done for you.
 
@@ -59,7 +63,7 @@ DATABASE_URL="postgres://<username>:<password>@<host>:<port>/<database-name>"
 REDIS_URL="redis://<username>:<password>@<host>:<port>"
 ```
 
-If you're sharing a Redis instance across multiple apps and using Redis ACL for isolation, set `REDIS_KEY_PREFIX` to namespace all keys (e.g. `REDIS_KEY_PREFIX="usesend"` prefixes all keys with `usesend:`).
+If you're sharing a Redis instance across multiple apps and using Redis ACL for isolation, set `REDIS_KEY_PREFIX` to namespace all keys (e.g. `REDIS_KEY_PREFIX="bytesend"` prefixes all keys with `bytesend:`).
 
   </Step>
   <Step title="Next auth url and secret">
@@ -72,8 +76,8 @@ openssl rand -base64 32
 Add the following environment variables.
 
 ```env
-  NEXTAUTH_URL="https://<your-usesend-instance>"
-  NEXTAUTH_SECRET="<your-usesend-secret>"
+  NEXTAUTH_URL="https://<your-bytesend-instance>"
+  NEXTAUTH_SECRET="<your-random-secret>"
 ```
 
   </Step>
@@ -81,7 +85,7 @@ Add the following environment variables.
 
 ## Step 2: Setting up the app
 
-You can use any platform that supports Docker to host useSend. If you have any questions drop in the [discord channel](https://discord.gg/gbsvjb9MqV) and we'll try to help you out.
+You can use any platform that supports Docker to host ByteSend. If you have any questions drop in the [discord channel](https://discord.gg/gbsvjb9MqV) and we'll try to help you out.
 
 ### Docker
 
@@ -91,11 +95,11 @@ Follow this guide to setup your docker instance: [Set up docker](/get-started/se
 
 ## Step 3: Setting up a region
 
-In order to send emails, you need to select a region in AWS. Use a region where your users are located / where useSend is hosted. If you're confused just use `us-east-1`.
+In order to send emails, you need to select a region in AWS. Use a region where your users are located / where ByteSend is hosted. If you're confused just use `us-east-1`.
 
 You can check available regions [here](https://docs.aws.amazon.com/general/latest/gr/ses.html)
 
-Once you log in to useSend, it will prompt you add SES configuration.
+Once you log in to ByteSend, it will prompt you add SES configuration.
 
 - Add the region
 - Add the callback url, which is basically the app url. Note this should be accesible from internet. This is how you get the delivery status of the emails.
@@ -111,7 +115,7 @@ Once you log in to useSend, it will prompt you add SES configuration.
 
 ## Step 5: SMTP Proxy Server (Optional)
 
-The SMTP proxy server is an optional component that allows applications to send emails through useSend using standard SMTP protocol instead of the REST API. This is useful for legacy applications, email clients, or any software that needs to send emails via SMTP.
+The SMTP proxy server is an optional component that allows applications to send emails through ByteSend using standard SMTP protocol instead of the REST API. This is useful for legacy applications, email clients, or any software that needs to send emails via SMTP.
 
 <Tip>
   The complete source code for the SMTP proxy server is available at:
@@ -130,19 +134,19 @@ The SMTP proxy server is an optional component that allows applications to send 
 Create a `docker-compose.yml` file for the SMTP server:
 
 ```yaml
-name: usesend-smtp-server
+name: bytesend-smtp-server
 
 services:
   smtp-server:
-    container_name: usesend-smtp-server
-    image: usesend/smtp-proxy:latest
+    container_name: bytesend-smtp-server
+    image: bytesend/smtp-proxy:latest
     environment:
-      SMTP_AUTH_USERNAME: "usesend" # Username for SMTP authentication
-      USESEND_BASE_URL: "https://your-usesend-instance.com" # Your useSend instance URL
+      SMTP_AUTH_USERNAME: "bytesend" # Username for SMTP authentication
+      BYTESEND_BASE_URL: "https://your-bytesend-instance.com" # Your ByteSend instance URL
 
       # Optional: SSL certificate paths for secure connections
-      # USESEND_API_KEY_PATH: "/certs/server.key"
-      # USESEND_API_CERT_PATH: "/certs/server.crt"
+      # BYTESEND_API_KEY_PATH: "/certs/server.key"
+      # BYTESEND_API_CERT_PATH: "/certs/server.crt"
 
     # Optional: Mount SSL certificates
     # volumes:
@@ -171,13 +175,13 @@ To send emails through the proxy, configure your application with these SMTP set
 
 - **Host**: Your server's IP address or domain
 - **Ports**: 25, 587 (STARTTLS), 465 (SSL/TLS), 2587, or 2465
-- **Username**: `usesend` (or your custom `SMTP_AUTH_USERNAME`)
-- **Password**: Your useSend API key
+- **Username**: `bytesend` (or your custom `SMTP_AUTH_USERNAME`)
+- **Password**: Your ByteSend API key
 - **Encryption**: STARTTLS (ports 25, 587, 2587) or SSL/TLS (ports 465, 2465)
 
 <Tip>
-  The SMTP proxy forwards all emails to your useSend instance, so make sure your
-  main useSend application is running and accessible.
+  The SMTP proxy forwards all emails to your ByteSend instance, so make sure your
+  main ByteSend application is running and accessible.
 </Tip>
 
 <Warning>
@@ -197,7 +201,7 @@ You're all set up now.
 If you have any questions, please join [#self-host](https://discord.gg/gbsvjb9MqV) on discord.
 
 <Tip>
-  A community member shared a short write-up on hosting useSend with
+  A community member shared a short write-up on hosting ByteSend with
   [Coolify](https://mattstein.com/thoughts/coolify-unsend/). Give it a read if
   you need another reference.
 </Tip>
