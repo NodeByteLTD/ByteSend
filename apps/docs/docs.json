@@ -3,18 +3,23 @@
   "theme": "maple",
   "name": "ByteSend",
   "colors": {
-    "primary": "#21453D",
-    "light": "#E6FAF5",
-    "dark": "#21453D"
+    "primary": "#144B90",
+    "light": "#DBEAFE",
+    "dark": "#4395F9"
   },
   "background": {
     "color": {
-      "light": "#F5F5F5",
-      "dark": "#181825"
+      "light": "#F5F7FA",
+      "dark": "#10151E"
     }
   },
   "fonts": {
-    "family": "IBM Plex Mono"
+    "heading": {
+      "family": "Inter"
+    },
+    "body": {
+      "family": "Inter"
+    }
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -126,12 +131,12 @@
       "anchors": [
         {
           "anchor": "GitHub",
-          "href": "https://github.com/usesend/usesend",
+          "href": "https://github.com/NodeByteHosting",
           "icon": "github"
         },
         {
           "anchor": "Community",
-          "href": "https://discord.gg/BU8n8pJv8S",
+          "href": "https://discord.gg/nodebyte",
           "icon": "discord"
         }
       ]
@@ -156,7 +161,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hey@bytesend.cloud"
+        "href": "https://discord.gg/nodebyte"
       }
     ],
     "primary": {
@@ -167,8 +172,8 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/useSend_com",
-      "github": "https://github.com/usesend"
+      "x": "https://x.com/TryByteSend",
+      "github": "https://github.com/NodeByteHosting"
     }
   },
   "contextual": {
