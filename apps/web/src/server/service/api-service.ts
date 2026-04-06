@@ -36,7 +36,7 @@ export async function addApiKey({
     const token = randomBytes(16).toString("hex");
     const hashedToken = await createSecureHash(token);
 
-    const apiKey = `us_${clientId}_${token}`;
+    const apiKey = `bs_${clientId}_${token}`;
 
     await db.apiKey.create({
       data: {

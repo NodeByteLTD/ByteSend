@@ -30,7 +30,7 @@ describeIntegration("api-service integration", () => {
       teamId: team.id,
     });
 
-    expect(apiKey.startsWith("us_")).toBe(true);
+    expect(apiKey.startsWith("bs_")).toBe(true);
 
     const result = await getTeamAndApiKey(apiKey);
 

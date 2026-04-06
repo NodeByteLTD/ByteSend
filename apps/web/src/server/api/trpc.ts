@@ -262,11 +262,22 @@ export const templateProcedure = teamProcedure
   });
 
 /**
- * To manage application settings, for hosted version, authenticated users will be considered as admin
+ * Admin procedure — accessible by FOUNDER_EMAIL, ADMIN_EMAIL env vars, or DB isAdmin=true users.
+ * Grants access to SES config, team management, and email analytics.
  */
 export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean);
-  if (env.NEXT_PUBLIC_IS_CLOUD && !adminEmails.includes(ctx.session.user.email ?? '')) {
+  if (env.NEXT_PUBLIC_IS_CLOUD && !ctx.session.user.isAdmin) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next();
+});
+
+/**
+ * Founder procedure — exclusively for the FOUNDER_EMAIL holder.
+ * Grants access to user management and admin assignment on top of all admin capabilities.
+ */
+export const founderProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.session.user.isFounder) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next();

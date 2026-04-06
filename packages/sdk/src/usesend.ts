@@ -41,7 +41,7 @@ export class UseSend {
 
       if (!this.key) {
         throw new Error(
-          'Missing API key. Pass it to the constructor `new UseSend("us_123")`',
+          'Missing API key. Pass it to the constructor `new UseSend("bs_123")`',
         );
       }
     }
@@ -185,7 +185,7 @@ export class UseSend {
    *
    * @example
    * ```ts
-   * const usesend = new UseSend('us_xxx');
+   * const usesend = new UseSend('bs_xxx');
    * const webhooks = usesend.webhooks('whsec_xxx');
    *
    * // In your webhook route

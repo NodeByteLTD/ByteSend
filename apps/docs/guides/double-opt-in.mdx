@@ -53,7 +53,7 @@ Create a contact book with double opt-in enabled:
 
 ```bash
 curl -X POST https://bytesend.cloud/api/v1/contactBooks \
-  -H "Authorization: Bearer us_your_api_key" \
+  -H "Authorization: Bearer bs_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Newsletter Subscribers",
@@ -67,7 +67,7 @@ Or enable it on an existing contact book:
 
 ```bash
 curl -X PATCH https://bytesend.cloud/api/v1/contactBooks/{contactBookId} \
-  -H "Authorization: Bearer us_your_api_key" \
+  -H "Authorization: Bearer bs_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "doubleOptInEnabled": true

@@ -28,6 +28,7 @@ declare module "next-auth" {
       id: number;
       isBetaUser: boolean;
       isAdmin: boolean;
+      isFounder: boolean;
       isWaitlisted: boolean;
       // ...other properties
       // role: UserRole;
@@ -39,6 +40,7 @@ declare module "next-auth" {
     id: number;
     isBetaUser: boolean;
     isAdmin: boolean;
+    isFounder: boolean;
     isWaitlisted: boolean;
   }
 }
@@ -118,16 +120,24 @@ function getProviders() {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-        isBetaUser: user.isBetaUser,
-        isAdmin: [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean).includes(user.email ?? ''),
-        isWaitlisted: user.isWaitlisted,
-      },
-    }),
+    session: ({ session, user }) => {
+      const isFounder = !!env.FOUNDER_EMAIL && user.email === env.FOUNDER_EMAIL;
+      const isAdmin =
+        isFounder ||
+        (!!env.ADMIN_EMAIL && user.email === env.ADMIN_EMAIL) ||
+        user.isAdmin;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+          isBetaUser: user.isBetaUser,
+          isAdmin,
+          isFounder,
+          isWaitlisted: user.isWaitlisted,
+        },
+      };
+    },
   },
   adapter: PrismaAdapter(db) as Adapter,
   pages: {

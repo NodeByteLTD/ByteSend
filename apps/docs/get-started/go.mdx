@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-    client, err := usesend.NewClient("us_12345")
+    client, err := usesend.NewClient("bs_12345")
     if err != nil {
         log.Fatal(err)
     }
@@ -44,7 +44,7 @@ API keys can also be supplied via the `USESEND_API_KEY` environment variable.
 If you are running a self-hosted version of useSend, provide the base URL using `WithBaseURL`.
 ```go
 client, err := usesend.NewClient(
-    "us_12345",
+    "bs_12345",
     usesend.WithBaseURL("https://bytesend.cloud"),
 )
 if err != nil {

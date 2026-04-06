@@ -1,0 +1,257 @@
+"use client";
+
+import { useState } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Button } from "@bytesend/ui/src/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@bytesend/ui/src/form";
+import { Input } from "@bytesend/ui/src/input";
+import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
+import { Switch } from "@bytesend/ui/src/switch";
+import { Badge } from "@bytesend/ui/src/badge";
+import { formatDistanceToNow } from "date-fns";
+
+import { api } from "~/trpc/react";
+import { isCloud } from "~/utils/common";
+import type { AppRouter } from "~/server/api/root";
+import type { inferRouterOutputs } from "@trpc/server";
+
+const searchSchema = z.object({
+  email: z
+    .string({ required_error: "Email is required" })
+    .trim()
+    .email("Enter a valid email address"),
+});
+
+type SearchInput = z.infer<typeof searchSchema>;
+
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+type ManagedUser = NonNullable<RouterOutputs["admin"]["findUserByEmail"]>;
+
+function UserToggleRow({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+  isPending,
+  dangerous,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (val: boolean) => void;
+  isPending: boolean;
+  dangerous?: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          disabled={isPending}
+          className={dangerous && checked ? "data-[state=checked]:bg-destructive" : undefined}
+        />
+        {isPending ? <Spinner className="h-4 w-4" /> : null}
+      </div>
+    </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  const [userResult, setUserResult] = useState<ManagedUser | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const form = useForm<SearchInput>({
+    resolver: zodResolver(searchSchema),
+    defaultValues: { email: "" },
+  });
+
+  const findUser = api.admin.findUserByEmail.useMutation({
+    onSuccess: (data) => {
+      setHasSearched(true);
+      if (!data) {
+        setUserResult(null);
+        toast.info("No user found for that email");
+        return;
+      }
+      setUserResult(data);
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Unable to search for user");
+    },
+  });
+
+  const updateWaitlist = api.admin.updateUserWaitlist.useMutation({
+    onSuccess: (updated) => {
+      setUserResult(updated);
+      toast.success(
+        updated.isWaitlisted ? "User added to waitlist" : "User removed from waitlist",
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Unable to update waitlist status");
+    },
+  });
+
+  const updateBeta = api.admin.updateUserBeta.useMutation({
+    onSuccess: (updated) => {
+      setUserResult(updated);
+      toast.success(
+        updated.isBetaUser ? "Beta access granted" : "Beta access revoked",
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Unable to update beta status");
+    },
+  });
+
+  const setAdmin = api.admin.setUserAdmin.useMutation({
+    onSuccess: (updated) => {
+      setUserResult(updated);
+      toast.success(
+        updated.isAdmin ? "Admin access granted" : "Admin access revoked",
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Unable to update admin status");
+    },
+  });
+
+  const onSubmit = (values: SearchInput) => {
+    setHasSearched(false);
+    setUserResult(null);
+    findUser.mutate(values);
+  };
+
+  if (!isCloud()) {
+    return (
+      <div className="rounded-lg border bg-muted/30 p-6 text-sm text-muted-foreground">
+        User management is available only in the cloud deployment.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Search */}
+      <div className="rounded-lg border p-6 shadow-sm">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>User email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="user@example.com"
+                      autoComplete="off"
+                      {...field}
+                      value={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={findUser.isPending}>
+              {findUser.isPending ? (
+                <>
+                  <Spinner className="mr-2 h-4 w-4" /> Searching...
+                </>
+              ) : (
+                "Lookup user"
+              )}
+            </Button>
+          </form>
+        </Form>
+      </div>
+
+      {!findUser.isPending && hasSearched && !userResult ? (
+        <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+          No user matched that email. Try another search.
+        </div>
+      ) : null}
+
+      {userResult ? (
+        <div className="space-y-4 rounded-lg border p-6 shadow-sm">
+          {/* User header */}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-base font-semibold">{userResult.name ?? "—"}</p>
+              <p className="text-sm text-muted-foreground">{userResult.email}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Joined{" "}
+                {formatDistanceToNow(new Date(userResult.createdAt), { addSuffix: true })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {userResult.isWaitlisted && (
+                <Badge variant="destructive">Waitlisted</Badge>
+              )}
+              {userResult.isBetaUser && (
+                <Badge variant="secondary">Beta</Badge>
+              )}
+              {userResult.isAdmin && (
+                <Badge variant="outline">Admin</Badge>
+              )}
+              {!userResult.isWaitlisted && !userResult.isBetaUser && !userResult.isAdmin && (
+                <Badge variant="outline">Standard</Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Toggles */}
+          <div className="space-y-4 border-t pt-4">
+            <UserToggleRow
+              label="Waitlist"
+              description="Restrict this user from accessing the platform until manually released."
+              checked={userResult.isWaitlisted}
+              onCheckedChange={(val) =>
+                updateWaitlist.mutate({ userId: userResult.id, isWaitlisted: val })
+              }
+              isPending={updateWaitlist.isPending}
+              dangerous
+            />
+
+            <UserToggleRow
+              label="Beta access"
+              description="Grant this user access to beta features before public release."
+              checked={userResult.isBetaUser}
+              onCheckedChange={(val) =>
+                updateBeta.mutate({ userId: userResult.id, isBetaUser: val })
+              }
+              isPending={updateBeta.isPending}
+            />
+
+            <UserToggleRow
+              label="Admin"
+              description="Grants access to the admin panel — SES configs, team management, and analytics. Admins cannot manage other users or assign roles."
+              checked={userResult.isAdmin}
+              onCheckedChange={(val) =>
+                setAdmin.mutate({ userId: userResult.id, isAdmin: val })
+              }
+              isPending={setAdmin.isPending}
+              dangerous
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

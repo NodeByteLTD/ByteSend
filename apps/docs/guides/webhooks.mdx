@@ -149,7 +149,7 @@ bun add bytesend-js
 ```typescript
 import { UseSend } from "bytesend-js";
 
-const usesend = new UseSend("us_your_api_key");
+const usesend = new UseSend("bs_your_api_key");
 const webhooks = usesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 
 export async function POST(request: Request) {

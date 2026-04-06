@@ -49,9 +49,9 @@ You can create unordered list
 <p>Add code by typing \`\`\` and enter</p>
 <pre>
 <code>
-const usesend = new UseSend("us_12345");
+const usesend = new UseSend("bs_12345");
 
-// const usesend = new UseSend("us_12345", "https://bytesend.cloud");
+// const usesend = new UseSend("bs_12345", "https://bytesend.cloud");
 
 usesend.emails.send({
   to: "john@doe.com",

@@ -86,6 +86,7 @@ model User {
   image            String?
   isBetaUser       Boolean    @default(false)
   isWaitlisted     Boolean    @default(false)
+  isAdmin          Boolean    @default(false)
   createdAt        DateTime   @default(now())
   accounts         Account[]
   sessions         Session[]

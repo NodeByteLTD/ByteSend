@@ -116,7 +116,7 @@ This renders `there` when `firstName` is empty.
 
 ```bash
 curl -X POST https://bytesend.cloud/api/v1/contactBooks \
-  -H "Authorization: Bearer us_your_api_key" \
+  -H "Authorization: Bearer bs_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Customers",
@@ -128,7 +128,7 @@ curl -X POST https://bytesend.cloud/api/v1/contactBooks \
 
 ```bash
 curl -X POST https://bytesend.cloud/api/v1/contactBooks/{contactBookId}/contacts \
-  -H "Authorization: Bearer us_your_api_key" \
+  -H "Authorization: Bearer bs_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "jane@example.com",
@@ -145,7 +145,7 @@ curl -X POST https://bytesend.cloud/api/v1/contactBooks/{contactBookId}/contacts
 
 ```bash
 curl -X POST https://bytesend.cloud/api/v1/campaigns \
-  -H "Authorization: Bearer us_your_api_key" \
+  -H "Authorization: Bearer bs_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Welcome campaign",

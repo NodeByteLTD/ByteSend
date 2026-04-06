@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { SettingsNavButton } from "../dev-settings/settings-nav-button";
 import { isCloud } from "~/utils/common";
 
@@ -8,6 +9,9 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session } = useSession();
+  const isFounder = session?.user.isFounder ?? false;
+
   return (
     <div className="space-y-6">
       <div>
@@ -28,6 +32,11 @@ export default function AdminLayout({
         {isCloud() ? (
           <SettingsNavButton href="/admin/email-analytics">
             Email Analytics
+          </SettingsNavButton>
+        ) : null}
+        {isCloud() && isFounder ? (
+          <SettingsNavButton href="/admin/users">
+            Users
           </SettingsNavButton>
         ) : null}
         {isCloud() ? (

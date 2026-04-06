@@ -53,7 +53,7 @@ class UseSend:
     ) -> None:
         self.key = key or os.getenv("USESEND_API_KEY") or os.getenv("UNSEND_API_KEY")
         if not self.key:
-            raise ValueError("Missing API key. Pass it to UseSend('us_123')")
+            raise ValueError("Missing API key. Pass it to UseSend('bs_123')")
 
         base = os.getenv("USESEND_BASE_URL") or os.getenv("UNSEND_BASE_URL") or DEFAULT_BASE_URL
         if url:

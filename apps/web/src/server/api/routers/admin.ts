@@ -2,7 +2,7 @@ import { Prisma, type Plan } from "@prisma/client";
 import { z } from "zod";
 import { env } from "~/env";
 
-import { createTRPCRouter, adminProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, adminProcedure, founderProcedure } from "~/server/api/trpc";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
 import { getAccount } from "~/server/aws/ses";
 import { db } from "~/server/db";
@@ -12,11 +12,13 @@ import { UseSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
 
-const waitlistUserSelection = {
+const userAdminSelection = {
   id: true,
   email: true,
   name: true,
   isWaitlisted: true,
+  isBetaUser: true,
+  isAdmin: true,
   createdAt: true,
 } as const;
 
@@ -124,7 +126,7 @@ export const adminRouter = createTRPCRouter({
       );
     }),
 
-  findUserByEmail: adminProcedure
+  findUserByEmail: founderProcedure
     .input(
       z.object({
         email: z
@@ -136,13 +138,13 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const user = await db.user.findUnique({
         where: { email: input.email },
-        select: waitlistUserSelection,
+        select: userAdminSelection,
       });
 
       return user ?? null;
     }),
 
-  updateUserWaitlist: adminProcedure
+  updateUserWaitlist: founderProcedure
     .input(
       z.object({
         userId: z.number(),
@@ -152,7 +154,7 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const existingUser = await db.user.findUnique({
         where: { id: input.userId },
-        select: waitlistUserSelection,
+        select: userAdminSelection,
       });
 
       if (!existingUser) {
@@ -162,7 +164,7 @@ export const adminRouter = createTRPCRouter({
       const updatedUser = await db.user.update({
         where: { id: input.userId },
         data: { isWaitlisted: input.isWaitlisted },
-        select: waitlistUserSelection,
+        select: userAdminSelection,
       });
 
       const founderEmail = env.FOUNDER_EMAIL ?? undefined;
@@ -256,7 +258,7 @@ export const adminRouter = createTRPCRouter({
       return updatedUser;
     }),
 
-  rejectWaitlistUser: adminProcedure
+  rejectWaitlistUser: founderProcedure
     .input(
       z.object({
         userId: z.number(),
@@ -265,7 +267,7 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const user = await db.user.findUnique({
         where: { id: input.userId },
-        select: waitlistUserSelection,
+        select: userAdminSelection,
       });
 
       if (!user) {
@@ -315,6 +317,59 @@ export const adminRouter = createTRPCRouter({
       }
 
       return { sent: true };
+    }),
+
+  updateUserBeta: founderProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        isBetaUser: z.boolean(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const user = await db.user.findUnique({
+        where: { id: input.userId },
+        select: userAdminSelection,
+      });
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      return db.user.update({
+        where: { id: input.userId },
+        data: { isBetaUser: input.isBetaUser },
+        select: userAdminSelection,
+      });
+    }),
+
+  setUserAdmin: founderProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        isAdmin: z.boolean(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Prevent the founder from removing their own admin (safety guard)
+      const target = await db.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, email: true },
+      });
+
+      if (!target) {
+        throw new Error("User not found");
+      }
+
+      if (target.email === env.FOUNDER_EMAIL) {
+        throw new Error("Cannot modify the founder's admin status");
+      }
+
+      return db.user.update({
+        where: { id: input.userId },
+        data: { isAdmin: input.isAdmin },
+        select: userAdminSelection,
+      });
     }),
 
   findTeam: adminProcedure
