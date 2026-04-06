@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        APP_VERSION: ${APP_VERSION:-unknown}
+        GIT_SHA: ${GIT_SHA:-unknown}
+    ports:
+      - "3020:3020"
+    environment:
+      # Node
+      - NODE_ENV=production
+      - PORT=3020
+      
+      # NextAuth
+      - NEXTAUTH_URL=https://bytesend.cloud
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      
+      # Database
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # GitHub OAuth (optional)
+      - GITHUB_ID=${GITHUB_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      
+      # Discord OAuth (optional)
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      
+      # Google OAuth (optional)
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      
+      # AWS
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_SES_ENDPOINT=${AWS_SES_ENDPOINT}
+      - AWS_SNS_ENDPOINT=${AWS_SNS_ENDPOINT}
+      
+      # API Keys
+      - USESEND_API_KEY=${USESEND_API_KEY}
+      - UNSEND_API_KEY=${UNSEND_API_KEY}
+      
+      # Features
+      - API_RATE_LIMIT=${API_RATE_LIMIT:-1}
+      - NEXT_PUBLIC_IS_CLOUD=true
+      
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`bytesend.cloud`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.web.loadbalancer.server.port=3020"
+    restart: unless-stopped
