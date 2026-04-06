@@ -217,9 +217,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsItems
-                .filter((item) => !item.isAdmin && !item.isSelfHosted)
-                .map((item) => {
+              {settingsItems.map((item) => {
                   const isActive = pathname?.startsWith(item.url);
                   return (
                     <SidebarMenuItem key={item.title}>
