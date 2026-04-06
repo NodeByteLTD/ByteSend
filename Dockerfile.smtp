@@ -10,7 +10,7 @@ RUN apk add --no-cache libc6-compat
 RUN apk update
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY ./apps/smtp-server ./apps/smtp-server
 COPY ./packages ./packages
 RUN pnpm add turbo@^2.5.2 -g
