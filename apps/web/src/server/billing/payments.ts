@@ -79,7 +79,15 @@ export async function createCheckoutSessionForTeam(
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [{ price: env.STRIPE_LITE_PRICE_ID, quantity: 1 }],
+      line_items: [
+        { price: env.STRIPE_LITE_PRICE_ID, quantity: 1 },
+        ...(env.STRIPE_LITE_MARKETING_USAGE_PRICE_ID
+          ? [{ price: env.STRIPE_LITE_MARKETING_USAGE_PRICE_ID }]
+          : []),
+        ...(env.STRIPE_LITE_TRANSACTIONAL_USAGE_PRICE_ID
+          ? [{ price: env.STRIPE_LITE_TRANSACTIONAL_USAGE_PRICE_ID }]
+          : []),
+      ],
       success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
       metadata: { teamId, plan },
@@ -97,7 +105,15 @@ export async function createCheckoutSessionForTeam(
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [{ price: env.STRIPE_HOBBY_PRICE_ID, quantity: 1 }],
+      line_items: [
+        { price: env.STRIPE_HOBBY_PRICE_ID, quantity: 1 },
+        ...(env.STRIPE_HOBBY_MARKETING_USAGE_PRICE_ID
+          ? [{ price: env.STRIPE_HOBBY_MARKETING_USAGE_PRICE_ID }]
+          : []),
+        ...(env.STRIPE_HOBBY_TRANSACTIONAL_USAGE_PRICE_ID
+          ? [{ price: env.STRIPE_HOBBY_TRANSACTIONAL_USAGE_PRICE_ID }]
+          : []),
+      ],
       success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
       metadata: { teamId, plan },
@@ -107,11 +123,9 @@ export async function createCheckoutSessionForTeam(
     return session;
   }
 
-  // BASIC: monthly subscription + metered usage
-  if (!env.STRIPE_BASIC_PRICE_ID || !env.STRIPE_BASIC_USAGE_PRICE_ID) {
-    throw new Error(
-      "STRIPE_BASIC_PRICE_ID or STRIPE_BASIC_USAGE_PRICE_ID is not set"
-    );
+  // BASIC: monthly flat-rate subscription
+  if (!env.STRIPE_BASIC_PRICE_ID) {
+    throw new Error("STRIPE_BASIC_PRICE_ID is not set");
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -119,7 +133,6 @@ export async function createCheckoutSessionForTeam(
     customer: customerId,
     line_items: [
       { price: env.STRIPE_BASIC_PRICE_ID, quantity: 1 },
-      { price: env.STRIPE_BASIC_USAGE_PRICE_ID },
     ],
     success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { PlanType } from "./types";
 import { STRIPE_PRODUCTS, STRIPE_ENV_KEYS } from "./products";
+import { PLANS } from "./plans";
 
 /**
  * Stripe Seed/Sync Utilities
@@ -13,7 +14,8 @@ export interface StripeProductMapping {
   priceIds: {
     monthly?: string;
     annual?: string;
-    usage?: string;
+    marketingUsage?: string;
+    transactionalUsage?: string;
     oneTime?: string;
   };
   metadata: {
@@ -88,12 +90,12 @@ export async function syncPlansToStripe(
         }
 
         // Handle pricing based on plan type
-        const priceIds: { monthly?: string; annual?: string; usage?: string; oneTime?: string } =
+        const priceIds: { monthly?: string; annual?: string; marketingUsage?: string; transactionalUsage?: string; oneTime?: string } =
           {};
 
         if (plan === "FREE") {
-          // No prices needed for free plan
-          console.log(`  └─ Free plan, skipping price creation`);
+          // No base subscription price — only metered usage prices
+          console.log(`  └─ Free plan, skipping base price`);
         } else if (plan === "LIFETIME") {
           // One-time purchase — no recurring field in Stripe means type=one_time
           const price = await createOrUpdatePrice(stripe, {
@@ -132,6 +134,36 @@ export async function syncPlansToStripe(
           console.log(`  └─ Created monthly price ($${(config.priceMonthly! / 100).toFixed(2)}/mo): ${monthlyPrice.id}`);
         }
 
+        // Create metered usage prices for plans with usageMetering
+        const planData = PLANS[plan];
+        if (planData.usageMetering) {
+          // Rates are in dollars — convert to cents string for Stripe unit_amount_decimal
+          const marketingCents = (planData.usageMetering.marketing * 100).toFixed(4);
+          const transactionalCents = (planData.usageMetering.transactional * 100).toFixed(4);
+
+          const marketingPrice = await createOrUpdatePrice(stripe, {
+            productId: product.id,
+            unitAmountDecimal: marketingCents,
+            currency: "usd",
+            billingScheme: "per_unit",
+            recurring: { interval: "month", usageType: "metered", aggregateUsage: "sum" },
+            metadata: { type: "marketing-usage", plan },
+          });
+          priceIds.marketingUsage = marketingPrice.id;
+          console.log(`  └─ Created marketing usage price ($${planData.usageMetering.marketing}/email): ${marketingPrice.id}`);
+
+          const transactionalPrice = await createOrUpdatePrice(stripe, {
+            productId: product.id,
+            unitAmountDecimal: transactionalCents,
+            currency: "usd",
+            billingScheme: "per_unit",
+            recurring: { interval: "month", usageType: "metered", aggregateUsage: "sum" },
+            metadata: { type: "transactional-usage", plan },
+          });
+          priceIds.transactionalUsage = transactionalPrice.id;
+          console.log(`  └─ Created transactional usage price ($${planData.usageMetering.transactional}/email): ${transactionalPrice.id}`);
+        }
+
         products.push({
           plan,
           productId: product.id,
@@ -165,7 +197,8 @@ export async function syncPlansToStripe(
 
 interface CreatePriceParams {
   productId: string;
-  amount: number | null;
+  amount?: number | null;
+  unitAmountDecimal?: string;
   currency: string;
   billingScheme: "per_unit";
   recurring: {
@@ -183,6 +216,7 @@ async function createOrUpdatePrice(
   const {
     productId,
     amount,
+    unitAmountDecimal,
     currency,
     billingScheme,
     recurring,
@@ -219,8 +253,10 @@ async function createOrUpdatePrice(
     };
   }
 
-  if (amount !== null) {
+  if (amount !== undefined && amount !== null) {
     priceData.unit_amount = amount;
+  } else if (unitAmountDecimal !== undefined) {
+    priceData.unit_amount_decimal = unitAmountDecimal;
   }
 
   const price = await stripe.prices.create(priceData);
@@ -253,8 +289,10 @@ export function generateEnvOutput(
         env[envKey] = result.productId;
       } else if (key === "monthlyPrice" && result.priceIds.monthly) {
         env[envKey] = result.priceIds.monthly;
-      } else if (key === "usagePrice" && result.priceIds.usage) {
-        env[envKey] = result.priceIds.usage;
+      } else if (key === "marketingUsagePrice" && result.priceIds.marketingUsage) {
+        env[envKey] = result.priceIds.marketingUsage;
+      } else if (key === "transactionalUsagePrice" && result.priceIds.transactionalUsage) {
+        env[envKey] = result.priceIds.transactionalUsage;
       } else if (key === "oneTimePrice" && result.priceIds.oneTime) {
         env[envKey] = result.priceIds.oneTime;
       }

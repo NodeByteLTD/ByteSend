@@ -9,17 +9,23 @@ import { PLANS, getPlan, PlanType } from "@bytesend/lib";
 /**
  * Environment variable mapping for plan price IDs
  */
-const PLAN_ENV_MAP: Record<PlanType, { monthly?: string; usage?: string; oneTime?: string }> = {
-  FREE: {},
+const PLAN_ENV_MAP: Record<PlanType, { monthly?: string; marketingUsage?: string; transactionalUsage?: string; oneTime?: string }> = {
+  FREE: {
+    marketingUsage: env.STRIPE_FREE_MARKETING_USAGE_PRICE_ID,
+    transactionalUsage: env.STRIPE_FREE_TRANSACTIONAL_USAGE_PRICE_ID,
+  },
   LITE: {
     monthly: env.STRIPE_LITE_PRICE_ID,
+    marketingUsage: env.STRIPE_LITE_MARKETING_USAGE_PRICE_ID,
+    transactionalUsage: env.STRIPE_LITE_TRANSACTIONAL_USAGE_PRICE_ID,
   },
   HOBBY: {
     monthly: env.STRIPE_HOBBY_PRICE_ID,
+    marketingUsage: env.STRIPE_HOBBY_MARKETING_USAGE_PRICE_ID,
+    transactionalUsage: env.STRIPE_HOBBY_TRANSACTIONAL_USAGE_PRICE_ID,
   },
   BASIC: {
     monthly: env.STRIPE_BASIC_PRICE_ID,
-    usage: env.STRIPE_BASIC_USAGE_PRICE_ID,
   },
   LIFETIME: {
     oneTime: env.STRIPE_LIFETIME_PRICE_ID,
@@ -29,7 +35,7 @@ const PLAN_ENV_MAP: Record<PlanType, { monthly?: string; usage?: string; oneTime
 /**
  * Get Stripe price IDs for a plan
  */
-export function getPlanPriceIds(plan: PlanType): { monthly?: string; usage?: string; oneTime?: string } {
+export function getPlanPriceIds(plan: PlanType): { monthly?: string; marketingUsage?: string; transactionalUsage?: string; oneTime?: string } {
   return PLAN_ENV_MAP[plan];
 }
 
@@ -41,10 +47,17 @@ export function getMonthlyPriceId(plan: PlanType): string | undefined {
 }
 
 /**
- * Get the price ID for usage/metered billing
+ * Get the price ID for marketing email metered billing
  */
-export function getUsagePriceId(plan: PlanType): string | undefined {
-  return PLAN_ENV_MAP[plan]?.usage;
+export function getMarketingUsagePriceId(plan: PlanType): string | undefined {
+  return PLAN_ENV_MAP[plan]?.marketingUsage;
+}
+
+/**
+ * Get the price ID for transactional email metered billing
+ */
+export function getTransactionalUsagePriceId(plan: PlanType): string | undefined {
+  return PLAN_ENV_MAP[plan]?.transactionalUsage;
 }
 
 /**

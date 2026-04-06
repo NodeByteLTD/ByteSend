@@ -72,14 +72,20 @@ export function getAllProductConfigs(): StripeProductConfig[] {
 export const STRIPE_ENV_KEYS = {
   FREE: {
     productId: "STRIPE_FREE_PRODUCT_ID",
+    marketingUsagePrice: "STRIPE_FREE_MARKETING_USAGE_PRICE_ID",
+    transactionalUsagePrice: "STRIPE_FREE_TRANSACTIONAL_USAGE_PRICE_ID",
   },
   LITE: {
     productId: "STRIPE_LITE_PRODUCT_ID",
     monthlyPrice: "STRIPE_LITE_PRICE_ID",
+    marketingUsagePrice: "STRIPE_LITE_MARKETING_USAGE_PRICE_ID",
+    transactionalUsagePrice: "STRIPE_LITE_TRANSACTIONAL_USAGE_PRICE_ID",
   },
   HOBBY: {
     productId: "STRIPE_HOBBY_PRODUCT_ID",
     monthlyPrice: "STRIPE_HOBBY_PRICE_ID",
+    marketingUsagePrice: "STRIPE_HOBBY_MARKETING_USAGE_PRICE_ID",
+    transactionalUsagePrice: "STRIPE_HOBBY_TRANSACTIONAL_USAGE_PRICE_ID",
   },
   BASIC: {
     productId: "STRIPE_BASIC_PRODUCT_ID",
