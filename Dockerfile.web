@@ -4,7 +4,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 ENV SKIP_ENV_VALIDATION="true"
 ENV DOCKER_OUTPUT=1
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_IS_CLOUD="false"
+ENV NEXT_PUBLIC_IS_CLOUD="true"
 
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
