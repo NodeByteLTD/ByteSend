@@ -8,12 +8,9 @@ services:
         APP_VERSION: ${APP_VERSION:-unknown}
         GIT_SHA: ${GIT_SHA:-unknown}
     ports:
-      - "3020:3020"
+      - "3040:3040"
     environment:
       # Node
-      - NODE_ENV=production
-      - PORT=3020
-      
       # NextAuth
       - NEXTAUTH_URL=https://bytesend.cloud
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
@@ -53,5 +50,5 @@ services:
       - "traefik.http.routers.web.rule=Host(`bytesend.cloud`)"
       - "traefik.http.routers.web.entrypoints=websecure"
       - "traefik.http.routers.web.tls.certresolver=letsencrypt"
-      - "traefik.http.services.web.loadbalancer.server.port=3020"
+      - "traefik.http.services.web.loadbalancer.server.port=3040"
     restart: unless-stopped
