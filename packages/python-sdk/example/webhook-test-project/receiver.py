@@ -8,7 +8,7 @@ from flask.typing import ResponseReturnValue
 from usesend import UseSend, WebhookVerificationError  # type: ignore[import-not-found]
 
 
-WEBHOOK_SECRET = os.getenv("USESEND_WEBHOOK_SECRET", "whsec_test")
+WEBHOOK_SECRET = os.getenv("BYTESEND_WEBHOOK_SECRET", "whsec_test")
 
 app = Flask(__name__)
 usesend = UseSend("us_test")

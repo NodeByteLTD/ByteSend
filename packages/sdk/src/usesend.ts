@@ -7,7 +7,7 @@ import { Campaigns } from "./campaign";
 import { Analytics } from "./analytics";
 import { Webhooks } from "./webhooks";
 
-const defaultBaseUrl = "https://app.bytesend.cloud";
+const defaultBaseUrl = "https://bytesend.cloud";
 // eslint-disable-next-line turbo/no-undeclared-env-vars
 const baseUrl = `${process?.env?.BYTESEND_BASE_URL ?? process?.env?.USESEND_BASE_URL ?? process?.env?.UNSEND_BASE_URL ?? defaultBaseUrl}/api/v1`;
 

@@ -416,8 +416,8 @@ export class TeamService {
 
     const subject =
       reason === LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED
-        ? "useSend: You've reached your monthly email limit"
-        : "useSend: You've reached your daily email limit";
+        ? "ByteSend: You've reached your monthly email limit"
+        : "ByteSend: You've reached your daily email limit";
 
     const text = `Hi ${team.name} team,\n\nYou've reached your ${
       reason === LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED
@@ -441,7 +441,7 @@ export class TeamService {
     try {
       await Promise.all(
         recipients.map((to) =>
-          sendMail(to, subject, text, html, "hey@usesend.com"),
+          sendMail(to, subject, text, html, "hey@bytesend.cloud"),
         ),
       );
       logger.info(
@@ -525,8 +525,8 @@ export class TeamService {
 
     const subject =
       period === "monthly"
-        ? "useSend: You're nearing your monthly email limit"
-        : "useSend: You're nearing your daily email limit";
+        ? "ByteSend: You're nearing your monthly email limit"
+        : "ByteSend: You're nearing your daily email limit";
 
     const text = `Hi ${team.name} team,\n\nYou've used ${used.toLocaleString()} of your ${period} limit of ${limit.toLocaleString()} emails.\n\nConsider ${
       isPaidPlan
@@ -547,7 +547,7 @@ export class TeamService {
     try {
       await Promise.all(
         recipients.map((to) =>
-          sendMail(to, subject, text, html, "hey@usesend.com"),
+          sendMail(to, subject, text, html, "hey@bytesend.cloud"),
         ),
       );
       logger.info(

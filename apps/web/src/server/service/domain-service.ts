@@ -294,12 +294,12 @@ async function sendDomainStatusNotification({
     `Open domain settings: ${domainUrl}`,
     null,
     "Thanks,",
-    "useSend Team",
+    "ByteSend Team",
   ].filter((value): value is string => Boolean(value));
 
   await Promise.all(
     recipients.map((email) =>
-      sendMail(email, subject, textLines.join("\n"), html, "hey@usesend.com"),
+      sendMail(email, subject, textLines.join("\n"), html, "hey@bytesend.cloud"),
     ),
   );
 }
@@ -353,7 +353,7 @@ export async function validateDomainFromEmail(email: string, teamId: number) {
   if (!domain) {
     throw new UnsendApiError({
       code: "BAD_REQUEST",
-      message: `Domain: ${fromDomain} of from email is wrong. Use the domain verified by useSend`,
+      message: `Domain: ${fromDomain} of from email is wrong. Use the domain verified by ByteSend`,
     });
   }
 

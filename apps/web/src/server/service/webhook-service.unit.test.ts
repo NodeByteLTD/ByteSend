@@ -191,11 +191,11 @@ describe("WebhookService documented behavior", () => {
 
     const [, request] = fetchSpy.mock.calls[0]!;
     const headers = request!.headers as Record<string, string>;
-    expect(headers["X-UseSend-Event"]).toBe("email.delivered");
-    expect(headers["X-UseSend-Call"]).toBe("call_123");
-    expect(headers["X-UseSend-Signature"]).toMatch(/^v1=/);
-    expect(headers["X-UseSend-Timestamp"]).toBeTypeOf("string");
-    expect(headers["X-UseSend-Retry"]).toBe("false");
+    expect(headers["X-ByteSend-Event"]).toBe("email.delivered");
+    expect(headers["X-ByteSend-Call"]).toBe("call_123");
+    expect(headers["X-ByteSend-Signature"]).toMatch(/^v1=/);
+    expect(headers["X-ByteSend-Timestamp"]).toBeTypeOf("string");
+    expect(headers["X-ByteSend-Retry"]).toBe("false");
   });
 
   it("sets retry=true header for retry attempts", async () => {
@@ -214,7 +214,7 @@ describe("WebhookService documented behavior", () => {
 
     const [, request] = fetchSpy.mock.calls[0]!;
     const headers = request!.headers as Record<string, string>;
-    expect(headers["X-UseSend-Retry"]).toBe("true");
+    expect(headers["X-ByteSend-Retry"]).toBe("true");
   });
 
   it("marks webhook call as FAILED after 6 attempts", async () => {

@@ -1,6 +1,6 @@
 ---
 title: Use with React Email
-description: "A guide on how to use useSend with React Email"
+description: "A guide on how to use ByteSend with React Email"
 ---
 
 ## Introduction
@@ -53,9 +53,9 @@ import { UseSend } from "bytesend-js";
 import { render } from "@react-email/render";
 import { Email } from "./email";
 
-const usesend = new UseSend("us_your_usesend_api_key");
+const usesend = new UseSend("us_your_bytesend_api_key");
 
-  const html = await render(<Email url="https://usesend.com" />);
+  const html = await render(<Email url="https://bytesend.cloud" />);
 
 const response = await usesend.emails.send({
   to: "hello@usesend.com",

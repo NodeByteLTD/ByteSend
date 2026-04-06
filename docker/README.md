@@ -64,7 +64,7 @@ This starts:
    REDIS_URL=redis://redis:6379
 
    # NextAuth
-   NEXTAUTH_URL=https://app.bytesend.cloud
+   NEXTAUTH_URL=https://bytesend.cloud
    NEXTAUTH_SECRET=<secure-secret>
 
    # AWS/SES

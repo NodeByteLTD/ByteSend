@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <p className="text-muted-foreground mb-8">
           This Privacy Policy explains how NodeByte LTD (&quot;we&quot;,
           &quot;us&quot;) collects, uses, and shares information when you visit
-          or interact with bytesend.cloud and the ByteSend application (app.bytesend.cloud).
+          or interact with bytesend.cloud and the ByteSend application (bytesend.cloud).
         </p>
 
         <section className="space-y-3 mb-8">

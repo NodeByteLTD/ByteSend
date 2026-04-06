@@ -7,14 +7,14 @@ import {
 
 describe("email header sanitization", () => {
   it("removes reserved and invalid headers", () => {
-    expect(sanitizeHeader("x-usesend-email-id", "123")).toBeUndefined();
+    expect(sanitizeHeader("x-bytesend-email-id", "123")).toBeUndefined();
     expect(sanitizeHeader("X-Test", "ok\r\nInjected: true")).toBeUndefined();
     expect(sanitizeHeader(123, "ok")).toBeUndefined();
   });
 
   it("returns undefined for empty sanitized map", () => {
     const result = sanitizeCustomHeaders({
-      "x-usesend-email-id": "blocked",
+      "x-bytesend-email-id": "blocked",
       "x-bad": "hello\nworld",
     });
 
@@ -31,7 +31,7 @@ describe("email header sanitization", () => {
       isBulk: true,
     });
 
-    expect(headers["X-Usesend-Email-ID"]).toBe("em_1");
+    expect(headers["X-ByteSend-Email-ID"]).toBe("em_1");
     expect(headers["X-Custom-Trace"]).toBe("trace-1");
     expect(headers["List-Unsubscribe"]).toBe("<https://example.com/unsub>");
     expect(headers["Precedence"]).toBe("bulk");

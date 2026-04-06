@@ -82,10 +82,10 @@ This document explains the webhook system architecture, including how events are
 │                              HTTP POST Request                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────────┐    │
 │  │  Headers:                                                                    │    │
-│  │  ├── X-UseSend-Signature: v1=<hmac-sha256>                                   │    │
-│  │  ├── X-UseSend-Timestamp: 1705312200000                                      │    │
-│  │  ├── X-UseSend-Event: email.delivered                                        │    │
-│  │  └── X-UseSend-Call: call_abc123                                             │    │
+│  │  ├── X-ByteSend-Signature: v1=<hmac-sha256>                                   │    │
+│  │  ├── X-ByteSend-Timestamp: 1705312200000                                      │    │
+│  │  ├── X-ByteSend-Event: email.delivered                                        │    │
+│  │  └── X-ByteSend-Call: call_abc123                                             │    │
 │  │                                                                              │    │
 │  │  Body: {                                                                     │    │
 │  │    "id": "call_abc123",                                                      │    │
@@ -322,12 +322,12 @@ Each request includes security headers for verification:
 
 ```
 Content-Type: application/json
-User-Agent: UseSend-Webhook/1.0
-X-UseSend-Event: email.delivered
-X-UseSend-Call: call_abc123
-X-UseSend-Timestamp: 1705312200000
-X-UseSend-Signature: v1=<hmac-sha256-hex>
-X-UseSend-Retry: false
+User-Agent: ByteSend-Webhook/1.0
+X-ByteSend-Event: email.delivered
+X-ByteSend-Call: call_abc123
+X-ByteSend-Timestamp: 1705312200000
+X-ByteSend-Signature: v1=<hmac-sha256-hex>
+X-ByteSend-Retry: false
 ```
 
 Signature computation:
@@ -376,7 +376,7 @@ PENDING → IN_PROGRESS → DELIVERED (success)
 Located in `packages/sdk/src/webhooks.ts`:
 
 ```typescript
-import { UseSend } from "usesend";
+import { UseSend } from "bytesend";
 
 const usesend = new UseSend("us_api_key");
 const webhooks = usesend.webhooks("whsec_your_secret");

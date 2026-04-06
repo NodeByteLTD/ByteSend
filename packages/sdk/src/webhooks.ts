@@ -34,10 +34,10 @@ export class WebhookVerificationError extends Error {
   }
 }
 
-export const WEBHOOK_SIGNATURE_HEADER = "X-UseSend-Signature";
-export const WEBHOOK_TIMESTAMP_HEADER = "X-UseSend-Timestamp";
-export const WEBHOOK_EVENT_HEADER = "X-UseSend-Event";
-export const WEBHOOK_CALL_HEADER = "X-UseSend-Call";
+export const WEBHOOK_SIGNATURE_HEADER = "X-ByteSend-Signature";
+export const WEBHOOK_TIMESTAMP_HEADER = "X-ByteSend-Timestamp";
+export const WEBHOOK_EVENT_HEADER = "X-ByteSend-Event";
+export const WEBHOOK_CALL_HEADER = "X-ByteSend-Call";
 
 const SIGNATURE_PREFIX = "v1=";
 const DEFAULT_TOLERANCE_MS = 5 * 60 * 1000;

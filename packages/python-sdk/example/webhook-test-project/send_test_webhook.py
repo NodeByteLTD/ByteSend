@@ -10,7 +10,7 @@ import uuid
 import requests
 
 
-WEBHOOK_SECRET = os.getenv("USESEND_WEBHOOK_SECRET", "whsec_test")
+WEBHOOK_SECRET = os.getenv("BYTESEND_WEBHOOK_SECRET", "whsec_test")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "http://127.0.0.1:8000/webhook")
 
 

@@ -59,7 +59,7 @@ export async function parseSesHook(data: SesEvent) {
   // Handle race condition: If email not found by sesEmailId, try to find by custom header
   if (!email) {
     const emailIdHeader = data.mail.headers.find(
-      (h) => h.name === "X-Usesend-Email-ID" || h.name === "X-Unsend-Email-ID",
+      (h) => h.name === "X-ByteSend-Email-ID" || h.name === "X-Unsend-Email-ID",
     );
 
     if (emailIdHeader?.value) {

@@ -77,7 +77,7 @@ services:
       - S3_COMPATIBLE_BUCKET=${S3_COMPATIBLE_BUCKET}
       
       # API Keys
-      - USESEND_API_KEY=${USESEND_API_KEY}
+      - BYTESEND_API_KEY=${BYTESEND_API_KEY}
       - BYTESEND_API_KEY=${BYTESEND_API_KEY}
       
       # Features

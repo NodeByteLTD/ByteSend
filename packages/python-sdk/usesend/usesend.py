@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional, Tuple
 import requests
 
 
-DEFAULT_BASE_URL = "https://app.usesend.com"
+DEFAULT_BASE_URL = "https://bytesend.cloud"
 
 
 class UseSendHTTPError(Exception):

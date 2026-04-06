@@ -17,7 +17,7 @@ export function EmailHeader({ logoUrl, title }: EmailHeaderProps) {
       {logoUrl && (
         <Img
           src={logoUrl}
-          alt="useSend"
+          alt="ByteSend"
           style={{
             width: "48px",
             height: "48px",

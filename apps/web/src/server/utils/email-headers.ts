@@ -1,7 +1,7 @@
 import { nanoid } from "../nanoid";
 
 const RESERVED_EMAIL_HEADERS = new Set(
-  ["x-usesend-email-id"].map((header) => header.toLowerCase())
+  ["x-bytesend-email-id"].map((header) => header.toLowerCase())
 );
 
 const HEADER_INJECTION_PATTERN = /[\r\n]/;
@@ -85,7 +85,7 @@ export function buildHeaders({
   }
 
   if (emailId) {
-    defaultHeaders["X-Usesend-Email-ID"] = emailId;
+    defaultHeaders["X-ByteSend-Email-ID"] = emailId;
   }
 
   if (unsubUrl) {

@@ -37,7 +37,7 @@ You should see:
 
 ## Environment variables
 
-- `USESEND_WEBHOOK_SECRET` (default: `whsec_test`)
+- `BYTESEND_WEBHOOK_SECRET` (default: `whsec_test`)
 - `WEBHOOK_URL` (default: `http://127.0.0.1:8000/webhook`)
 
-Use the same `USESEND_WEBHOOK_SECRET` for both scripts.
+Use the same `BYTESEND_WEBHOOK_SECRET` for both scripts.

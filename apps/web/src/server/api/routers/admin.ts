@@ -183,7 +183,7 @@ export const adminRouter = createTRPCRouter({
         updatedUser.email
       ) {
         try {
-          const client = new UseSend(env.USESEND_API_KEY);
+          const client = new UseSend(env.BYTESEND_API_KEY);
 
           // Split name into first and last name if available
           const firstName = updatedUser.name || "";
@@ -294,7 +294,7 @@ export const adminRouter = createTRPCRouter({
         "",
         "",
         "cheers,",
-        "koushik - useSend.com",
+        "koushik - ByteSend.cloud",
       ].join("\n");
 
       try {

@@ -8,7 +8,7 @@ interface EmailFooterProps {
 
 export function EmailFooter({
   companyName = "ByteSend",
-  supportUrl = "mailto:hey@bytesend.com",
+  supportUrl = "mailto:hey@bytesend.cloud",
 }: EmailFooterProps) {
   return (
     <Container

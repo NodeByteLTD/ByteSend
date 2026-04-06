@@ -11,7 +11,7 @@ let bytesend: UseSend | undefined;
 
 const getClient = () => {
   if (!bytesend) {
-    bytesend = new UseSend(env.USESEND_API_KEY ?? env.UNSEND_API_KEY);
+    bytesend = new UseSend(env.BYTESEND_API_KEY ?? env.UNSEND_API_KEY);
   }
   return bytesend;
 };
@@ -90,7 +90,7 @@ export async function sendMail(
   replyTo?: string,
   fromOverride?: string
 ) {
-  const hasApiKey = !!(env.USESEND_API_KEY ?? env.UNSEND_API_KEY);
+  const hasApiKey = !!(env.BYTESEND_API_KEY ?? env.UNSEND_API_KEY);
 
   if (isSelfHosted() || !hasApiKey) {
     logger.info("Sending email using self hosted");

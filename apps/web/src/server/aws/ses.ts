@@ -310,7 +310,7 @@ export async function addWebhookConfiguration(
 
   const command = new CreateConfigurationSetEventDestinationCommand({
     ConfigurationSetName: configName, // required
-    EventDestinationName: "usesend_destination", // required
+    EventDestinationName: "bytesend_destination", // required
     EventDestination: {
       Enabled: true,
       MatchingEventTypes: eventTypes,

@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- [useSend API key](https://app.usesend.com/dev-settings/api-keys)
-- [Verified domain](https://app.usesend.com/domains)
+- [useSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- [Verified domain](https://bytesend.cloud/domains)
 
 ## Installation
 
@@ -39,7 +39,7 @@ import { UseSend } from "usesend";
 const usesend = new UseSend("us_12345");
 
 // for self-hosted installations you can pass your base URL
-// const usesend = new UseSend("us_12345", "https://app.usesend.com");
+// const usesend = new UseSend("us_12345", "https://bytesend.cloud");
 
 usesend.emails.send({
   to: "hello@acme.com",
@@ -124,7 +124,7 @@ Verify webhook signatures and get typed events:
 import { UseSend } from "usesend";
 
 const usesend = new UseSend("us_12345");
-const webhooks = usesend.webhooks(process.env.USESEND_WEBHOOK_SECRET!);
+const webhooks = usesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 
 // In a Next.js App Route
 export async function POST(request: Request) {
@@ -150,7 +150,7 @@ You can also use the `Webhooks` class directly:
 ```ts
 import { Webhooks } from "usesend";
 
-const webhooks = new Webhooks(process.env.USESEND_WEBHOOK_SECRET!);
+const webhooks = new Webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 const event = webhooks.constructEvent(rawBody, { headers: request.headers });
 ```
 

@@ -7,8 +7,8 @@ async function testEmailTemplates() {
     // Test OTP email
     const otpHtml = await renderOtpEmail({
       otpCode: 'ABC123',
-      loginUrl: 'https://app.usesend.com/login?token=abc123',
-      hostName: 'useSend',
+      loginUrl: 'https://bytesend.cloud/login?token=abc123',
+      hostName: 'ByteSend',
     });
     
     console.log('✅ OTP Email rendered successfully');
@@ -17,7 +17,7 @@ async function testEmailTemplates() {
     // Test Team Invite email
     const inviteHtml = await renderTeamInviteEmail({
       teamName: 'My Awesome Team',
-      inviteUrl: 'https://app.usesend.com/join-team?inviteId=123',
+      inviteUrl: 'https://bytesend.cloud/join-team?inviteId=123',
     });
     
     console.log('✅ Team Invite Email rendered successfully');

@@ -161,7 +161,7 @@ export function AddWebhook() {
                     <FormLabel>Endpoint URL</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="https://example.com/webhooks/usesend"
+                        placeholder="https://example.com/webhooks/bytesend"
                         {...field}
                       />
                     </FormControl>

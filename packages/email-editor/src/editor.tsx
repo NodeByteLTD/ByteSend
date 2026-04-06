@@ -51,7 +51,7 @@ You can create unordered list
 <code>
 const usesend = new UseSend("us_12345");
 
-// const usesend = new UseSend("us_12345", "https://app.usesend.com");
+// const usesend = new UseSend("us_12345", "https://bytesend.cloud");
 
 usesend.emails.send({
   to: "john@doe.com",
