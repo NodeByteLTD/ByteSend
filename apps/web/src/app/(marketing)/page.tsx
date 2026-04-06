@@ -379,7 +379,7 @@ function Pricing() {
 
 const comparisonRows = [
   { feature: "Free tier emails", bytesend: "5,000/mo", unsend: "3,000/mo", resend: "3,000/mo", sendgrid: "100/day", postmark: "100/mo", ses: "N/A" },
-  { feature: "Transactional pricing", bytesend: "Included w/Pro+", unsend: "$0.001/ea", resend: "$0.001/ea", sendgrid: "$0.0006/ea", postmark: "$0.001/ea", ses: "$0.0001/ea" },
+  { feature: "Transactional pricing", bytesend: "$0.001/ea", unsend: "$0.001/ea", resend: "$0.001/ea", sendgrid: "$0.0006/ea", postmark: "$0.001/ea", ses: "$0.0001/ea" },
   { feature: "Marketing campaigns", bytesend: "✓ Built-in", unsend: "✓ Built-in", resend: "✗", sendgrid: "✓", postmark: "✗", ses: "✗" },
   { feature: "Visual editor", bytesend: "✓ WYSIWYG", unsend: "✓ WYSIWYG", resend: "✗", sendgrid: "✓", postmark: "✗", ses: "✗" },
   { feature: "Contact management", bytesend: "✓ Built-in", unsend: "✓ Built-in", resend: "✓", sendgrid: "✓", postmark: "✗", ses: "✗" },
