@@ -2,6 +2,10 @@
   "name": "bytesend",
   "license": "AGPL-3.0-only",
   "private": true,
+  "engines": {
+    "pnpm": ">=9.0.0",
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "build": "turbo build",
     "build:editor": "turbo build --filter=@bytesend/email-editor",
@@ -51,10 +55,7 @@
     "stripe": "^17.7.0",
     "tsx": "^4.19.2"
   },
-  "packageManager": "pnpm@8.9.0",
-  "engines": {
-    "node": ">=20"
-  },
+  "packageManager": "pnpm@9.0.0",
   "dependencies": {
     "turbo": "^2.5.2"
   },
