@@ -32,7 +32,6 @@
             "pages": [
               "introduction",
               "get-started/nodejs",
-              "get-started/python",
               "get-started/go",
               "get-started/smtp"
             ]
