@@ -34,13 +34,8 @@
               "get-started/nodejs",
               "get-started/python",
               "get-started/go",
-              "get-started/local",
               "get-started/smtp"
             ]
-          },
-          {
-            "group": "Self Hosting",
-            "pages": ["self-hosting/overview", "self-hosting/railway"]
           },
           {
             "group": "Guides",
