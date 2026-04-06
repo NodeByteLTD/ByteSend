@@ -12,6 +12,8 @@ services:
     environment:
       # Node
       # NextAuth
+      - NODE_ENV=production
+      - PORT=3020
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       
