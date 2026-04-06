@@ -35,10 +35,7 @@ RUN pnpm turbo run build --filter=smtp-server...
 FROM base AS runner
 WORKDIR /app
 
-COPY --from=installer /app/node_modules ./node_modules
-COPY --from=installer /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=installer /app/apps/smtp-server/package.json ./apps/smtp-server/
-COPY --from=installer /app/apps/smtp-server/dist ./apps/smtp-server/dist
+COPY --from=installer /app .
 
 # Expose SMTP ports
 # 25: SMTP (unencrypted)

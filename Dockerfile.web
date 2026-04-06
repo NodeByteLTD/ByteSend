@@ -45,27 +45,11 @@ RUN pnpm turbo run build --filter=web...
 FROM base AS runner
 WORKDIR /app
 
-COPY --from=installer /app/apps/web/next.config.js .
-COPY --from=installer /app/apps/web/package.json .
-COPY --from=installer /app/pnpm-lock.yaml .
-
-# Copy Next.js build output
-COPY --from=installer /app/apps/web/.next/standalone ./
-COPY --from=installer /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=installer /app/apps/web/public ./apps/web/public
-
-# Copy Prisma files for migrations
-COPY --from=installer /app/apps/web/prisma/schema.prisma ./apps/web/prisma/schema.prisma
-COPY --from=installer /app/apps/web/prisma/migrations ./apps/web/prisma/migrations
-COPY --from=installer /app/apps/web/node_modules/prisma ./node_modules/prisma
-COPY --from=installer /app/apps/web/node_modules/@prisma ./node_modules/@prisma
-
-RUN mkdir -p node_modules/.bin && ln -s /app/node_modules/prisma/build/index.js ./node_modules/.bin/prisma
-
-ENV SKIP_ENV_VALIDATION="false"
-
+COPY --from=installer /app .
 COPY ./docker/start.sh ./start.sh
 RUN chmod +x ./start.sh
+
+ENV SKIP_ENV_VALIDATION="false"
 
 EXPOSE 3000
 
