@@ -53,7 +53,7 @@ export default function SmtpPage() {
                 className="mt-1.5 rounded-lg p-2.5 w-full bg-muted/50 border border-border/50 font-mono text-sm"
                 value={values[field.key]!}
               />
-              {field.hint && (
+              {'hint' in field && field.hint && (
                 <p className="mt-1.5 text-xs text-muted-foreground">{field.hint}</p>
               )}
             </div>
