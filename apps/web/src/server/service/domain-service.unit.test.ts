@@ -87,7 +87,7 @@ function createDomain(overrides: Partial<Domain> = {}): Domain {
     clickTracking: false,
     openTracking: false,
     publicKey: "public-key",
-    dkimSelector: "usesend",
+    dkimSelector: "bytesend",
     dkimStatus: DomainStatus.NOT_STARTED,
     spfDetails: DomainStatus.NOT_STARTED,
     dmarcAdded: false,

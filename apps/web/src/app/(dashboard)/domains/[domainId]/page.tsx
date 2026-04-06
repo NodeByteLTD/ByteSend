@@ -225,7 +225,7 @@ const DomainSettings: React.FC<{ domain: DomainResponse }> = ({ domain }) => {
       <div className="flex flex-col gap-1">
         <div className="font-semibold">Open tracking</div>
         <p className=" text-muted-foreground text-sm">
-          Unsend adds a tracking pixel to every email you send. This allows you
+          ByteSend adds a tracking pixel to every email you send. This allows you
           to see how many people open your emails. This will affect the delivery
           rate of your emails.
         </p>

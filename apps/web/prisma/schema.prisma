@@ -191,7 +191,7 @@ model Domain {
   clickTracking Boolean      @default(false)
   openTracking  Boolean      @default(false)
   publicKey     String
-  dkimSelector  String?      @default("usesend")
+  dkimSelector  String?      @default("bytesend")
   dkimStatus    String?
   spfDetails    String?
   dmarcAdded    Boolean      @default(false)

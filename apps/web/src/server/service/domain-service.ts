@@ -57,7 +57,7 @@ function parseDomainStatus(status?: string | null): DomainStatus {
 function buildDnsRecords(domain: Domain): DomainDnsRecord[] {
   const subdomainSuffix = domain.subdomain ? `.${domain.subdomain}` : "";
   const mailDomain = `mail${subdomainSuffix}`;
-  const dkimSelector = domain.dkimSelector ?? "usesend";
+  const dkimSelector = domain.dkimSelector ?? "bytesend";
 
   const spfStatus = parseDomainStatus(domain.spfDetails);
   const dkimStatus = parseDomainStatus(domain.dkimStatus);
@@ -422,7 +422,7 @@ export async function createDomain(
   }
 
   const subdomain = tldts.getSubdomain(name);
-  const dkimSelector = "usesend";
+  const dkimSelector = "bytesend";
   const publicKey = await ses.addDomain(
     name,
     region,
