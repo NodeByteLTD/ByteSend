@@ -2,13 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import CodeExample from "~/components/marketing/CodeExample";
 import { Button } from "@bytesend/ui/src/button";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "ByteSend – The email platform for modern teams",
-  description:
-    "Send product, transactional and marketing emails. Pay only for what you send.",
-};
 
 const APP_URL = "/login";
 
