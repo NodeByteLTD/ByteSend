@@ -35,12 +35,10 @@ RUN pnpm turbo run build --filter=smtp-server...
 FROM base AS runner
 WORKDIR /app
 
-COPY --from=installer /app/apps/smtp-server/package.json ./apps/smtp-server/
-COPY --from=installer /app/apps/smtp-server/dist ./apps/smtp-server/dist
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/pnpm-lock.yaml ./pnpm-lock.yaml
-
-WORKDIR /app/apps/smtp-server
+COPY --from=installer /app/apps/smtp-server/package.json ./apps/smtp-server/
+COPY --from=installer /app/apps/smtp-server/dist ./apps/smtp-server/dist
 
 # Expose SMTP ports
 # 25: SMTP (unencrypted)
@@ -50,4 +48,4 @@ WORKDIR /app/apps/smtp-server
 # 2465: Alternative SMTPS port
 EXPOSE 25 465 587 2465 2587
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "apps/smtp-server/dist/server.js"]
