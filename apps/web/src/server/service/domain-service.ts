@@ -391,6 +391,12 @@ export async function validateApiKeyDomainAccess(
   return domain;
 }
 
+const RESERVED_DOMAINS = [
+  "bytesend.cloud",
+  "bytesend.com",
+  "usesend.com",
+];
+
 export async function createDomain(
   teamId: number,
   name: string,
@@ -403,6 +409,13 @@ export async function createDomain(
 
   if (!domainStr) {
     throw new Error("Invalid domain");
+  }
+
+  if (RESERVED_DOMAINS.some((r) => name === r || name.endsWith(`.${r}`))) {
+    throw new UnsendApiError({
+      code: "BAD_REQUEST",
+      message: "This domain is reserved and cannot be added.",
+    });
   }
 
   const setting = await SesSettingsService.getSetting(region);

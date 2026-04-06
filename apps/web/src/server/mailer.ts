@@ -105,15 +105,23 @@ export async function sendMail(
       return;
     }
 
-    const domains = await getDomains(team.id);
+    const allDomains = await getDomains(team.id);
 
-    if (domains.length === 0 || !domains[0]) {
+    if (allDomains.length === 0) {
       logger.error("No domains found");
       return;
     }
 
-    const availableDomains = domains.map((d) => d.name);
-    const domain = domains[0];
+    // Prefer verified/active domains; fall back to any domain
+    const domains = allDomains.filter((d) => d.status === "VERIFIED" || d.status === "ACTIVE");
+    const domain = domains[0] ?? allDomains[0]!;
+
+    if (!domain) {
+      logger.error("No usable domain found");
+      return;
+    }
+
+    const availableDomains = (domains.length > 0 ? domains : allDomains).map((d) => d.name);
 
     const candidateFroms = [fromOverride, env.FROM_EMAIL, `hello@${domain.name}`].filter(
       (value): value is string => Boolean(value)
