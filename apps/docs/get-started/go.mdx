@@ -108,9 +108,9 @@ contact, apiErr, err := client.Contacts.Create(
     context.Background(),
     "contactBook_123",
     usesend.CreateContactPayload{
-        Email:     "hey@koushik.dev",
-        FirstName: "Koushik",
-        LastName:  "KM",
+        Email:     "hey@bobdole.com",
+        FirstName: "Bob",
+        LastName:  "Dole",
     },
 )
 
@@ -132,8 +132,8 @@ contact, apiErr, err := client.Contacts.Update(
     "contactBook_123",
     "contact_456",
     usesend.UpdateContactPayload{
-        FirstName: "Koushik",
-        LastName:  "KM",
+        FirstName: "Bob",
+        LastName:  "Dold",
     },
 )
 
