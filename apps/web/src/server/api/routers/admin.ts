@@ -125,7 +125,7 @@ export const adminRouter = createTRPCRouter({
       );
     }),
 
-  findUserByEmail: founderProcedure
+  findUserByEmail: adminProcedure
     .input(
       z.object({
         email: z
