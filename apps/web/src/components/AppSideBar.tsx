@@ -280,7 +280,7 @@ export function AppSidebar() {
             ) : null}
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Docs">
-                <Link href="https://docs.usesend.com" target="_blank">
+                <Link href="https://docs.bytesend.cloud" target="_blank">
                   <BookOpenText />
                   <span>Docs</span>
                 </Link>
