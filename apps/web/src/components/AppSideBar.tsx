@@ -354,7 +354,7 @@ export function AppSidebar() {
             ) : null}
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Discord">
-                <Link href="https://discord.gg/nodebyte" target="_blank">
+                <Link href="https://discord.gg/mVxSeGmEqg" target="_blank">
                   <DiscordIcon className="size-4 shrink-0" />
                   <span>Discord</span>
                 </Link>
