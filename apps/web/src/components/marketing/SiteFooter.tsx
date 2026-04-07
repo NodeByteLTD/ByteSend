@@ -46,7 +46,7 @@ export function SiteFooter() {
 
           {/* Right: social icons */}
           <div className="flex items-center gap-3">
-            <a href="https://discord.gg/nodebyte" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
+            <a href="https://discord.gg/xqkqzVRC4S" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
               <DiscordIcon className="size-4.5" />
             </a>
             <a href="https://x.com/TryByteSend" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="X (Twitter)">

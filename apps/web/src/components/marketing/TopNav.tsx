@@ -29,7 +29,7 @@ export function TopNav() {
         <nav className="hidden sm:flex items-center gap-6 text-muted-foreground">
           <Link href={featuresHref} className="hover:text-foreground transition-colors text-[13px]">Features</Link>
           <Link href={pricingHref} className="hover:text-foreground transition-colors text-[13px]">Pricing</Link>
-          <a href="https://discord.gg/nodebyte" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors text-[13px]">Discord</a>
+          <a href="https://discord.gg/xqkqzVRC4S" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors text-[13px]">Discord</a>
           <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors text-[13px]">Docs</a>
           <Button size="sm" className="ml-2 rounded-lg" asChild>
             <Link href={ctaHref}>{ctaLabel}</Link>
@@ -57,6 +57,7 @@ export function TopNav() {
             <Link href={featuresHref} className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>
             <Link href={pricingHref} className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>
             <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors">Docs</a>
+            <a href="https://discord.gg/xqkqzVRC4S" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors">Discord</a>
             <Button className="w-full mt-2 rounded-lg" asChild>
               <Link href={ctaHref}>{ctaLabel}</Link>
             </Button>
