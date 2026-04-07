@@ -92,9 +92,9 @@ export function CodeExample() {
   const containerId = "code-example";
   const languages = [
     { key: "ts", label: "TypeScript", kind: "ts", shiki: "typescript" as const, code: TS_CODE },
-    { key: "py", label: "Python", kind: "py", shiki: "python" as const, code: PY_CODE },
-    { key: "go", label: "Go", kind: "go", shiki: "go" as const, code: GO_CODE },
-    { key: "php", label: "PHP", kind: "php", shiki: "php" as const, code: PHP_CODE },
+    //{ key: "py", label: "Python", kind: "py", shiki: "python" as const, code: PY_CODE },
+    //{ key: "go", label: "Go", kind: "go", shiki: "go" as const, code: GO_CODE },
+    //{ key: "php", label: "PHP", kind: "php", shiki: "php" as const, code: PHP_CODE },
   ];
 
   return (
