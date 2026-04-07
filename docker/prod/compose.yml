@@ -1,0 +1,95 @@
+name: bytesend-prod
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: bytesend-db-prod
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: bytesend-redis-prod
+    restart: always
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - cache:/data
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+
+  minio:
+    image: minio/minio
+    container_name: bytesend-storage-prod
+    ports:
+      - 9002:9002
+      - 9001:9001
+    volumes:
+      - storage:/data
+    environment:
+      MINIO_ROOT_USER: bytesend
+      MINIO_ROOT_PASSWORD: password
+    entrypoint: sh
+    command: -c 'mkdir -p /data/bytesend && minio server /data --console-address ":9001" --address ":9002"'
+
+  web:
+    image: bytesend/web:latest
+    container_name: bytesend-web
+    restart: always
+    ports:
+      - ${PORT:-3000}:3000
+    environment:
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL:?err}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:?err}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?err}
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY:?err}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY:?err}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:?err}
+      - GITHUB_ID=${GITHUB_ID:?err}
+      - GITHUB_SECRET=${GITHUB_SECRET:?err}
+      - REDIS_URL=${REDIS_URL:?err}
+      - REDIS_KEY_PREFIX=${REDIS_KEY_PREFIX:-}
+      - NEXT_PUBLIC_IS_CLOUD=${NEXT_PUBLIC_IS_CLOUD:-false}
+      - API_RATE_LIMIT=${API_RATE_LIMIT:-1}
+      - SMTP_HOST=${SMTP_HOST:-smtp.bytesend.cloud}
+      - SMTP_USER=${SMTP_USER:-noreply@bytesend.cloud}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  smtp:
+    image: bytesend/smtp:latest
+    container_name: bytesend-smtp
+    restart: always
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "2465:2465"
+      - "2587:2587"
+    environment:
+      - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-http://web:3000}
+      - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
+      - BYTESEND_API_KEY_PATH=${BYTESEND_API_KEY_PATH:-}
+      - BYTESEND_API_CERT_PATH=${BYTESEND_API_CERT_PATH:-}
+    depends_on:
+      - web
+
+volumes:
+  database:
+  cache:
+  storage:
