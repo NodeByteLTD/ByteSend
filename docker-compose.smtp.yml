@@ -47,23 +47,3 @@ services:
 networks:
   dokploy-network:
     external: true
-    labels:
-      - "traefik.enable=true"
-
-      # ── Port 587 STARTTLS ── TCP passthrough, server handles TLS with its own cert
-      - "traefik.tcp.routers.smtp-587.entrypoints=smtp-submission"
-      - "traefik.tcp.routers.smtp-587.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.smtp-587.service=smtp-starttls-svc"
-      - "traefik.tcp.services.smtp-starttls-svc.loadbalancer.server.port=587"
-
-      # ── Port 465 SMTPS ── Traefik terminates TLS then forwards plain TCP
-      - "traefik.tcp.routers.smtp-465.entrypoints=smtps"
-      - "traefik.tcp.routers.smtp-465.rule=HostSNI(`smtp.bytesend.cloud`)"
-      - "traefik.tcp.routers.smtp-465.tls=true"
-      - "traefik.tcp.routers.smtp-465.tls.certresolver=letsencrypt"
-      - "traefik.tcp.routers.smtp-465.service=smtp-smtps-svc"
-      - "traefik.tcp.services.smtp-smtps-svc.loadbalancer.server.port=465"
-
-networks:
-  dokploy-network:
-    external: true
