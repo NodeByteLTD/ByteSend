@@ -40,7 +40,7 @@ export function SiteFooter() {
               <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Docs</a>
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <a href="https://nodebytestat.us" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>
+              <a href="https://status.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>
             </nav>
           </div>
 
@@ -49,7 +49,7 @@ export function SiteFooter() {
             <a href="https://discord.gg/nodebyte" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Discord">
               <DiscordIcon className="size-4.5" />
             </a>
-            <a href="https://x.com/NodeByteHosting" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="X (Twitter)">
+            <a href="https://x.com/TryByteSend" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="X (Twitter)">
               <XIcon className="size-4" />
             </a>
             <a href="https://bsky.app/profile/nodebyte.host" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Bluesky">
