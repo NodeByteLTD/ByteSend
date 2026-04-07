@@ -10,6 +10,7 @@ import {
   Mail,
   Server,
   Volume2,
+  BookOpenText,
   BarChart3,
   LogOutIcon,
   MoreVerticalIcon,
@@ -277,6 +278,14 @@ export function AppSidebar() {
                 />
               </SidebarMenuItem>
             ) : null}
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Docs">
+                <Link href="https://docs.usesend.com" target="_blank">
+                  <BookOpenText />
+                  <span>Docs</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Discord">
                 <Link href="https://discord.gg/nodebyte" target="_blank">
