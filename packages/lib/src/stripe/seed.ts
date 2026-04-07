@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { PlanType } from "./types";
-import { STRIPE_PRODUCTS, STRIPE_ENV_KEYS } from "./products";
+import { STRIPE_PRODUCTS, STRIPE_ENV_KEYS, STRIPE_ADDON_PRODUCTS } from "./products";
 import { PLANS } from "./plans";
 
 /**
@@ -12,7 +12,11 @@ import { PLANS } from "./plans";
 export const METER_EVENT_NAMES = {
   marketing: "bytesend_marketing_emails",
   transactional: "bytesend_transactional_emails",
+  extraMember: "bytesend_extra_team_members",
 } as const;
+
+/** Plans that use Stripe metered overage billing (excludes FREE and LIFETIME) */
+const METERED_PLANS: PlanType[] = ["HOBBY", "LITE", "BASIC"];
 
 export interface StripeProductMapping {
   plan: PlanType;
@@ -33,7 +37,8 @@ export interface StripeProductMapping {
 export interface SyncResult {
   success: boolean;
   products: StripeProductMapping[];
-  meters: { marketing: string; transactional: string };
+  meters: { marketing: string; transactional: string; extraMember: string };
+  addonProducts?: { extraMemberProductId: string; additionalDomainProductId: string };
   errors?: string[];
 }
 
@@ -88,12 +93,17 @@ export async function syncPlansToStripe(
     const marketingMeter = await ensureMeter(
       stripe,
       METER_EVENT_NAMES.marketing,
-      "Marketing Emails Sent"
+      "Marketing Emails Sent (Overage)"
     );
     const transactionalMeter = await ensureMeter(
       stripe,
       METER_EVENT_NAMES.transactional,
-      "Transactional Emails Sent"
+      "Transactional Emails Sent (Overage)"
+    );
+    const extraMemberMeter = await ensureMeter(
+      stripe,
+      METER_EVENT_NAMES.extraMember,
+      "Extra Team Members"
     );
     console.log("");
 
@@ -142,7 +152,7 @@ export async function syncPlansToStripe(
 
         // ── Base subscription / one-time prices ──
         if (plan === "FREE") {
-          console.log(`  └─ Free plan, no base price`);
+          console.log(`  └─ Free plan, no base price or metering`);
         } else if (plan === "LIFETIME") {
           const price = await createOrUpdatePrice(stripe, {
             productId: product.id,
@@ -168,9 +178,11 @@ export async function syncPlansToStripe(
           console.log(`  └─ Monthly: CA$${(config.priceMonthly! / 100).toFixed(2)}/mo → ${monthlyPrice.id}`);
         }
 
-        // ── Metered usage prices (plans with per-email billing) ──
+        // ── Metered overage prices (HOBBY, LITE, BASIC only) ──
+        // Rates apply ONLY to emails sent BEYOND the plan's included monthly limit.
+        // FREE has no metering (hard cap). LIFETIME has no metering (unlimited).
         const planData = PLANS[plan];
-        if (planData.usageMetering) {
+        if (planData.usageMetering && METERED_PLANS.includes(plan)) {
           // Marketing metered price — references the marketing meter
           const marketingCents = (planData.usageMetering.marketing * 100).toFixed(4);
           const marketingPrice = await createOrUpdateMeterPrice(stripe, {
@@ -181,7 +193,7 @@ export async function syncPlansToStripe(
             metadata: { type: "marketing-usage", plan },
           });
           priceIds.marketingUsage = marketingPrice.id;
-          console.log(`  └─ Marketing usage: CA$${planData.usageMetering.marketing}/email → ${marketingPrice.id}`);
+          console.log(`  └─ Marketing overage: CA$${planData.usageMetering.marketing}/email → ${marketingPrice.id}`);
 
           // Transactional metered price — references the transactional meter
           const transactionalCents = (planData.usageMetering.transactional * 100).toFixed(4);
@@ -193,7 +205,7 @@ export async function syncPlansToStripe(
             metadata: { type: "transactional-usage", plan },
           });
           priceIds.transactionalUsage = transactionalPrice.id;
-          console.log(`  └─ Transactional usage: CA$${planData.usageMetering.transactional}/email → ${transactionalPrice.id}`);
+          console.log(`  └─ Transactional overage: CA$${planData.usageMetering.transactional}/email → ${transactionalPrice.id}`);
         }
 
         products.push({
@@ -218,6 +230,7 @@ export async function syncPlansToStripe(
       meters: {
         marketing: marketingMeter.id,
         transactional: transactionalMeter.id,
+        extraMember: extraMemberMeter.id,
       },
       errors: errors.length > 0 ? errors : undefined,
     };
@@ -226,7 +239,7 @@ export async function syncPlansToStripe(
     return {
       success: false,
       products: [],
-      meters: { marketing: "", transactional: "" },
+      meters: { marketing: "", transactional: "", extraMember: "" },
       errors: [`Fatal error during sync: ${errorMsg}`],
     };
   }
@@ -354,7 +367,7 @@ export function generateEnvOutput(
   const env: Record<string, string> = {};
 
   for (const result of results) {
-    const envKeys = STRIPE_ENV_KEYS[result.plan];
+    const envKeys = STRIPE_ENV_KEYS[result.plan as keyof typeof STRIPE_ENV_KEYS];
     if (!envKeys) continue;
 
     const keysRecord = envKeys as Record<string, string>;

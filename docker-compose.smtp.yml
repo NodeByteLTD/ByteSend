@@ -1,36 +1,65 @@
 version: '3.8'
+
+volumes:
+  # Shared volume where traefik-certs-dumper writes extracted cert files.
+  # The smtp container reads from here — no need to manage certs separately.
+  smtp-certs:
+
 services:
+  # Watches Traefik's acme.json and dumps individual cert/key files into the
+  # shared smtp-certs volume whenever Traefik renews certificates.
+  certs-dumper:
+    image: ldez/traefik-certs-dumper:v2.8.3
+    restart: unless-stopped
+    command: >
+      file
+      --source /acme.json
+      --dest /certs
+      --domain-subdir
+      --watch
+      --clean=false
+    volumes:
+      # Mount Traefik's acme.json (read-only). Adjust path if your Dokploy
+      # instance stores it elsewhere (e.g. /var/lib/dokploy/traefik/acme.json).
+      - /etc/dokploy/traefik/acme.json:/acme.json:ro
+      - smtp-certs:/certs
+
   smtp:
     build:
       context: .
       dockerfile: Dockerfile.smtp
+    restart: unless-stopped
+    depends_on:
+      - certs-dumper
     ports:
       - "25:25"
       - "587:587"
       - "465:465"
       - "2465:2465"
       - "2587:2587"
+    volumes:
+      # certs-dumper writes to /certs/<domain>/certificate.crt and privatekey.key
+      - smtp-certs:/certs:ro
     environment:
       - NODE_ENV=production
       - SMTP_AUTH_USERNAME=bytesend
       - BYTESEND_BASE_URL=https://bytesend.cloud
       - SMTP_TLS_MODE=traefik
+      - SMTP_TLS_CERT_PATH=/certs/smtp.bytesend.cloud/certificate.crt
+      - SMTP_TLS_KEY_PATH=/certs/smtp.bytesend.cloud/privatekey.key
     labels:
       - "traefik.enable=true"
-      
-      # Entrypoint for Submission (587)
+
+      # ── Port 587 STARTTLS ── TCP passthrough, server handles TLS with its own cert
       - "traefik.tcp.routers.smtp-587.entrypoints=smtp-submission"
-      - "traefik.tcp.routers.smtp-587.rule=HostSNI(`smtp.bytesend.cloud`)"
-      - "traefik.tcp.routers.smtp-587.tls=true"
-      - "traefik.tcp.routers.smtp-587.tls.certresolver=letsencrypt"
-      
-      # Entrypoint for SMTPS (465)
+      - "traefik.tcp.routers.smtp-587.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.smtp-587.service=smtp-starttls-svc"
+      - "traefik.tcp.services.smtp-starttls-svc.loadbalancer.server.port=587"
+
+      # ── Port 465 SMTPS ── Traefik terminates TLS then forwards plain TCP
       - "traefik.tcp.routers.smtp-465.entrypoints=smtps"
       - "traefik.tcp.routers.smtp-465.rule=HostSNI(`smtp.bytesend.cloud`)"
       - "traefik.tcp.routers.smtp-465.tls=true"
       - "traefik.tcp.routers.smtp-465.tls.certresolver=letsencrypt"
-
-      # Point both to the same internal port (587)
-      - "traefik.tcp.routers.smtp-587.service=smtp-svc"
-      - "traefik.tcp.routers.smtp-465.service=smtp-svc"
-      - "traefik.tcp.services.smtp-svc.loadbalancer.server.port=587"
+      - "traefik.tcp.routers.smtp-465.service=smtp-smtps-svc"
+      - "traefik.tcp.services.smtp-smtps-svc.loadbalancer.server.port=465"

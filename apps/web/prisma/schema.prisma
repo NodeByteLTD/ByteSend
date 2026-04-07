@@ -104,6 +104,7 @@ enum Plan {
 model Team {
   id               Int               @id @default(autoincrement())
   name             String
+  image            String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   plan             Plan              @default(FREE)

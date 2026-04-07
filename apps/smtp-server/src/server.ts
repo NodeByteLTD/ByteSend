@@ -10,9 +10,12 @@ const AUTH_USERNAME = process.env.SMTP_AUTH_USERNAME ?? "bytesend";
 const BASE_URL = process.env.BYTESEND_BASE_URL ?? "https://bytesend.cloud";
 
 // TLS_MODE controls how TLS is handled:
-//   'traefik' — reverse proxy (e.g. Traefik/Dokploy) terminates TLS; server runs plain
-//   'manual'  — server handles TLS directly using SMTP_TLS_KEY_PATH / SMTP_TLS_CERT_PATH
-//   'none'    — no TLS (default)
+//   'traefik' — reverse proxy terminates TLS on port 465 (SMTPS).
+//               For port 587 STARTTLS, the server handles TLS directly —
+//               provide SMTP_TLS_KEY_PATH / SMTP_TLS_CERT_PATH so that
+//               STARTTLS connections can negotiate properly.
+//   'manual'  — server handles all TLS (both STARTTLS and implicit) directly.
+//   'none'    — no TLS; STARTTLS disabled.
 const TLS_MODE = (process.env.SMTP_TLS_MODE ?? "none").toLowerCase();
 
 const SSL_KEY_PATH = process.env.SMTP_TLS_KEY_PATH;
@@ -61,7 +64,11 @@ async function sendEmailToByteSend(emailData: any, apiKey: string) {
 }
 
 function loadCertificates(): { key?: Buffer; cert?: Buffer } {
-  if (TLS_MODE !== "manual") return {};
+  // Load certs for both 'manual' and 'traefik' modes when paths are provided.
+  // In 'traefik' mode, certs are needed so port 587 STARTTLS can negotiate TLS
+  // directly — Traefik does TCP passthrough for STARTTLS (it only terminates TLS
+  // for implicit-TLS connections on port 465 where TLS starts at byte 1).
+  if (TLS_MODE === "none") return {};
   return {
     key: SSL_KEY_PATH ? readFileSync(SSL_KEY_PATH) : undefined,
     cert: SSL_CERT_PATH ? readFileSync(SSL_CERT_PATH) : undefined,
@@ -74,6 +81,17 @@ const serverOptions: SMTPServerOptions = {
   secure: false,
   key: initialCerts.key,
   cert: initialCerts.cert,
+  // Disable STARTTLS when no cert is available and the mode isn't manual.
+  // In 'traefik' mode with certs provided, STARTTLS is enabled so clients using
+  // STARTTLS on port 587 can negotiate TLS directly with this server (Traefik does
+  // TCP passthrough for port 587 — it cannot upgrade STARTTLS mid-session).
+  // In 'none' mode or 'traefik' without certs, advertise plain only.
+  disabledCommands:
+    TLS_MODE === "none" || (TLS_MODE === "traefik" && !SSL_KEY_PATH)
+      ? ["STARTTLS"]
+      : [],
+  // Allow plain-text auth when in traefik mode without certs (internal-only setup).
+  allowInsecureAuth: TLS_MODE === "traefik" && !SSL_KEY_PATH,
   onData(
     stream: Readable,
     session: SMTPServerSession,
@@ -162,11 +180,13 @@ function startServers() {
 
     server.listen(port, () => {
       const modeLabel =
-        TLS_MODE === "traefik"
-          ? "plain (TLS handled by reverse proxy)"
-          : TLS_MODE === "manual"
-            ? "STARTTLS"
-            : "plain";
+        TLS_MODE === "traefik" && SSL_KEY_PATH
+          ? "STARTTLS (cert-backed, Traefik passthrough)"
+          : TLS_MODE === "traefik"
+            ? "plain (no cert — STARTTLS disabled)"
+            : TLS_MODE === "manual"
+              ? "STARTTLS"
+              : "plain";
       console.log(`SMTP server (${modeLabel}) is listening on port ${port}`);
     });
 

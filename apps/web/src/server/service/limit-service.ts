@@ -172,7 +172,10 @@ export class LimitService {
   // - Sends "warning" emails when nearing daily/monthly limits (rate-limited in TeamService)
   // - Sends "limit reached" notifications when limits are exceeded (rate-limited in TeamService)
   // - Teams with inactive subscriptions are treated like FREE plans for monthly limit alerts
-  static async checkEmailLimit(teamId: number): Promise<{
+  static async checkEmailLimit(
+    teamId: number,
+    emailType?: "MARKETING" | "TRANSACTIONAL",
+  ): Promise<{
     isLimitReached: boolean;
     limit: number;
     reason?: LimitReason;
@@ -199,6 +202,20 @@ export class LimitService {
       };
     }
 
+    const activePlan = getActivePlan(team);
+
+    // Block marketing emails on plans where they are not available (e.g. FREE)
+    if (
+      emailType === "MARKETING" &&
+      !PLAN_LIMITS[activePlan].marketingEmailsIncluded
+    ) {
+      return {
+        isLimitReached: true,
+        limit: 0,
+        reason: LimitReason.EMAIL_BLOCKED,
+      };
+    }
+
     // Enforce daily sending limit (team-specific)
     const usage = await withCache(
       `usage:this-month:${teamId}`,
@@ -207,7 +224,6 @@ export class LimitService {
     );
 
     const dailyUsage = usage.day.reduce((acc, curr) => acc + curr.sent, 0);
-    const activePlan = getActivePlan(team);
     const dailyLimit =
       activePlan !== "FREE"
         ? team.dailyEmailLimit
@@ -317,5 +333,54 @@ export class LimitService {
       limit: dailyLimit,
       available: dailyLimit - dailyUsage,
     };
+  }
+
+  /**
+   * Checks how many teams a user can own (be ADMIN of).
+   * The limit is derived from their best plan across existing owned teams,
+   * defaulting to FREE limits for users with no teams yet.
+   */
+  static async checkOwnedTeamsLimit(userId: number): Promise<{
+    isLimitReached: boolean;
+    limit: number;
+    reason?: LimitReason;
+  }> {
+    // Limits only apply in cloud mode
+    if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1 };
+    }
+
+    const adminTeams = await db.teamUser.findMany({
+      where: { userId, role: "ADMIN" },
+      include: { team: true },
+    });
+
+    // Admin/founder users have no limits
+    const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean) as string[];
+    if (adminEmails.length > 0) {
+      const user = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+      if (user?.email && adminEmails.includes(user.email)) {
+        return { isLimitReached: false, limit: -1 };
+      }
+    }
+
+    const planOrder: Plan[] = ["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"];
+    const bestPlan = adminTeams.reduce<Plan>((best, tu) => {
+      const current = getActivePlan(tu.team);
+      return planOrder.indexOf(current) > planOrder.indexOf(best) ? current : best;
+    }, "FREE");
+
+    const limit = PLAN_LIMITS[bestPlan].ownedTeams;
+    const currentCount = adminTeams.length;
+
+    if (isLimitExceeded(currentCount, limit)) {
+      return {
+        isLimitReached: true,
+        limit,
+        reason: LimitReason.OWNED_TEAMS,
+      };
+    }
+
+    return { isLimitReached: false, limit };
   }
 }

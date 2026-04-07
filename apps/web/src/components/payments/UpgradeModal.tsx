@@ -27,7 +27,8 @@ const PLAN_OPTIONS: {
     price: "CA$5 / mo",
     perks: [
       "15,000 emails / month",
-      "500 emails / day",
+      "2,000 emails / day",
+      "10 owned teams · 30 members",
       "5 domains",
       "Usage-based billing",
     ],
@@ -38,7 +39,8 @@ const PLAN_OPTIONS: {
     price: "CA$10 / mo",
     perks: [
       "50,000 emails / month",
-      "2,000 emails / day",
+      "5,000 emails / day",
+      "20 owned teams · 60 members",
       "10 domains",
       "Priority support",
     ],
@@ -48,10 +50,10 @@ const PLAN_OPTIONS: {
     name: "Professional",
     price: "CA$30 / mo",
     perks: [
-      "Unlimited emails",
-      "No per-email charges",
-      "100 domains · 50 members",
-      "Advanced analytics",
+      "150,000 emails / month included",
+      "50 owned teams · unlimited members",
+      "Marketing & transactional CA$0.01/ea (overage)",
+      "100 domains · advanced analytics",
     ],
     highlight: true,
   },
@@ -60,10 +62,10 @@ const PLAN_OPTIONS: {
     name: "Lifetime",
     price: "CA$60 one-time",
     perks: [
-      "Unlimited emails forever",
+      "Unlimited emails — no overage charges",
       "No recurring charges",
-      "500 domains · 200 members",
-      "All future features",
+      "Unlimited owned teams & members",
+      "500 domains · all future features",
     ],
   },
 ];

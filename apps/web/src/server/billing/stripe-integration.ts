@@ -11,8 +11,7 @@ import { PLANS, getPlan, PlanType } from "@bytesend/lib";
  */
 const PLAN_ENV_MAP: Record<PlanType, { monthly?: string; marketingUsage?: string; transactionalUsage?: string; oneTime?: string }> = {
   FREE: {
-    marketingUsage: env.STRIPE_FREE_MARKETING_USAGE_PRICE_ID,
-    transactionalUsage: env.STRIPE_FREE_TRANSACTIONAL_USAGE_PRICE_ID,
+    // No metered prices — FREE plan is hard-capped, no Stripe overage metering
   },
   LITE: {
     monthly: env.STRIPE_LITE_PRICE_ID,
@@ -26,9 +25,12 @@ const PLAN_ENV_MAP: Record<PlanType, { monthly?: string; marketingUsage?: string
   },
   BASIC: {
     monthly: env.STRIPE_BASIC_PRICE_ID,
+    marketingUsage: env.STRIPE_BASIC_MARKETING_USAGE_PRICE_ID,
+    transactionalUsage: env.STRIPE_BASIC_TRANSACTIONAL_USAGE_PRICE_ID,
   },
   LIFETIME: {
     oneTime: env.STRIPE_LIFETIME_PRICE_ID,
+    // No metered prices — LIFETIME is unlimited
   },
 };
 

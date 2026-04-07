@@ -13,24 +13,25 @@ export const PLANS: Record<PlanType, PricingTier> = {
     order: 1,
     isLimited: true,
     monthlyPrice: 0,
-    usageMetering: {
-      marketing: 0.004, // CA$0.004 per marketing email
-      transactional: 0.002, // CA$0.002 per transactional email
-    },
+    // No usageMetering — FREE plan is a hard cap on everything. No overage billing.
     limits: {
       monthlyEmailLimit: 5_000,
-      dailyEmailLimit: 250,
+      dailyEmailLimit: 1_000,
       maxDomains: 3,
       maxContactBooks: 5,
       maxTeamMembers: 5,
+      maxOwnedTeams: 5,
       maxWebhooks: 3,
       contactsLimit: 500,
-      campaignsLimit: 10,
+      campaignsLimit: 0, // Marketing emails not available on free plan
       prioritySupport: false,
       customBranding: false,
       advancedAnalytics: false,
       apiAccessLevel: "basic",
       concurrentConnections: 1,
+      marketingEmailsIncluded: false,
+      extraMemberRateCents: 0, // Hard cap — no overage
+      additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 
@@ -42,15 +43,16 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 500, // CA$5/month in cents
     usageMetering: {
-      marketing: 0.003, // CA$0.003 per marketing email
-      transactional: 0.0015, // CA$0.0015 per transactional email
+      marketing: 0.05,    // CA$0.05 per marketing email (overage after 15,000 included)
+      transactional: 0.03, // CA$0.03 per transactional email (overage after 15,000 included)
     },
     limits: {
       monthlyEmailLimit: 15_000,
-      dailyEmailLimit: 500,
+      dailyEmailLimit: 2_000,
       maxDomains: 5,
       maxContactBooks: 10,
-      maxTeamMembers: 10,
+      maxTeamMembers: 30,
+      maxOwnedTeams: 10,
       maxWebhooks: 5,
       contactsLimit: 2_000,
       campaignsLimit: 30,
@@ -59,6 +61,9 @@ export const PLANS: Record<PlanType, PricingTier> = {
       advancedAnalytics: false,
       apiAccessLevel: "basic",
       concurrentConnections: 2,
+      marketingEmailsIncluded: true,
+      extraMemberRateCents: 25, // CA$0.25/member overage
+      additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 
@@ -70,15 +75,16 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 1000, // CA$10/month in cents
     usageMetering: {
-      marketing: 0.002, // CA$0.002 per marketing email
-      transactional: 0.001, // CA$0.001 per transactional email
+      marketing: 0.02,    // CA$0.02 per marketing email (overage after 50,000 included)
+      transactional: 0.02, // CA$0.02 per transactional email (overage after 50,000 included)
     },
     limits: {
       monthlyEmailLimit: 50_000,
-      dailyEmailLimit: 2_000,
+      dailyEmailLimit: 5_000,
       maxDomains: 10,
       maxContactBooks: 25,
-      maxTeamMembers: 25,
+      maxTeamMembers: 60,
+      maxOwnedTeams: 20,
       maxWebhooks: 10,
       contactsLimit: 10_000,
       campaignsLimit: 100,
@@ -87,6 +93,9 @@ export const PLANS: Record<PlanType, PricingTier> = {
       advancedAnalytics: false,
       apiAccessLevel: "full",
       concurrentConnections: 5,
+      marketingEmailsIncluded: true,
+      extraMemberRateCents: 25, // CA$0.25/member overage
+      additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 
@@ -97,21 +106,28 @@ export const PLANS: Record<PlanType, PricingTier> = {
     order: 4,
     isLimited: false,
     monthlyPrice: 3000, // CA$30/month in cents
-    // Marketing & transactional emails included at no extra cost
+    usageMetering: {
+      marketing: 0.01,    // CA$0.01 per marketing email (overage after 150,000 included)
+      transactional: 0.01, // CA$0.01 per transactional email (overage after 150,000 included)
+    },
     limits: {
-      monthlyEmailLimit: Number.POSITIVE_INFINITY,
+      monthlyEmailLimit: 150_000,
       dailyEmailLimit: Number.POSITIVE_INFINITY,
       maxDomains: 100,
       maxContactBooks: 500,
-      maxTeamMembers: 50,
+      maxTeamMembers: Number.POSITIVE_INFINITY,
+      maxOwnedTeams: 50,
       maxWebhooks: 50,
       contactsLimit: 1_000_000,
       campaignsLimit: 1_000,
       prioritySupport: true,
-      customBranding: true,
+      customBranding: false, // Self-hosted only
       advancedAnalytics: true,
       apiAccessLevel: "full",
       concurrentConnections: 10,
+      marketingEmailsIncluded: true,
+      extraMemberRateCents: 0, // Unlimited members — no overage
+      additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 
@@ -123,21 +139,25 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: false,
     monthlyPrice: 0,
     oneTimePrice: 6000, // CA$60 one-time purchase
-    // Marketing & transactional emails included at no extra cost
+    // No usageMetering — everything is unlimited and included.
     limits: {
       monthlyEmailLimit: Number.POSITIVE_INFINITY,
       dailyEmailLimit: Number.POSITIVE_INFINITY,
       maxDomains: 500,
       maxContactBooks: 1000,
-      maxTeamMembers: 200,
+      maxTeamMembers: Number.POSITIVE_INFINITY,
+      maxOwnedTeams: Number.POSITIVE_INFINITY,
       maxWebhooks: 100,
       contactsLimit: 10_000_000,
       campaignsLimit: 10_000,
       prioritySupport: true,
-      customBranding: true,
+      customBranding: false, // Self-hosted only
       advancedAnalytics: true,
       apiAccessLevel: "full",
       concurrentConnections: 50,
+      marketingEmailsIncluded: true,
+      extraMemberRateCents: 0,
+      additionalDomainRateCents: 0, // Effectively no limit at this tier
     },
   },
 };

@@ -199,26 +199,37 @@ function Features() {
 
 /* ─────────────────── Pricing ─────────────────── */
 
-const pricingPlans = [
-  { name: "Free", price: "CA$0", period: "forever", cta: "Get started free", popular: false },
-  { name: "Hobby", price: "CA$5", period: "/mo", cta: "Start with Hobby", popular: false },
-  { name: "Lite", price: "CA$10", period: "/mo", cta: "Start with Lite", popular: false },
-  { name: "Professional", price: "CA$30", period: "/mo", cta: "Go Professional", popular: true },
-  { name: "Lifetime", price: "CA$60", period: "once", cta: "Buy Lifetime", popular: false, badge: "Best value" },
+const pricingPlans: {
+  name: string;
+  price: string;
+  period: string;
+  cta: string;
+  popular?: boolean;
+  badge?: string;
+  href?: string;
+  selfHosted?: boolean;
+}[] = [
+  { name: "Free", price: "CA$0", period: "forever", cta: "Get started free", href: APP_URL },
+  { name: "Hobby", price: "CA$5", period: "/mo", cta: "Start with Hobby", href: APP_URL },
+  { name: "Lite", price: "CA$10", period: "/mo", cta: "Start with Lite", href: APP_URL },
+  { name: "Professional", price: "CA$30", period: "/mo", cta: "Go Professional", popular: true, href: APP_URL },
+  { name: "Lifetime", price: "CA$60", period: "once", cta: "Buy Lifetime", badge: "Best value", href: APP_URL },
+  { name: "Self-Hosted", price: "Free", period: "open source", cta: "View docs", badge: "Coming soon", href: "https://docs.bytesend.cloud", selfHosted: true },
 ];
 
+// Values align with pricingPlans order: [Free, Hobby, Lite, Pro, Lifetime, Self-Hosted]
 const pricingFeatures: { label: string; values: (string | boolean)[] }[] = [
-  { label: "Monthly emails", values: ["5,000", "15,000", "50,000", "Unlimited", "Unlimited"] },
-  { label: "Daily emails", values: ["250", "500", "2,000", "Unlimited", "Unlimited"] },
-  { label: "Marketing emails", values: [true, true, true, true, true] },
-  { label: "Transactional rate", values: ["CA$0.002/ea", "CA$0.0015/ea", "CA$0.001/ea", "Included", "Included"] },
-  { label: "Marketing rate", values: ["CA$0.004/ea", "CA$0.003/ea", "CA$0.002/ea", "Included", "Included"] },
-  { label: "Domains", values: ["3", "5", "10", "100", "500"] },
-  { label: "Contacts", values: ["500", "2,000", "10,000", "1M", "10M"] },
-  { label: "Team members", values: ["5", "10", "25", "50", "200"] },
-  { label: "Advanced analytics", values: [false, false, false, true, true] },
-  { label: "Custom branding", values: [false, false, false, true, true] },
-  { label: "Priority support", values: [false, false, true, true, true] },
+  { label: "Monthly emails included", values: ["5,000", "15,000", "50,000", "150,000", "Unlimited", "Unlimited"] },
+  { label: "Daily email limit", values: ["1,000", "2,000", "5,000", "Unlimited", "Unlimited", "Unlimited"] },
+  { label: "Transactional emails", values: ["Included", "CA$0.03/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
+  { label: "Marketing emails", values: [false, "CA$0.05/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
+  { label: "Domains", values: ["3 + $1/extra", "5 + $1/extra", "10 + $1/extra", "100 + $1/extra", "500 + $1/extra", "Unlimited"] },
+  { label: "Owned teams", values: ["5", "10", "20", "50", "Unlimited", "Unlimited"] },
+  { label: "Members per team", values: ["5", "30", "60", "Unlimited", "Unlimited", "Unlimited"] },
+  { label: "Contacts", values: ["500", "2,000", "10,000", "1M", "10M", "Unlimited"] },
+  { label: "Advanced analytics", values: [false, false, false, true, true, true] },
+  { label: "Custom branding", values: [false, false, false, false, false, true] },
+  { label: "Priority support", values: [false, false, true, true, true, true] },
 ];
 
 function Pricing() {
@@ -231,7 +242,8 @@ function Pricing() {
             Simple, transparent pricing
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Every plan includes marketing &amp; transactional emails. Higher plans unlock better rates.
+            Every plan includes transactional emails. Paid plans unlock marketing email sending.
+            Usage-based overage rates apply only <em>after</em> the included monthly limit is reached.
           </p>
         </div>
 
@@ -243,8 +255,10 @@ function Pricing() {
               className={`relative flex flex-col rounded-2xl border p-6 transition-all hover:shadow-md ${
                 plan.popular
                   ? "border-primary/40 bg-primary/3 shadow-lg shadow-primary/8 ring-1 ring-primary/20 lg:scale-[1.03] z-10"
-                  : "border-border/40 bg-card/40 hover:border-primary/20"
-              } ${plan.name === "Lifetime" ? "sm:col-span-2 lg:col-span-1" : ""}`}
+                  : plan.selfHosted
+                    ? "border-dashed border-border/60 bg-muted/20 hover:border-primary/20"
+                    : "border-border/40 bg-card/40 hover:border-primary/20"
+              }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground shadow-sm">
@@ -252,7 +266,7 @@ function Pricing() {
                 </div>
               )}
               {plan.badge && !plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-4 py-1 text-xs font-medium text-white shadow-sm">
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-medium text-white shadow-sm ${plan.selfHosted ? "bg-muted-foreground" : "bg-emerald-500"}`}>
                   {plan.badge}
                 </div>
               )}
@@ -288,15 +302,19 @@ function Pricing() {
 
               <Button
                 className={`w-full rounded-xl ${plan.popular ? "shadow-lg shadow-primary/20" : ""}`}
-                variant={plan.popular ? "default" : "outline"}
+                variant={plan.popular ? "default" : plan.selfHosted ? "ghost" : "outline"}
                 size="lg"
                 asChild
               >
-                <Link href={APP_URL}>{plan.cta}</Link>
+                <Link href={plan.href ?? APP_URL} {...(plan.selfHosted ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{plan.cta}</Link>
               </Button>
             </div>
           ))}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center mt-6">
+          † Overage rates apply only after the plan&apos;s included monthly email limit is reached. Free plan is a hard cap no overage billing.
+        </p>
       </div>
     </section>
   );

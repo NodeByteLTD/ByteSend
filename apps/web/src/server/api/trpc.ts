@@ -120,8 +120,16 @@ export const protectedProcedure = authedProcedure.use(({ ctx, next }) => {
 });
 
 export const teamProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  // Respect the active team chosen by the client (sent as x-team-id header).
+  // Falls back to the user's first team if the header is absent or invalid.
+  const requestedTeamId = ctx.headers.get("x-team-id");
+  const numericTeamId = requestedTeamId ? parseInt(requestedTeamId, 10) : NaN;
+
   const teamUser = await db.teamUser.findFirst({
-    where: { userId: ctx.session.user.id },
+    where: {
+      userId: ctx.session.user.id,
+      ...(!isNaN(numericTeamId) ? { teamId: numericTeamId } : {}),
+    },
     include: { team: true },
   });
 

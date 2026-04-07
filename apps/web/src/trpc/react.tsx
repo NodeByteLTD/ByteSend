@@ -39,6 +39,12 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
+            // Pass the active team so teamProcedure resolves the right team.
+            const activeTeamId =
+              typeof window !== "undefined"
+                ? window.localStorage.getItem("bytesend:active-team-id")
+                : null;
+            if (activeTeamId) headers.set("x-team-id", activeTeamId);
             return headers;
           },
         }),

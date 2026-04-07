@@ -11,6 +11,7 @@ export interface PlanLimits {
   maxDomains: number;
   maxContactBooks: number;
   maxTeamMembers: number;
+  maxOwnedTeams: number;
   maxWebhooks: number;
   contactsLimit: number;
   campaignsLimit: number;
@@ -19,6 +20,12 @@ export interface PlanLimits {
   advancedAnalytics: boolean;
   apiAccessLevel: "basic" | "full";
   concurrentConnections: number;
+  /** Whether marketing/campaign emails are available on this plan. False = marketing blocked entirely. */
+  marketingEmailsIncluded: boolean;
+  /** Per-member overage rate in cents when maxTeamMembers is exceeded. 0 = hard cap (no overage). */
+  extraMemberRateCents: number;
+  /** Rate in cents to order an additional domain. 0 = not applicable. */
+  additionalDomainRateCents: number;
 }
 
 export interface PricingTier {
@@ -31,9 +38,14 @@ export interface PricingTier {
   annualPrice?: number;
   /** One-time purchase price in cents (e.g. LIFETIME plan). */
   oneTimePrice?: number;
+  /**
+   * Per-email overage billing rates (CAD).
+   * Applies ONLY to emails sent BEYOND the plan's included monthlyEmailLimit.
+   * Plans without this field are either hard-capped (FREE) or unlimited (LIFETIME).
+   */
   usageMetering?: {
-    marketing: number; // dollars per email
-    transactional: number; // dollars per email
+    marketing: number; // CAD per marketing email (overage only)
+    transactional: number; // CAD per transactional email (overage only)
   };
   isLimited: boolean;
   order: number;

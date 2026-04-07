@@ -19,6 +19,9 @@ import {
   UserRoundX,
   Webhook,
   HouseIcon,
+  ChevronsUpDown,
+  Check,
+  PlusIcon,
 } from "lucide-react";
 
 function DiscordIcon({ className }: { className?: string }) {
@@ -35,6 +38,7 @@ function DiscordIcon({ className }: { className?: string }) {
   );
 }
 import { signOut } from "next-auth/react";
+import { useTeam } from "~/providers/team-context";
 
 import {
   Sidebar,
@@ -134,32 +138,99 @@ const settingsItems = [
 export function AppSidebar() {
   const { data: session } = useSession();
   const showFeedback = isCloud();
+  const { currentTeam, teams, setCurrentTeam } = useTeam();
 
   const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 py-3.5 border-b border-sidebar-border/40">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 shrink-0">
-            <Image
-              src="/logo-squircle.png"
-              alt="ByteSend"
-              width={22}
-              height={22}
-              className="rounded-sm"
-            />
-          </div>
-          <span className="font-semibold text-[15px] tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            ByteSend
-          </span>
-          {/**<Badge
-            variant="outline"
-            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-primary border-primary/30 group-data-[collapsible=icon]:hidden"
-          >
-            v1.0.0-beta
-          </Badge>**/}
-        </div>
+      <SidebarHeader className="border-b border-sidebar-border/40">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  tooltip="Switch team"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 shrink-0 overflow-hidden">
+                    {currentTeam?.image ? (
+                      <Image
+                        src={currentTeam.image}
+                        alt={currentTeam.name}
+                        width={32}
+                        height={32}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src="/logo-squircle.png"
+                        alt="ByteSend"
+                        width={22}
+                        height={22}
+                        className="rounded-sm"
+                      />
+                    )}
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold tracking-tight">
+                      {currentTeam?.name ?? "No team"}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                side="bottom"
+                align="start"
+                className="w-56"
+              >
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Your teams
+                </DropdownMenuLabel>
+                {teams.map((team) => (
+                  <DropdownMenuItem
+                    key={team.id}
+                    onSelect={() => setCurrentTeam(team.id)}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 ring-1 ring-primary/20 overflow-hidden">
+                      {team.image ? (
+                        <Image
+                          src={team.image}
+                          alt={team.name}
+                          width={20}
+                          height={20}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Image
+                          src="/logo-squircle.png"
+                          alt={team.name}
+                          width={14}
+                          height={14}
+                          className="rounded-sm"
+                        />
+                      )}
+                    </div>
+                    <span className="flex-1 truncate">{team.name}</span>
+                    {team.id === currentTeam?.id && (
+                      <Check className="size-3.5 text-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <a href="/create-team" className="flex items-center gap-2 cursor-pointer">
+                    <PlusIcon className="size-3.5" />
+                    <span>Create team</span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
