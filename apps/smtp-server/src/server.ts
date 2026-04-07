@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import dotenv from "dotenv";
 import { simpleParser } from "mailparser";
-import { readFileSync, watch, FSWatcher } from "fs";
+import { readFileSync, existsSync, watch, FSWatcher } from "fs";
 import { SMTPServer, SMTPServerOptions, SMTPServerSession } from "smtp-server";
 
 dotenv.config();
@@ -75,23 +75,40 @@ function loadCertificates(): { key?: Buffer; cert?: Buffer } {
   };
 }
 
-const initialCerts = loadCertificates();
+/**
+ * Polls until both cert files exist or the timeout is reached.
+ * certs-dumper writes them shortly after container startup.
+ */
+async function waitForCertificates(
+  keyPath: string,
+  certPath: string,
+  timeoutMs = 120_000,
+  intervalMs = 3_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (existsSync(keyPath) && existsSync(certPath)) {
+      console.log("TLS certificate files found.");
+      return;
+    }
+    console.log(
+      `Waiting for TLS certificate files (${keyPath}, ${certPath})...`,
+    );
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error(
+    `TLS certificates not available after ${timeoutMs / 1_000}s — check that certs-dumper is running and acme.json contains the domain.`,
+  );
+}
 
 const serverOptions: SMTPServerOptions = {
   secure: false,
-  key: initialCerts.key,
-  cert: initialCerts.cert,
-  // Disable STARTTLS when no cert is available and the mode isn't manual.
-  // In 'traefik' mode with certs provided, STARTTLS is enabled so clients using
-  // STARTTLS on port 587 can negotiate TLS directly with this server (Traefik does
-  // TCP passthrough for port 587 — it cannot upgrade STARTTLS mid-session).
-  // In 'none' mode or 'traefik' without certs, advertise plain only.
-  disabledCommands:
-    TLS_MODE === "none" || (TLS_MODE === "traefik" && !SSL_KEY_PATH)
-      ? ["STARTTLS"]
-      : [],
-  // Allow plain-text auth when in traefik mode without certs (internal-only setup).
-  allowInsecureAuth: TLS_MODE === "traefik" && !SSL_KEY_PATH,
+  // key/cert are set in startServers() after waitForCertificates() resolves.
+  key: undefined,
+  cert: undefined,
+  // disabledCommands and allowInsecureAuth are also set in startServers().
+  disabledCommands: [],
+  allowInsecureAuth: false,
   onData(
     stream: Readable,
     session: SMTPServerSession,
@@ -149,6 +166,18 @@ function startServers() {
 
   console.log(`SMTP TLS mode: ${TLS_MODE}`);
 
+  // Load certs now — waitForCertificates() already ensured they exist.
+  const initialCerts = loadCertificates();
+  serverOptions.key = initialCerts.key;
+  serverOptions.cert = initialCerts.cert;
+
+  // Re-evaluate STARTTLS/auth settings now that we know whether certs are loaded.
+  serverOptions.disabledCommands =
+    TLS_MODE === "none" || (TLS_MODE === "traefik" && !SSL_KEY_PATH)
+      ? ["STARTTLS"]
+      : [];
+  serverOptions.allowInsecureAuth = TLS_MODE === "traefik" && !SSL_KEY_PATH;
+
   if (TLS_MODE === "manual") {
     if (!SSL_KEY_PATH || !SSL_CERT_PATH) {
       throw new Error(
@@ -197,7 +226,13 @@ function startServers() {
     servers.push(server);
   });
 
-  if (TLS_MODE === "manual" && SSL_KEY_PATH && SSL_CERT_PATH) {
+  // Watch cert files for renewal in both manual and traefik modes.
+  const needsCertWatch =
+    (TLS_MODE === "manual" || TLS_MODE === "traefik") &&
+    SSL_KEY_PATH &&
+    SSL_CERT_PATH;
+
+  if (needsCertWatch) {
     const reloadCertificates = () => {
       try {
         const { key, cert } = loadCertificates();
@@ -218,15 +253,32 @@ function startServers() {
   return { servers, watchers };
 }
 
-const { servers, watchers } = startServers();
+async function main() {
+  // In traefik/manual mode, wait for certs-dumper to write the files before
+  // starting — there is a race between container startup and cert extraction.
+  if (
+    (TLS_MODE === "traefik" || TLS_MODE === "manual") &&
+    SSL_KEY_PATH &&
+    SSL_CERT_PATH
+  ) {
+    await waitForCertificates(SSL_KEY_PATH, SSL_CERT_PATH);
+  }
 
-function shutdown() {
-  console.log("Shutting down SMTP server...");
-  watchers.forEach((w) => w.close());
-  servers.forEach((s) => s.close());
-  process.exit(0);
+  const { servers, watchers } = startServers();
+
+  function shutdown() {
+    console.log("Shutting down SMTP server...");
+    watchers.forEach((w) => w.close());
+    servers.forEach((s) => s.close());
+    process.exit(0);
+  }
+
+  ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
+    process.on(signal, shutdown);
+  });
 }
 
-["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
-  process.on(signal, shutdown);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
 });
