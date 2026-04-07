@@ -279,14 +279,6 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ) : null}
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Docs">
-                <Link href="https://docs.bytesend.cloud" target="_blank">
-                  <BookOpenText />
-                  <span>Docs</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip="Discord">
                 <Link href="https://discord.gg/nodebyte" target="_blank">
                   <DiscordIcon className="size-4 shrink-0" />
@@ -394,6 +386,12 @@ export function NavUser({
                 <Link href="/settings">
                   <GaugeIcon />
                   Usage
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="https://docs.bytesend.cloud">
+                  <GaugeIcon />
+                  Docs
                 </Link>
               </DropdownMenuItem>
               <div className="px-2 py-0.5">
