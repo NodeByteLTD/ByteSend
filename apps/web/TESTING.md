@@ -40,7 +40,7 @@ Full integration flow:
 ## Infra configuration
 
 - Compose file: `docker/testing/compose.yml`
-- Postgres: `127.0.0.1:54329` (`usesend_test`)
+- Postgres: `127.0.0.1:54329` (`bytesend_test`)
 - Redis: `127.0.0.1:6380` (test DB index `15`)
 
 The default test env is bootstrapped in `src/test/setup/setup-env.ts`.

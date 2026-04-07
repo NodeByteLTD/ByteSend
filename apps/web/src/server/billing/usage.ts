@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { env } from "~/env";
 import { getUsageTimestamp } from "~/lib/usage";
 
-const METER_EVENT_NAME = "unsend_usage";
+const METER_EVENT_NAME = "bytesend_usage";
 
 export async function sendUsageToStripe(customerId: string, usage: number) {
   const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {

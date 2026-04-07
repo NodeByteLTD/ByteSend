@@ -30,9 +30,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <SidebarInset className="min-w-0">
           {/* Top header bar */}
-          <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-lg px-4 md:px-6">
-            <SidebarTrigger className="h-7 w-7 text-muted-foreground" />
-            <div className="h-4 w-px bg-border/60" />
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b border-border/30 bg-background/80 backdrop-blur-xl px-4 md:px-6">
+            <SidebarTrigger className="h-7 w-7 text-muted-foreground hover:text-foreground transition-colors" />
+            <div className="h-4 w-px bg-border/40" />
             <span className="text-sm text-muted-foreground font-medium capitalize truncate">
               {pathname?.split("/").filter(Boolean).pop()?.replace(/-/g, " ") ?? "Dashboard"}
             </span>

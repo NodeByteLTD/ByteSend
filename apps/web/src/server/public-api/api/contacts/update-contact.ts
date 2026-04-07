@@ -2,7 +2,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { PublicAPIApp } from "~/server/public-api/hono";
 import { updateContactInContactBook } from "~/server/service/contact-service";
 import { getContactBook } from "../../api-utils";
-import { UnsendApiError } from "../../api-error";
+import { ByteSendApiError } from "../../api-error";
 
 const route = createRoute({
   method: "patch",
@@ -65,7 +65,7 @@ function updateContactInfo(app: PublicAPIApp) {
     );
 
     if (!contact) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Contact not found",
       });

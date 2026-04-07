@@ -21,7 +21,7 @@ import { isLocalhost } from "~/utils/client";
 
 const FormSchema = z.object({
   region: z.string(),
-  usesendUrl: z.string().url(),
+  bytesendUrl: z.string().url(),
   sendRate: z.coerce.number(),
   transactionalQuota: z.coerce.number().min(0).max(100),
 });
@@ -32,12 +32,14 @@ type SesSettingsProps = {
 
 export const AddSesSettings: React.FC<SesSettingsProps> = ({ onSuccess }) => {
   return (
-    <div className="flex items-center justify-center min-h-screen ">
-      <div className=" w-[400px] flex flex-col gap-8">
+    <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-120 w-180 rounded-full bg-primary/8 blur-[120px]" />
+      <div className="relative w-[400px] flex flex-col gap-8">
         <div>
           <h1 className="text-2xl font-semibold text-center">
             Add SES Settings
           </h1>
+          <p className="text-sm text-muted-foreground text-center mt-1">Configure your AWS SES connection</p>
         </div>
         <AddSesSettingsForm onSuccess={onSuccess} />
       </div>
@@ -56,7 +58,7 @@ export const AddSesSettingsForm: React.FC<SesSettingsProps> = ({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       region: "",
-      usesendUrl: "",
+      bytesendUrl: "",
       sendRate: 1,
       transactionalQuota: 50,
     },
@@ -65,15 +67,15 @@ export const AddSesSettingsForm: React.FC<SesSettingsProps> = ({
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const localhost = isLocalhost();
 
-    if (!data.usesendUrl.startsWith("https://") && !localhost) {
-      form.setError("usesendUrl", {
+    if (!data.bytesendUrl.startsWith("https://") && !localhost) {
+      form.setError("bytesendUrl", {
         message: "URL must start with https://",
       });
       return;
     }
 
-    if (data.usesendUrl.includes("localhost") && !localhost) {
-      form.setError("usesendUrl", {
+    if (data.bytesendUrl.includes("localhost") && !localhost) {
+      form.setError("bytesendUrl", {
         message: "URL must be a valid url",
       });
       return;
@@ -82,7 +84,7 @@ export const AddSesSettingsForm: React.FC<SesSettingsProps> = ({
     addSesSettings.mutate(
       {
         region: data.region,
-        usesendUrl: data.usesendUrl,
+        bytesendUrl: data.bytesendUrl,
         sendRate: data.sendRate,
         transactionalQuota: data.transactionalQuota,
       },
@@ -142,7 +144,7 @@ export const AddSesSettingsForm: React.FC<SesSettingsProps> = ({
         />
         <FormField
           control={form.control}
-          name="usesendUrl"
+          name="bytesendUrl"
           render={({ field, formState }) => (
             <FormItem>
               <FormLabel>Callback URL</FormLabel>
@@ -153,7 +155,7 @@ export const AddSesSettingsForm: React.FC<SesSettingsProps> = ({
                   {...field}
                 />
               </FormControl>
-              {formState.errors.usesendUrl ? (
+              {formState.errors.bytesendUrl ? (
                 <FormMessage />
               ) : (
                 <FormDescription>

@@ -33,7 +33,7 @@ function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
           </span>
-          Now in public beta
+          No credit card required.
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1]">
@@ -166,26 +166,29 @@ function Features() {
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Features</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Everything you need to send email
+            Everything you need to send emails
           </h2>
           <p className="mt-4 text-muted-foreground">
-            From transactional receipts to marketing campaigns — one platform, one bill.
+            From transactional receipts to marketing campaigns one platform, one bill.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className={`group rounded-2xl border border-border/50 bg-card/50 p-6 transition-all hover:border-primary/30 hover:shadow-sm ${
+              className={`group relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 p-6 transition-all hover:border-primary/30 hover:bg-card/60 hover:shadow-md ${
                 i < 2 ? "lg:col-span-2" : ""
               }`}
             >
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${f.accent} mb-4`}>
+              {/* Hover glow */}
+              <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className={`relative flex h-11 w-11 items-center justify-center rounded-xl ${f.accent} mb-4 ring-1 ring-current/10`}>
                 <f.icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+              <h3 className="relative font-semibold text-[15px]">{f.title}</h3>
+              <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
@@ -232,137 +235,61 @@ function Pricing() {
           </p>
         </div>
 
-        {/* Desktop pricing table */}
-        <div className="hidden lg:block overflow-visible rounded-2xl border border-border/50">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/50">
-                <th className="p-5 text-left w-48" />
-                {pricingPlans.map((plan) => (
-                  <th
-                    key={plan.name}
-                    className={`p-5 pt-8 text-center relative ${
-                      plan.popular ? "bg-primary/5" : ""
-                    }`}
-                  >
-                    {plan.popular && (
-                      <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground whitespace-nowrap shadow-sm">
-                        Most popular
-                      </span>
-                    )}
-                    {plan.badge && !plan.popular && (
-                      <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-4 py-1 text-xs font-medium text-white whitespace-nowrap shadow-sm">
-                        {plan.badge}
-                      </span>
-                    )}
-                    <div className="font-semibold text-base">{plan.name}</div>
-                    <div className="mt-2 flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-bold">{plan.price}</span>
-                      <span className="text-xs text-muted-foreground">{plan.period}</span>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/30">
-              {pricingFeatures.map((row) => (
-                <tr key={row.label} className="hover:bg-muted/20 transition-colors">
-                  <td className="p-4 font-medium text-muted-foreground">{row.label}</td>
-                  {row.values.map((val, i) => {
-                    const plan = pricingPlans[i]!;
-                    return (
-                      <td
-                        key={plan.name}
-                        className={`p-4 text-center ${plan.popular ? "bg-primary/3" : ""}`}
-                      >
-                        {typeof val === "boolean" ? (
-                          val ? (
-                            <CheckIcon className="h-4 w-4 text-emerald-500 mx-auto" />
-                          ) : (
-                            <span className="text-muted-foreground/40">—</span>
-                          )
-                        ) : (
-                          <span className="font-medium">{val}</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              {/* CTA row */}
-              <tr>
-                <td className="p-5" />
-                {pricingPlans.map((plan) => (
-                  <td key={plan.name} className={`p-5 text-center ${plan.popular ? "bg-primary/3" : ""}`}>
-                    <Button
-                      className="w-full max-w-40"
-                      variant={plan.popular ? "default" : "outline"}
-                      size="sm"
-                      asChild
-                    >
-                      <Link href={APP_URL}>{plan.cta}</Link>
-                    </Button>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile pricing cards */}
-        <div className="lg:hidden space-y-6">
+        {/* Pricing cards grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {pricingPlans.map((plan, planIdx) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-6 ${
+              className={`relative flex flex-col rounded-2xl border p-6 transition-all hover:shadow-md ${
                 plan.popular
-                  ? "border-primary/50 bg-primary/3 shadow-lg shadow-primary/10 ring-1 ring-primary/20"
-                  : "border-border/50 bg-card/50"
-              }`}
+                  ? "border-primary/40 bg-primary/3 shadow-lg shadow-primary/8 ring-1 ring-primary/20 lg:scale-[1.03] z-10"
+                  : "border-border/40 bg-card/40 hover:border-primary/20"
+              } ${plan.name === "Lifetime" ? "sm:col-span-2 lg:col-span-1" : ""}`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-[11px] font-medium text-primary-foreground">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground shadow-sm">
                   Most popular
                 </div>
               )}
               {plan.badge && !plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-3 py-0.5 text-[11px] font-medium text-white">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-500 px-4 py-1 text-xs font-medium text-white shadow-sm">
                   {plan.badge}
                 </div>
               )}
 
-              <div className="flex items-baseline justify-between">
+              <div className="mb-5">
                 <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-xs text-muted-foreground">{plan.period}</span>
+                <div className="mt-3 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
+                  <span className="text-sm text-muted-foreground">{plan.period}</span>
                 </div>
               </div>
 
-              <div className="mt-5 space-y-2.5">
+              {/* Feature list */}
+              <ul className="flex-1 space-y-3 mb-6">
                 {pricingFeatures.map((row) => {
                   const val = row.values[planIdx];
+                  if (typeof val === "boolean" && !val) return null;
                   return (
-                    <div key={row.label} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{row.label}</span>
-                      {typeof val === "boolean" ? (
-                        val ? (
-                          <CheckIcon className="h-4 w-4 text-emerald-500" />
-                        ) : (
-                          <span className="text-muted-foreground/40">—</span>
-                        )
-                      ) : (
-                        <span className="font-medium">{val}</span>
-                      )}
-                    </div>
+                    <li key={row.label} className="flex items-start gap-2.5 text-sm">
+                      <CheckIcon className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                      <span className="text-muted-foreground">
+                        {typeof val === "boolean" ? row.label : (
+                          <>
+                            <span className="font-medium text-foreground">{val}</span>{" "}
+                            {row.label.toLowerCase()}
+                          </>
+                        )}
+                      </span>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
 
               <Button
-                className="mt-6 w-full"
+                className={`w-full rounded-xl ${plan.popular ? "shadow-lg shadow-primary/20" : ""}`}
                 variant={plan.popular ? "default" : "outline"}
-                size="sm"
+                size="lg"
                 asChild
               >
                 <Link href={APP_URL}>{plan.cta}</Link>
@@ -377,30 +304,52 @@ function Pricing() {
 
 /* ───────────── Competitor Comparison ───────────── */
 
-const comparisonRows = [
-  { feature: "Free tier emails", bytesend: "5,000/mo", unsend: "3,000/mo", resend: "3,000/mo", sendgrid: "100/day", postmark: "100/mo", ses: "N/A" },
-  { feature: "Transactional pricing", bytesend: "$0.001/ea", unsend: "$0.001/ea", resend: "$0.001/ea", sendgrid: "$0.0006/ea", postmark: "$0.001/ea", ses: "$0.0001/ea" },
-  { feature: "Marketing campaigns", bytesend: "✓ Built-in", unsend: "✓ Built-in", resend: "✗", sendgrid: "✓", postmark: "✗", ses: "✗" },
-  { feature: "Visual editor", bytesend: "✓ WYSIWYG", unsend: "✓ WYSIWYG", resend: "✗", sendgrid: "✓", postmark: "✗", ses: "✗" },
-  { feature: "Contact management", bytesend: "✓ Built-in", unsend: "✓ Built-in", resend: "✓", sendgrid: "✓", postmark: "✗", ses: "✗" },
-  { feature: "SMTP relay", bytesend: "✓", unsend: "✓", resend: "✓", sendgrid: "✓", postmark: "✓", ses: "✓" },
-  { feature: "Webhooks", bytesend: "✓", unsend: "✓", resend: "✓", sendgrid: "✓", postmark: "✓", ses: "Via SNS" },
-  { feature: "Lifetime plan", bytesend: "✓ $60", unsend: "✗", resend: "✗", sendgrid: "✗", postmark: "✗", ses: "✗" },
-  { feature: "Self-hostable", bytesend: "✓ Docker", unsend: "✓ Docker", resend: "✗", sendgrid: "✗", postmark: "✗", ses: "✗" },
-  { feature: "Open API", bytesend: "✓ REST", unsend: "✓ REST", resend: "✓ REST", sendgrid: "✓ REST", postmark: "✓ REST", ses: "✓ AWS SDK" },
-  { feature: "Multiple plans", bytesend: "5 plans", unsend: "2 plans", resend: "3 plans", sendgrid: "4 plans", postmark: "1 plan", ses: "Pay-as-you-go" },
+const advantages = [
+  {
+    title: "Most generous free tier",
+    description: "5,000 emails/month free. Others cap at 100-3,000.",
+    bytesend: "5,000/mo",
+    others: ["Resend 3k", "SendGrid 100/day", "Postmark 100"],
+    icon: GiftIcon,
+  },
+  {
+    title: "All-in-one platform",
+    description: "Marketing campaigns, transactional emails, contacts, and analytics in one place.",
+    bytesend: "Everything included",
+    others: ["Resend: No campaigns", "Postmark: No campaigns", "SES: No UI"],
+    icon: LayersIcon,
+  },
+  {
+    title: "Pay-once lifetime option",
+    description: "One payment, unlimited emails forever. No other provider offers this.",
+    bytesend: "$60 once",
+    others: ["Everyone else: Monthly forever"],
+    icon: InfinityIcon,
+  },
+  {
+    title: "Self-hostable",
+    description: "Run on your own infrastructure with Docker. Full data sovereignty.",
+    bytesend: "Docker ready",
+    others: ["Resend: No", "SendGrid: No", "Postmark: No"],
+    icon: ServerIcon,
+  },
+  {
+    title: "Visual email editor",
+    description: "Notion-like WYSIWYG editor for campaigns. No code, no external tools.",
+    bytesend: "Built-in editor",
+    others: ["Resend: Code only", "Postmark: Templates", "SES: Raw HTML"],
+    icon: PaintbrushIcon,
+  },
+  {
+    title: "SMTP relay included",
+    description: "Drop-in SMTP server that works with any app. Swap one config, done.",
+    bytesend: "Drop-in SMTP",
+    others: ["All providers offer SMTP"],
+    icon: ServerIcon,
+  },
 ];
 
 function ComparisonTable() {
-  const providers = [
-    { key: "bytesend", name: "ByteSend", highlight: true },
-    { key: "unsend", name: "Unsend", highlight: false },
-    { key: "resend", name: "Resend", highlight: false },
-    { key: "sendgrid", name: "SendGrid", highlight: false },
-    { key: "postmark", name: "Postmark", highlight: false },
-    { key: "ses", name: "AWS SES", highlight: false },
-  ];
-
   return (
     <section className="py-20 sm:py-28 border-t border-border/30">
       <div className="mx-auto max-w-6xl px-6">
@@ -409,78 +358,57 @@ function ComparisonTable() {
             Compare
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            See how ByteSend stacks up
+            Why teams choose ByteSend
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Feature-for-feature comparison with popular email providers.
+            See how we compare against Resend, SendGrid, Postmark, and AWS SES.
           </p>
         </div>
 
-        {/* Desktop table */}
-        <div className="hidden md:block overflow-x-auto rounded-2xl border border-border/50">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/50 bg-muted/30">
-                <th className="text-left font-medium text-muted-foreground p-4 w-50">Feature</th>
-                {providers.map((p) => (
-                  <th
-                    key={p.key}
-                    className={`text-center font-medium p-4 ${p.highlight ? "text-primary bg-primary/5" : "text-muted-foreground"}`}
-                  >
-                    {p.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/30">
-              {comparisonRows.map((row) => (
-                <tr key={row.feature} className="hover:bg-muted/20 transition-colors">
-                  <td className="p-4 font-medium">{row.feature}</td>
-                  {providers.map((p) => {
-                    const val = row[p.key as keyof typeof row];
-                    const isCheck = typeof val === "string" && val.startsWith("✓");
-                    const isCross = typeof val === "string" && val.startsWith("✗");
-                    return (
-                      <td
-                        key={p.key}
-                        className={`p-4 text-center ${p.highlight ? "bg-primary/2" : ""} ${isCheck ? "text-emerald-500" : isCross ? "text-muted-foreground/50" : ""}`}
-                      >
-                        {val}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {advantages.map((a) => (
+            <div
+              key={a.title}
+              className="group relative rounded-2xl border border-border/40 bg-card/40 p-6 transition-all hover:border-primary/30 hover:shadow-sm"
+            >
+              {/* Icon */}
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
+                <a.icon className="h-5 w-5" />
+              </div>
 
-        {/* Mobile cards */}
-        <div className="md:hidden space-y-4">
-          {comparisonRows.map((row) => (
-            <div key={row.feature} className="rounded-xl border border-border/50 p-4">
-              <div className="font-medium mb-3">{row.feature}</div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                {providers.map((p) => {
-                  const val = row[p.key as keyof typeof row];
-                  const isCheck = typeof val === "string" && val.startsWith("✓");
-                  return (
-                    <div
-                      key={p.key}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                        p.highlight ? "bg-primary/10 border border-primary/20" : "bg-muted/30"
-                      }`}
-                    >
-                      <span className={`text-xs ${p.highlight ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                        {p.name}
-                      </span>
-                      <span className={`text-xs font-medium ${isCheck ? "text-emerald-500" : ""}`}>{val}</span>
-                    </div>
-                  );
-                })}
+              <h3 className="font-semibold mb-1">{a.title}</h3>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">{a.description}</p>
+
+              {/* ByteSend value */}
+              <div className="rounded-xl bg-primary/6 border border-primary/15 px-4 py-2.5 mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span className="text-xs font-medium text-primary">ByteSend</span>
+                </div>
+                <p className="mt-1 text-sm font-semibold">{a.bytesend}</p>
+              </div>
+
+              {/* Others */}
+              <div className="space-y-1.5">
+                {a.others.map((o) => (
+                  <div key={o} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="h-1 w-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                    {o}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground mb-4">
+            Ready to switch? Migration takes minutes.
+          </p>
+          <Button size="lg" className="px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
+            <Link href={APP_URL}>Get started free</Link>
+          </Button>
         </div>
       </div>
     </section>
@@ -493,23 +421,40 @@ function Cta() {
   return (
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-4xl px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/15 via-primary/5 to-transparent border border-primary/20 px-8 py-16 sm:px-16 text-center">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/10 blur-[80px]" />
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Ready to send?
-          </h2>
-          <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
-            Create your free account in seconds. No credit card required — just start sending.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
-              <Link href={APP_URL}>Get started free</Link>
-            </Button>
-            <Button variant="ghost" size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
-              <Link href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
-                Read the docs
-              </Link>
-            </Button>
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 px-8 py-16 sm:px-16 text-center">
+          {/* Background gradient layers */}
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/12 via-primary/4 to-transparent" />
+          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-[80px]" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 h-60 w-60 rounded-full bg-primary/8 blur-[60px]" />
+
+          {/* Grid dot pattern */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 text-xs text-primary mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              Free tier available
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Ready to send?
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
+              Create your free account in seconds. No credit card required just sign up and start sending.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
+                <Link href={APP_URL}>Get started free</Link>
+              </Button>
+              <Button variant="ghost" size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
+                <Link href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
+                  Read the docs
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -571,6 +516,30 @@ function WebhookIcon({ className = "" }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" /><path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06" /><path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8H12" />
+    </svg>
+  );
+}
+
+function GiftIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
+    </svg>
+  );
+}
+
+function LayersIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" /><path d="m22.54 12.43-10 4.56a2 2 0 0 1-1.66 0l-9.42-4.29" /><path d="m22.54 16.43-10 4.56a2 2 0 0 1-1.66 0l-9.42-4.29" />
+    </svg>
+  );
+}
+
+function InfinityIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z" />
     </svg>
   );
 }

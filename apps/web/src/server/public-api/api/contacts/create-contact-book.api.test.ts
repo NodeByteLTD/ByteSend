@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UnsendApiError } from "~/server/public-api/api-error";
+import { ByteSendApiError } from "~/server/public-api/api-error";
 
 const {
   mockGetTeamFromToken,
@@ -331,7 +331,7 @@ describe("POST /v1/contactBooks", () => {
   it("returns service-level errors from optional field updates", async () => {
     mockCreateContactBook.mockResolvedValue(buildContactBook({ id: "cb_4" }));
     mockUpdateContactBook.mockRejectedValue(
-      new UnsendApiError({
+      new ByteSendApiError({
         code: "BAD_REQUEST",
         message: "doubleOptInFrom must use a verified domain",
       }),

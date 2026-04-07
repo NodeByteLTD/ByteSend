@@ -11,9 +11,9 @@ icon: golang
 
 ## Installation
 
-Install the useSend Go SDK:
+Install the ByteSend Go SDK:
 ```bash
-go get github.com/usesend/usesend-go
+go get github.com/NodeByteHosting/bytesend-go
 ```
 
 ## Initialize
@@ -26,26 +26,26 @@ import (
     "context"
     "log"
 
-    usesend "github.com/usesend/usesend-go"
+    bytesend "github.com/NodeByteHosting/bytesend-go"
 )
 
 func main() {
-    client, err := usesend.NewClient("bs_12345")
+    client, err := bytesend.NewClient("bs_12345")
     if err != nil {
         log.Fatal(err)
     }
 }
 ```
 
-API keys can also be supplied via the `USESEND_API_KEY` environment variable.
+API keys can also be supplied via the `BYTESEND_API_KEY` environment variable.
 
 ### Self-Hosted Setup
 
-If you are running a self-hosted version of useSend, provide the base URL using `WithBaseURL`.
+If you are running a self-hosted version of ByteSend, provide the base URL using `WithBaseURL`.
 ```go
-client, err := usesend.NewClient(
+client, err := bytesend.NewClient(
     "bs_12345",
-    usesend.WithBaseURL("https://bytesend.cloud"),
+    bytesend.WithBaseURL("https://bytesend.cloud"),
 )
 if err != nil {
     log.Fatal(err)
@@ -62,17 +62,17 @@ The base URL should be the root domain only. Do not include `/api/v1`, as the SD
 - `WithHTTPClient(*http.Client)`: Provide a custom HTTP client
 
 <Info>
-The default HTTP client uses a 30s timeout. Requests include a `User-Agent: usesend-go` header.
+The default HTTP client uses a 30s timeout. Requests include a `User-Agent: bytesend-go` header.
 </Info>
 
 ## Sending Emails
 ```go
 resp, errResp, err := client.Emails.Send(
     context.Background(),
-    usesend.SendEmailPayload{
+    bytesend.SendEmailPayload{
         To:      []string{"hello@acme.com"},
         From:    "hello@company.com",
-        Subject: "useSend email",
+        Subject: "ByteSend email",
         HTML:    "<p>ByteSend is the best way to send emails</p>",
         Text:    "ByteSend is the best way to send emails",
         Headers: map[string]string{
@@ -93,21 +93,21 @@ log.Printf("Email queued with ID: %s", resp.EmailID)
 ```
 
 <Info>
-Custom headers are forwarded as-is. useSend only manages the `X-Usesend-Email-ID` and `References` headers.
+Custom headers are forwarded as-is. ByteSend only manages the `X-ByteSend-Email-ID` and `References` headers.
 </Info>
 
 ## Managing Contacts
 
 ### Get Contact Book ID
 
-Retrieve the contact book ID from the useSend dashboard.
+Retrieve the contact book ID from the ByteSend dashboard.
 
 ### Create Contacts
 ```go
 contact, apiErr, err := client.Contacts.Create(
     context.Background(),
     "contactBook_123",
-    usesend.CreateContactPayload{
+    bytesend.CreateContactPayload{
         Email:     "hey@bobdole.com",
         FirstName: "Bob",
         LastName:  "Dole",
@@ -131,7 +131,7 @@ contact, apiErr, err := client.Contacts.Update(
     context.Background(),
     "contactBook_123",
     "contact_456",
-    usesend.UpdateContactPayload{
+    bytesend.UpdateContactPayload{
         FirstName: "Bob",
         LastName:  "Dold",
     },

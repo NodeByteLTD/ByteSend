@@ -1,4 +1,4 @@
-"""Webhook verification and event construction for UseSend webhooks.
+"""Webhook verification and event construction for ByteSend webhooks.
 
 This module provides secure webhook signature verification using HMAC-SHA256,
 timestamp validation, and type-safe event parsing.
@@ -16,10 +16,10 @@ from .types import WebhookEventData
 
 
 # Webhook header names
-WEBHOOK_SIGNATURE_HEADER = "X-UseSend-Signature"
-WEBHOOK_TIMESTAMP_HEADER = "X-UseSend-Timestamp"
-WEBHOOK_EVENT_HEADER = "X-UseSend-Event"
-WEBHOOK_CALL_HEADER = "X-UseSend-Call"
+WEBHOOK_SIGNATURE_HEADER = "X-ByteSend-Signature"
+WEBHOOK_TIMESTAMP_HEADER = "X-ByteSend-Timestamp"
+WEBHOOK_EVENT_HEADER = "X-ByteSend-Event"
+WEBHOOK_CALL_HEADER = "X-ByteSend-Call"
 
 # Signature format
 SIGNATURE_PREFIX = "v1="
@@ -71,10 +71,10 @@ class Webhooks:
     Example
     -------
     ```python
-    from usesend import UseSend
+    from bytesend import ByteSend
 
-    usesend = UseSend("us_12345")
-    webhooks = usesend.webhooks("whsec_xxx")
+    bytesend = ByteSend("us_12345")
+    webhooks = bytesend.webhooks("whsec_xxx")
 
     # Flask example
     @app.route("/webhook", methods=["POST"])

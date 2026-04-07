@@ -72,17 +72,23 @@ export default function LoginPage({
   const oauthProviders = providers?.filter((p) => p.type !== "email") ?? [];
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-100 space-y-8">
+    <main className="relative min-h-screen flex items-center justify-center bg-background px-4 py-12 overflow-hidden">
+      {/* Background gradient orbs */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-120 w-180 rounded-full bg-primary/8 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-primary/5 blur-[100px]" />
+
+      <div className="relative w-full max-w-100 space-y-8">
         {/* Logo & heading */}
         <div className="flex flex-col items-center text-center space-y-4">
-          <Image
-            src="/logo-squircle.png"
-            alt="ByteSend"
-            width={48}
-            height={48}
-            className="rounded-xl"
-          />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Image
+              src="/logo-squircle.png"
+              alt="ByteSend"
+              width={40}
+              height={40}
+              className="rounded-xl"
+            />
+          </div>
           <div className="space-y-1.5">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               {isSignup ? "Create your account" : "Sign in to ByteSend"}
@@ -90,14 +96,14 @@ export default function LoginPage({
             <p className="text-sm text-muted-foreground">
               {isSignup
                 ? "Get started with email infrastructure that scales"
-                : "Welcome back, let's pick up where you left off"}
+                : "Welcome back, let\u2019s pick up where you left off"}
             </p>
           </div>
         </div>
 
         {/* Email check-your-inbox state */}
         {emailSent ? (
-          <div className="rounded-xl border border-border/60 bg-card p-6 text-center space-y-3">
+          <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 text-center space-y-3">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
               <svg className="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -126,9 +132,9 @@ export default function LoginPage({
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="h-11"
+                  className="h-11 rounded-xl bg-card/60 border-border/40"
                 />
-                <Button type="submit" className="w-full h-11" disabled={emailLoading}>
+                <Button type="submit" className="w-full h-11 rounded-xl shadow-lg shadow-primary/20" disabled={emailLoading}>
                   {emailLoading ? (
                     <Spinner className="size-4" />
                   ) : (
@@ -147,10 +153,10 @@ export default function LoginPage({
             {hasEmailProvider && oauthProviders.length > 0 && (
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border/60" />
+                  <div className="w-full border-t border-border/30" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-background px-3 text-muted-foreground/60">or</span>
+                  <span className="bg-background px-3 text-muted-foreground/50">or</span>
                 </div>
               </div>
             )}
@@ -161,7 +167,7 @@ export default function LoginPage({
                 <Button
                   key={provider.id}
                   variant="outline"
-                  className="w-full h-11 gap-3 font-medium"
+                  className="w-full h-11 gap-3 font-medium rounded-xl border-border/40 bg-card/40 hover:bg-card/80"
                   onClick={() => handleOAuthSubmit(provider.id)}
                   disabled={submittedProvider === provider.id}
                 >

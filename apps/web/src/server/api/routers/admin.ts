@@ -8,7 +8,7 @@ import { getAccount } from "~/server/aws/ses";
 import { db } from "~/server/db";
 import { sendMail } from "~/server/mailer";
 import { logger } from "~/server/logger/log";
-import { UseSend } from "bytesend-js";
+import { ByteSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
 
@@ -83,7 +83,7 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         region: z.string(),
-        usesendUrl: z.string().url(),
+        bytesendUrl: z.string().url(),
         sendRate: z.number(),
         transactionalQuota: z.number(),
       }),
@@ -91,7 +91,7 @@ export const adminRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       return SesSettingsService.createSesSetting({
         region: input.region,
-        usesendUrl: input.usesendUrl,
+        bytesendUrl: input.bytesendUrl,
         sendingRateLimit: input.sendRate,
         transactionalQuota: input.transactionalQuota,
       });

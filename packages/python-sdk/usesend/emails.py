@@ -33,8 +33,8 @@ def _idem_headers(idempotency_key: Optional[str]) -> Optional[Dict[str, str]]:
 class Emails:
     """Client for `/emails` endpoints."""
 
-    def __init__(self, usesend: "UseSend") -> None:
-        self.usesend = usesend
+    def __init__(self, bytesend: "ByteSend") -> None:
+        self.bytesend = bytesend
 
     # Basic operations -------------------------------------------------
     def send(
@@ -63,7 +63,7 @@ class Emails:
             body["scheduledAt"] = body["scheduledAt"].isoformat()
 
         idempotency_key = options.get("idempotency_key") if options else None
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             "/emails", body, headers=_idem_headers(idempotency_key)
         )
         return (data, err)  # type: ignore[return-value]
@@ -82,13 +82,13 @@ class Emails:
                 d["scheduledAt"] = d["scheduledAt"].isoformat()
             items.append(d)
         idempotency_key = options.get("idempotency_key") if options else None
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             "/emails/batch", items, headers=_idem_headers(idempotency_key)
         )
         return (data, err)  # type: ignore[return-value]
 
     def get(self, email_id: str) -> Tuple[Optional[Email], Optional[APIError]]:
-        data, err = self.usesend.get(f"/emails/{email_id}")
+        data, err = self.bytesend.get(f"/emails/{email_id}")
         return (data, err)  # type: ignore[return-value]
 
     def update(self, email_id: str, payload: EmailUpdate) -> Tuple[Optional[EmailUpdateResponse], Optional[APIError]]:
@@ -96,12 +96,12 @@ class Emails:
         if isinstance(body.get("scheduledAt"), datetime):
             body["scheduledAt"] = body["scheduledAt"].isoformat()
 
-        data, err = self.usesend.patch(f"/emails/{email_id}", body)
+        data, err = self.bytesend.patch(f"/emails/{email_id}", body)
         return (data, err)  # type: ignore[return-value]
 
     def cancel(self, email_id: str) -> Tuple[Optional[EmailCancelResponse], Optional[APIError]]:
-        data, err = self.usesend.post(f"/emails/{email_id}/cancel", {})
+        data, err = self.bytesend.post(f"/emails/{email_id}/cancel", {})
         return (data, err)  # type: ignore[return-value]
 
 
-from .usesend import UseSend  # noqa: E402  pylint: disable=wrong-import-position
+from .bytesend import ByteSend  # noqa: E402  pylint: disable=wrong-import-position

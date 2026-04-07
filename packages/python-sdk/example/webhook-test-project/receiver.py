@@ -5,14 +5,14 @@ import os
 from flask import Flask, jsonify, request
 from flask.typing import ResponseReturnValue
 
-from usesend import UseSend, WebhookVerificationError  # type: ignore[import-not-found]
+from bytesend import ByteSend, WebhookVerificationError  # type: ignore[import-not-found]
 
 
 WEBHOOK_SECRET = os.getenv("BYTESEND_WEBHOOK_SECRET", "whsec_test")
 
 app = Flask(__name__)
-usesend = UseSend("us_test")
-webhooks = usesend.webhooks(WEBHOOK_SECRET)
+bytesend = ByteSend("us_test")
+webhooks = bytesend.webhooks(WEBHOOK_SECRET)
 
 
 @app.post("/webhook")

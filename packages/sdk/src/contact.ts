@@ -1,4 +1,4 @@
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
 
@@ -71,15 +71,15 @@ type DeleteContactResponse = {
 };
 
 export class Contacts {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async create(
     contactBookId: string,
     payload: CreateContactPayload
   ): Promise<CreateContactResponse> {
-    const data = await this.usesend.post<CreateContactResponseSuccess>(
+    const data = await this.bytesend.post<CreateContactResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts`,
       payload
     );
@@ -91,7 +91,7 @@ export class Contacts {
     contactBookId: string,
     contactId: string
   ): Promise<GetContactResponse> {
-    const data = await this.usesend.get<GetContactResponseSuccess>(
+    const data = await this.bytesend.get<GetContactResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts/${contactId}`
     );
     return data;
@@ -102,7 +102,7 @@ export class Contacts {
     contactId: string,
     payload: UpdateContactPayload
   ): Promise<UpdateContactResponse> {
-    const data = await this.usesend.patch<UpdateContactResponseSuccess>(
+    const data = await this.bytesend.patch<UpdateContactResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts/${contactId}`,
       payload
     );
@@ -115,7 +115,7 @@ export class Contacts {
     contactId: string,
     payload: UpsertContactPayload
   ): Promise<UpsertContactResponse> {
-    const data = await this.usesend.put<UpsertContactResponseSuccess>(
+    const data = await this.bytesend.put<UpsertContactResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts/${contactId}`,
       payload
     );
@@ -127,7 +127,7 @@ export class Contacts {
     contactBookId: string,
     payload: BulkCreateContactsPayload
   ): Promise<BulkCreateContactsResponse> {
-    const data = await this.usesend.post<BulkCreateContactsResponseSuccess>(
+    const data = await this.bytesend.post<BulkCreateContactsResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts/bulk`,
       payload
     );
@@ -139,7 +139,7 @@ export class Contacts {
     contactBookId: string,
     payload: BulkDeleteContactsPayload
   ): Promise<BulkDeleteContactsResponse> {
-    const data = await this.usesend.delete<BulkDeleteContactsResponseSuccess>(
+    const data = await this.bytesend.delete<BulkDeleteContactsResponseSuccess>(
       `/contactBooks/${contactBookId}/contacts/bulk`,
       payload
     );
@@ -151,7 +151,7 @@ export class Contacts {
     contactBookId: string,
     contactId: string
   ): Promise<DeleteContactResponse> {
-    const data = await this.usesend.delete<{ success: boolean }>(
+    const data = await this.bytesend.delete<{ success: boolean }>(
       `/contactBooks/${contactBookId}/contacts/${contactId}`
     );
 

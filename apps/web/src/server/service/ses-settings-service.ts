@@ -46,19 +46,19 @@ export class SesSettingsService {
   }
 
   /**
-   * Creates a new setting in AWS for the given region and usesendUrl
+   * Creates a new setting in AWS for the given region and bytesendUrl
    *
    * @param region
-   * @param usesendUrl
+   * @param bytesendUrl
    */
   public static async createSesSetting({
     region,
-    usesendUrl,
+    bytesendUrl,
     sendingRateLimit,
     transactionalQuota,
   }: {
     region: string;
-    usesendUrl: string;
+    bytesendUrl: string;
     sendingRateLimit: number;
     transactionalQuota: number;
   }) {
@@ -67,18 +67,18 @@ export class SesSettingsService {
       throw new Error(`SesSetting for region ${region} already exists`);
     }
 
-    const parsedUrl = usesendUrl.endsWith("/")
-      ? usesendUrl.substring(0, usesendUrl.length - 1)
-      : usesendUrl;
+    const parsedUrl = bytesendUrl.endsWith("/")
+      ? bytesendUrl.substring(0, bytesendUrl.length - 1)
+      : bytesendUrl;
 
     // Skip URL reachability check in self-hosted mode — the server cannot
     // reliably fetch itself, and the SNS subscription confirm flow handles
     // callback validation after the fact.
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
-      const usesendUrlValidation = await isValidUsesendUrl(parsedUrl);
-      if (!usesendUrlValidation.isValid) {
+      const bytesendUrlValidation = await isValidBytesendUrl(parsedUrl);
+      if (!bytesendUrlValidation.isValid) {
         throw new Error(
-          `Callback URL: ${usesendUrl} is not valid, status: ${usesendUrlValidation.code} message:${usesendUrlValidation.error}`
+          `Callback URL: ${bytesendUrl} is not valid, status: ${bytesendUrlValidation.code} message:${bytesendUrlValidation.error}`
         );
       }
     }
@@ -89,7 +89,7 @@ export class SesSettingsService {
     let settingId: string | undefined;
 
     try {
-      const topicName = `${idPrefix}-${region}-unsend`;
+      const topicName = `${idPrefix}-${region}-bytesend`;
       topicArn = await sns.createTopic(topicName, region);
       if (!topicArn) {
         throw new Error("Failed to create SNS topic");
@@ -248,7 +248,7 @@ async function registerConfigurationSet(setting: SesSetting) {
     throw new Error("Setting does not have a topic ARN");
   }
 
-  const configGeneral = `${setting.idPrefix}-${setting.region}-unsend-general`;
+  const configGeneral = `${setting.idPrefix}-${setting.region}-bytesend-general`;
   const generalStatus = await ses.addWebhookConfiguration(
     configGeneral,
     setting.topicArn,
@@ -256,7 +256,7 @@ async function registerConfigurationSet(setting: SesSetting) {
     setting.region
   );
 
-  const configClick = `${setting.idPrefix}-${setting.region}-unsend-click`;
+  const configClick = `${setting.idPrefix}-${setting.region}-bytesend-click`;
   const clickStatus = await ses.addWebhookConfiguration(
     configClick,
     setting.topicArn,
@@ -264,7 +264,7 @@ async function registerConfigurationSet(setting: SesSetting) {
     setting.region
   );
 
-  const configOpen = `${setting.idPrefix}-${setting.region}-unsend-open`;
+  const configOpen = `${setting.idPrefix}-${setting.region}-bytesend-open`;
   const openStatus = await ses.addWebhookConfiguration(
     configOpen,
     setting.topicArn,
@@ -272,7 +272,7 @@ async function registerConfigurationSet(setting: SesSetting) {
     setting.region
   );
 
-  const configFull = `${setting.idPrefix}-${setting.region}-unsend-full`;
+  const configFull = `${setting.idPrefix}-${setting.region}-bytesend-full`;
   const fullStatus = await ses.addWebhookConfiguration(
     configFull,
     setting.topicArn,
@@ -314,7 +314,7 @@ function isLocalhostUrl(url: string): boolean {
   }
 }
 
-async function isValidUsesendUrl(url: string) {
+async function isValidBytesendUrl(url: string) {
   logger.info({ url }, "Checking if URL is valid");
   try {
     const response = await fetch(`${url}/api/ses_callback`, {

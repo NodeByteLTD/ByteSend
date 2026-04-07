@@ -2,7 +2,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { ContactBookSchema } from "~/lib/zod/contact-book-schema";
 import { PublicAPIApp } from "~/server/public-api/hono";
 import { db } from "~/server/db";
-import { UnsendApiError } from "../../api-error";
+import { ByteSendApiError } from "../../api-error";
 
 const route = createRoute({
   method: "get",
@@ -69,7 +69,7 @@ function getContactBook(app: PublicAPIApp) {
     });
 
     if (!contactBook) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Contact book not found",
       });

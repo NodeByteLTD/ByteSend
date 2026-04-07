@@ -1,5 +1,5 @@
 import { env } from "~/env";
-import { UseSend } from "bytesend-js";
+import { ByteSend } from "bytesend-js";
 import { isSelfHosted } from "~/utils/common";
 import { db } from "./db";
 import { getDomains } from "./service/domain-service";
@@ -7,11 +7,11 @@ import { sendEmail } from "./service/email-service";
 import { logger } from "./logger/log";
 import { renderOtpEmail, renderTeamInviteEmail } from "./email-templates";
 
-let bytesend: UseSend | undefined;
+let bytesend: ByteSend | undefined;
 
 const getClient = () => {
   if (!bytesend) {
-    bytesend = new UseSend(env.BYTESEND_API_KEY ?? env.UNSEND_API_KEY);
+    bytesend = new ByteSend(env.BYTESEND_API_KEY ?? env.UNSEND_API_KEY);
   }
   return bytesend;
 };

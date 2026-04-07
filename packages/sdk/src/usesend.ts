@@ -11,7 +11,7 @@ const defaultBaseUrl = "https://bytesend.cloud";
 // eslint-disable-next-line turbo/no-undeclared-env-vars
 const baseUrl = `${process?.env?.BYTESEND_BASE_URL ?? process?.env?.USESEND_BASE_URL ?? process?.env?.UNSEND_BASE_URL ?? defaultBaseUrl}/api/v1`;
 
-function isUseSendErrorResponse(error: { error: ErrorResponse }) {
+function isByteSendErrorResponse(error: { error: ErrorResponse }) {
   return error.error.code !== undefined;
 }
 
@@ -19,7 +19,7 @@ type RequestOptions = {
   headers?: HeadersInit;
 };
 
-export class UseSend {
+export class ByteSend {
   private readonly baseHeaders: Headers;
 
   readonly emails = new Emails(this);
@@ -41,7 +41,7 @@ export class UseSend {
 
       if (!this.key) {
         throw new Error(
-          'Missing API key. Pass it to the constructor `new UseSend("bs_123")`',
+          'Missing API key. Pass it to the constructor `new ByteSend("bs_123")`',
         );
       }
     }
@@ -88,7 +88,7 @@ export class UseSend {
     if (!response.ok) {
       try {
         const resp = await response.json();
-        if (isUseSendErrorResponse(resp)) {
+        if (isByteSendErrorResponse(resp)) {
           return { data: null, error: resp };
         }
 
@@ -178,15 +178,15 @@ export class UseSend {
 
   /**
    * Creates a webhook handler with the given secret.
-   * Follows the Stripe pattern: `usesend.webhooks(secret).constructEvent(...)`
+   * Follows the Stripe pattern: `bytesend.webhooks(secret).constructEvent(...)`
    *
-   * @param secret - Webhook signing secret from your UseSend dashboard
+   * @param secret - Webhook signing secret from your ByteSend dashboard
    * @returns Webhooks instance for verifying webhook events
    *
    * @example
    * ```ts
-   * const usesend = new UseSend('bs_xxx');
-   * const webhooks = usesend.webhooks('whsec_xxx');
+   * const bytesend = new ByteSend('bs_xxx');
+   * const webhooks = bytesend.webhooks('whsec_xxx');
    *
    * // In your webhook route
    * const event = webhooks.constructEvent(req.body, {

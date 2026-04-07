@@ -27,7 +27,6 @@
         "VERCEL",
         "SKIP_ENV_VALIDATION",
         "PORT",
-        "UNSEND_API_KEY",
         "BYTESEND_API_KEY",
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",

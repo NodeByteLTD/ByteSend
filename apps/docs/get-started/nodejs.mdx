@@ -36,22 +36,22 @@ icon: node-js
     Get the API key from the [ByteSend dashboard](https://bytesend.cloud/dev-settings/api-keys) and initialize the SDK
 
     ```javascript
-    import { UseSend } from "bytesend-js";
+    import { ByteSend } from "bytesend-js";
 
-    const usesend = new UseSend("bs_12345");
+    const bytesend = new ByteSend("bs_12345");
     ```
 
     If you are running a self-hosted version of ByteSend, pass the base URL as the
     second argument:
 
     ```javascript
-    const usesend = new UseSend("bs_12345", "https://your-bytesend-instance.com");
+    const bytesend = new ByteSend("bs_12345", "https://your-bytesend-instance.com");
     ```
 
   </Step>
   <Step title="Send Email">
     ```javascript
-    usesend.emails.send({
+    bytesend.emails.send({
       to: "hello@acme.com",
       from: "hello@company.com",
       subject: "ByteSend email",
@@ -76,7 +76,7 @@ icon: node-js
   <Step title="Add contacts">
 
     ```javascript
-    usesend.contacts
+    bytesend.contacts
       .create("clzeydgeygff", {
         email: "hey@bobdole.com",
         firstName: "Bob",
@@ -88,7 +88,7 @@ icon: node-js
 
   <Step title="Update contact">
     ```javascript
-    usesend.contacts.update("clzeydgeygff", contactId, {
+    bytesend.contacts.update("clzeydgeygff", contactId, {
       firstName: "Bob",
       lastName: "Dole",
     });

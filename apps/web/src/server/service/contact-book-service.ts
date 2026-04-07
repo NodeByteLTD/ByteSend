@@ -5,7 +5,7 @@ import {
   hasDoubleOptInUrlPlaceholder,
 } from "~/lib/constants/double-opt-in";
 import { db } from "../db";
-import { UnsendApiError } from "../public-api/api-error";
+import { ByteSendApiError } from "../public-api/api-error";
 import { validateDomainFromEmail } from "./domain-service";
 import { LimitService } from "./limit-service";
 import {
@@ -51,7 +51,7 @@ export async function createContactBook(
     await LimitService.checkContactBookLimit(teamId);
 
   if (isLimitReached) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "FORBIDDEN",
       message: reason ?? "Contact book limit reached",
     });
@@ -62,7 +62,7 @@ export async function createContactBook(
   try {
     validateContactBookVariables(normalizedVariables);
   } catch (error) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: error instanceof Error ? error.message : "Invalid variables",
     });
@@ -136,7 +136,7 @@ export async function updateContactBook(
     try {
       validateContactBookVariables(normalizedVariables);
     } catch (error) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "BAD_REQUEST",
         message: error instanceof Error ? error.message : "Invalid variables",
       });
@@ -171,7 +171,7 @@ export async function updateContactBook(
       });
 
       if (!contactBook) {
-        throw new UnsendApiError({
+        throw new ByteSendApiError({
           code: "BAD_REQUEST",
           message: "Contact book not found",
         });
@@ -191,7 +191,7 @@ export async function updateContactBook(
     data.doubleOptInContent !== undefined &&
     !hasDoubleOptInUrlPlaceholder(data.doubleOptInContent)
   ) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message:
         "Double opt-in email content must include the {{doubleOptInUrl}} placeholder",

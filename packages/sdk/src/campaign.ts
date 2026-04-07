@@ -1,4 +1,4 @@
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
 
@@ -61,14 +61,14 @@ type CampaignActionResponse = {
 };
 
 export class Campaigns {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async create(
     payload: CreateCampaignPayload,
   ): Promise<CreateCampaignResponse> {
-    const data = await this.usesend.post<CreateCampaignResponseSuccess>(
+    const data = await this.bytesend.post<CreateCampaignResponseSuccess>(
       `/campaigns`,
       payload,
     );
@@ -87,12 +87,12 @@ export class Campaigns {
     const queryString = params.toString();
     const path = queryString ? `/campaigns?${queryString}` : `/campaigns`;
 
-    const data = await this.usesend.get<GetAllCampaignsResponseSuccess>(path);
+    const data = await this.bytesend.get<GetAllCampaignsResponseSuccess>(path);
     return data;
   }
 
   async get(campaignId: string): Promise<GetCampaignResponse> {
-    const data = await this.usesend.get<GetCampaignResponseSuccess>(
+    const data = await this.bytesend.get<GetCampaignResponseSuccess>(
       `/campaigns/${campaignId}`,
     );
     return data;
@@ -102,7 +102,7 @@ export class Campaigns {
     campaignId: string,
     payload: ScheduleCampaignPayload,
   ): Promise<ScheduleCampaignResponse> {
-    const data = await this.usesend.post<ScheduleCampaignResponseSuccess>(
+    const data = await this.bytesend.post<ScheduleCampaignResponseSuccess>(
       `/campaigns/${campaignId}/schedule`,
       payload,
     );
@@ -111,7 +111,7 @@ export class Campaigns {
   }
 
   async pause(campaignId: string): Promise<CampaignActionResponse> {
-    const data = await this.usesend.post<CampaignActionResponseSuccess>(
+    const data = await this.bytesend.post<CampaignActionResponseSuccess>(
       `/campaigns/${campaignId}/pause`,
       {},
     );
@@ -120,7 +120,7 @@ export class Campaigns {
   }
 
   async resume(campaignId: string): Promise<CampaignActionResponse> {
-    const data = await this.usesend.post<CampaignActionResponseSuccess>(
+    const data = await this.bytesend.post<CampaignActionResponseSuccess>(
       `/campaigns/${campaignId}/resume`,
       {},
     );
@@ -129,7 +129,7 @@ export class Campaigns {
   }
 
   async delete(campaignId: string): Promise<DeleteCampaignResponse> {
-    const data = await this.usesend.delete<DeleteCampaignResponseSuccess>(
+    const data = await this.bytesend.delete<DeleteCampaignResponseSuccess>(
       `/campaigns/${campaignId}`,
     );
     return data;

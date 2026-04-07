@@ -1,6 +1,6 @@
 import { render } from "@react-email/render";
 import * as React from "react";
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
 
@@ -72,8 +72,8 @@ type EmailRequestOptions = {
 };
 
 export class Emails {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async send(payload: SendEmailPayload, options?: EmailRequestOptions) {
@@ -89,7 +89,7 @@ export class Emails {
       delete payload.react;
     }
 
-    const data = await this.usesend.post<CreateEmailResponseSuccess>(
+    const data = await this.bytesend.post<CreateEmailResponseSuccess>(
       "/emails",
       payload,
       options?.idempotencyKey
@@ -111,7 +111,7 @@ export class Emails {
     options?: EmailRequestOptions,
   ): Promise<BatchEmailResponse> {
     // Note: React element rendering is not supported in batch mode.
-    const response = await this.usesend.post<BatchEmailResponseSuccess>(
+    const response = await this.bytesend.post<BatchEmailResponseSuccess>(
       "/emails/batch",
       payload,
       options?.idempotencyKey
@@ -125,7 +125,7 @@ export class Emails {
   }
 
   async get(id: string): Promise<GetEmailResponse> {
-    const data = await this.usesend.get<GetEmailResponseSuccess>(
+    const data = await this.bytesend.get<GetEmailResponseSuccess>(
       `/emails/${id}`
     );
 
@@ -136,7 +136,7 @@ export class Emails {
     id: string,
     payload: UpdateEmailPayload
   ): Promise<UpdateEmailResponse> {
-    const data = await this.usesend.patch<UpdateEmailResponseSuccess>(
+    const data = await this.bytesend.patch<UpdateEmailResponseSuccess>(
       `/emails/${id}`,
       payload
     );
@@ -144,7 +144,7 @@ export class Emails {
   }
 
   async cancel(id: string): Promise<CancelEmailResponse> {
-    const data = await this.usesend.post<CancelEmailResponseSuccess>(
+    const data = await this.bytesend.post<CancelEmailResponseSuccess>(
       `/emails/${id}/cancel`,
       {}
     );

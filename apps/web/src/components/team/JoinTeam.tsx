@@ -78,12 +78,12 @@ export default function JoinTeam({
 
   return (
     <div>
-      <div>You have been invited to join team</div>
+      <div className="text-sm font-medium text-center text-muted-foreground">You have been invited to join a team</div>
       <div className="space-y-2 mt-4">
         {invites.map((invite) => (
           <div
             key={invite.id}
-            className="flex items-center gap-2 border rounded-lg p-2 px-4 shadow justify-between"
+            className="flex items-center gap-2 border border-border/40 rounded-xl p-3 px-4 bg-card/40 justify-between"
           >
             <div>
               <div className="text-sm">{invite.team.name}</div>
@@ -112,7 +112,7 @@ export default function JoinTeam({
         ))}
       </div>
       {showCreateTeam ? (
-        <div className="mt-8 text-muted-foreground text-sm font-mono text-center">
+        <div className="mt-8 text-muted-foreground/50 text-xs font-medium text-center tracking-wider uppercase">
           OR
         </div>
       ) : null}

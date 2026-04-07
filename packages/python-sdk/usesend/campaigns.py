@@ -17,13 +17,13 @@ from .types import (
 class Campaigns:
     """Client for `/campaigns` endpoints."""
 
-    def __init__(self, usesend: "UseSend") -> None:
-        self.usesend = usesend
+    def __init__(self, bytesend: "ByteSend") -> None:
+        self.bytesend = bytesend
 
     def create(
         self, payload: CampaignCreate
     ) -> Tuple[Optional[CampaignCreateResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             "/campaigns",
             payload,
         )
@@ -32,7 +32,7 @@ class Campaigns:
     def get(
         self, campaign_id: str
     ) -> Tuple[Optional[Campaign], Optional[APIError]]:
-        data, err = self.usesend.get(
+        data, err = self.bytesend.get(
             f"/campaigns/{campaign_id}"
         )
         return (data, err)  # type: ignore[return-value]
@@ -40,7 +40,7 @@ class Campaigns:
     def schedule(
         self, campaign_id: str, payload: CampaignSchedule
     ) -> Tuple[Optional[CampaignScheduleResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             f"/campaigns/{campaign_id}/schedule",
             payload,
         )
@@ -49,7 +49,7 @@ class Campaigns:
     def pause(
         self, campaign_id: str
     ) -> Tuple[Optional[CampaignActionResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             f"/campaigns/{campaign_id}/pause",
             {},
         )
@@ -58,11 +58,11 @@ class Campaigns:
     def resume(
         self, campaign_id: str
     ) -> Tuple[Optional[CampaignActionResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             f"/campaigns/{campaign_id}/resume",
             {},
         )
         return (data, err)  # type: ignore[return-value]
 
 
-from .usesend import UseSend  # noqa: E402  pylint: disable=wrong-import-position
+from .bytesend import ByteSend  # noqa: E402  pylint: disable=wrong-import-position

@@ -6,8 +6,8 @@ from typing import get_args, get_type_hints
 
 import pytest
 
-from usesend import types
-from usesend.webhooks import (
+from bytesend import types
+from bytesend.webhooks import (
     WEBHOOK_SIGNATURE_HEADER,
     WEBHOOK_TIMESTAMP_HEADER,
     WebhookVerificationError,

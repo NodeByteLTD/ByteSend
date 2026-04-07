@@ -1,6 +1,6 @@
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 
 type CreateDomainPayload =
   paths["/v1/domains"]["post"]["requestBody"]["content"]["application/json"];
@@ -46,17 +46,17 @@ type DeleteDomainResponseSuccess =
   paths["/v1/domains/{id}"]["delete"]["responses"]["200"]["content"]["application/json"];
 
 export class Domains {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async list(): Promise<GetDomainsResponse> {
-    const data = await this.usesend.get<GetDomainsResponseSuccess>("/domains");
+    const data = await this.bytesend.get<GetDomainsResponseSuccess>("/domains");
     return data;
   }
 
   async create(payload: CreateDomainPayload): Promise<CreateDomainResponse> {
-    const data = await this.usesend.post<CreateDomainResponseSuccess>(
+    const data = await this.bytesend.post<CreateDomainResponseSuccess>(
       "/domains",
       payload,
     );
@@ -64,7 +64,7 @@ export class Domains {
   }
 
   async verify(id: number): Promise<VerifyDomainResponse> {
-    const data = await this.usesend.put<VerifyDomainResponseSuccess>(
+    const data = await this.bytesend.put<VerifyDomainResponseSuccess>(
       `/domains/${id}/verify`,
       {},
     );
@@ -72,7 +72,7 @@ export class Domains {
   }
 
   async get(id: number): Promise<GetDomainResponse> {
-    const data = await this.usesend.get<GetDomainResponseSuccess>(
+    const data = await this.bytesend.get<GetDomainResponseSuccess>(
       `/domains/${id}`,
     );
 
@@ -80,7 +80,7 @@ export class Domains {
   }
 
   async delete(id: number): Promise<DeleteDomainResponse> {
-    const data = await this.usesend.delete<DeleteDomainResponseSuccess>(
+    const data = await this.bytesend.delete<DeleteDomainResponseSuccess>(
       `/domains/${id}`,
     );
 

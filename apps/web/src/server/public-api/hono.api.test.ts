@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UnsendApiError } from "~/server/public-api/api-error";
+import { ByteSendApiError } from "~/server/public-api/api-error";
 
 const { mockGetTeamFromToken, mockRedis } = vi.hoisted(() => ({
   mockGetTeamFromToken: vi.fn(),
@@ -88,7 +88,7 @@ describe("public API Hono middleware", () => {
 
   it("returns auth error from middleware", async () => {
     mockGetTeamFromToken.mockRejectedValue(
-      new UnsendApiError({
+      new ByteSendApiError({
         code: "UNAUTHORIZED",
         message: "No Authorization header provided",
       }),

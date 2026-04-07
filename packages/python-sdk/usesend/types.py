@@ -1,4 +1,4 @@
-"""TypedDict models for the UseSend API.
+"""TypedDict models for the ByteSend API.
 
 Lightweight, Pydantic-free types for editor autocomplete and static checks.
 At runtime these are plain dicts and lists.

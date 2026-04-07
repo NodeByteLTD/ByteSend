@@ -7,17 +7,20 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-sidebar-background text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight mb-6">
-          Terms of Service
-        </h1>
-        <p className="text-muted-foreground mb-6">
-          These Terms of Service (&quot;Terms&quot;) govern your access to and
-          use of bytesend.cloud and the ByteSend application, operated by
-          NodeByte LTD. By accessing or using our platform, you agree to be
-          bound by these Terms.
-        </p>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+        <div className="mb-10">
+          <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Legal</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+            Terms of Service
+          </h1>
+          <p className="text-muted-foreground">
+            These Terms of Service (&quot;Terms&quot;) govern your access to and
+            use of bytesend.cloud and the ByteSend application, operated by
+            NodeByte LTD. By accessing or using our platform, you agree to be
+            bound by these Terms.
+          </p>
+        </div>
 
         <section className="space-y-3 mb-8">
           <h2 className="text-xl font-medium">Eligibility &amp; Accounts</h2>

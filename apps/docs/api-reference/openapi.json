@@ -1,6 +1,6 @@
 {
   "openapi": "3.0.0",
-  "info": { "version": "1.0.0", "title": "useSend API" },
+  "info": { "version": "1.0.0", "title": "ByteSend API" },
   "servers": [{ "url": "https://bytesend.cloud/api" }],
   "components": {
     "securitySchemes": { "Bearer": { "type": "http", "scheme": "bearer" } },

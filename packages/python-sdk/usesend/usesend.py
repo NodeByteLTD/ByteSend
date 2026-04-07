@@ -1,7 +1,7 @@
-"""Core client for interacting with the UseSend API.
+"""Core client for interacting with the ByteSend API.
 
 Enhancements:
-- Optional ``raise_on_error`` to raise ``UseSendHTTPError`` on non-2xx.
+- Optional ``raise_on_error`` to raise ``ByteSendHTTPError`` on non-2xx.
 - Reusable ``requests.Session`` support for connection reuse.
 """
 from __future__ import annotations
@@ -15,7 +15,7 @@ import requests
 DEFAULT_BASE_URL = "https://bytesend.cloud"
 
 
-class UseSendHTTPError(Exception):
+class ByteSendHTTPError(Exception):
     """HTTP error raised when ``raise_on_error=True`` and a request fails."""
 
     def __init__(self, status_code: int, error: Dict[str, Any], method: str, path: str) -> None:
@@ -31,14 +31,15 @@ class UseSendHTTPError(Exception):
         return f"{self.method} {self.path} -> {self.status_code} {code}: {message}"
 
 
-class UseSend:
-    """UseSend API client.
+class ByteSend:
+    """ByteSend API client.
 
     Parameters
     ----------
     key:
-        API key issued by UseSend. If not provided, the client attempts to
-        read ``USESEND_API_KEY`` or ``UNSEND_API_KEY`` from the environment.
+        API key issued by ByteSend. If not provided, the client attempts to
+        read ``BYTESEND_API_KEY``, ``USESEND_API_KEY``, or ``UNSEND_API_KEY``
+        from the environment.
     url:
         Optional base URL for the API (useful for testing).
     """
@@ -51,11 +52,11 @@ class UseSend:
         raise_on_error: bool = True,
         session: Optional[requests.Session] = None,
     ) -> None:
-        self.key = key or os.getenv("USESEND_API_KEY") or os.getenv("UNSEND_API_KEY")
+        self.key = key or os.getenv("BYTESEND_API_KEY") or os.getenv("USESEND_API_KEY") or os.getenv("UNSEND_API_KEY")
         if not self.key:
-            raise ValueError("Missing API key. Pass it to UseSend('bs_123')")
+            raise ValueError("Missing API key. Pass it to ByteSend('bs_123')")
 
-        base = os.getenv("USESEND_BASE_URL") or os.getenv("UNSEND_BASE_URL") or DEFAULT_BASE_URL
+        base = os.getenv("BYTESEND_BASE_URL") or os.getenv("USESEND_BASE_URL") or os.getenv("UNSEND_BASE_URL") or DEFAULT_BASE_URL
         if url:
             base = url
         self.url = f"{base}/api/v1"
@@ -95,8 +96,8 @@ class UseSend:
         Example
         -------
         ```python
-        usesend = UseSend("us_12345")
-        webhooks = usesend.webhooks("whsec_xxx")
+        bytesend = ByteSend("us_12345")
+        webhooks = bytesend.webhooks("whsec_xxx")
 
         # In your webhook handler
         event = webhooks.construct_event(body, headers=request.headers)
@@ -136,7 +137,7 @@ class UseSend:
             except Exception:
                 error = default_error
             if self.raise_on_error:
-                raise UseSendHTTPError(resp.status_code, error, method, path)
+                raise ByteSendHTTPError(resp.status_code, error, method, path)
             return None, error
 
         try:

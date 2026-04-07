@@ -25,13 +25,13 @@ from .types import (
 class Contacts:
     """Client for `/contactBooks` endpoints."""
 
-    def __init__(self, usesend: "UseSend") -> None:
-        self.usesend = usesend
+    def __init__(self, bytesend: "ByteSend") -> None:
+        self.bytesend = bytesend
 
     def create(
         self, book_id: str, payload: ContactCreate
     ) -> Tuple[Optional[ContactCreateResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             f"/contactBooks/{book_id}/contacts",
             payload,
         )
@@ -60,13 +60,13 @@ class Contacts:
         if query:
             path = f"{path}?{urlencode(query)}"
 
-        data, err = self.usesend.get(path)
+        data, err = self.bytesend.get(path)
         return (data, err)  # type: ignore[return-value]
 
     def get(
         self, book_id: str, contact_id: str
     ) -> Tuple[Optional[Contact], Optional[APIError]]:
-        data, err = self.usesend.get(
+        data, err = self.bytesend.get(
             f"/contactBooks/{book_id}/contacts/{contact_id}"
         )
         return (data, err)  # type: ignore[return-value]
@@ -74,7 +74,7 @@ class Contacts:
     def update(
         self, book_id: str, contact_id: str, payload: ContactUpdate
     ) -> Tuple[Optional[ContactUpdateResponse], Optional[APIError]]:
-        data, err = self.usesend.patch(
+        data, err = self.bytesend.patch(
             f"/contactBooks/{book_id}/contacts/{contact_id}",
             payload,
         )
@@ -83,7 +83,7 @@ class Contacts:
     def upsert(
         self, book_id: str, contact_id: str, payload: ContactUpsert
     ) -> Tuple[Optional[ContactUpsertResponse], Optional[APIError]]:
-        data, err = self.usesend.put(
+        data, err = self.bytesend.put(
             f"/contactBooks/{book_id}/contacts/{contact_id}",
             payload,
         )
@@ -92,7 +92,7 @@ class Contacts:
     def bulk_create(
         self, book_id: str, payload: ContactBulkCreate
     ) -> Tuple[Optional[ContactBulkCreateResponse], Optional[APIError]]:
-        data, err = self.usesend.post(
+        data, err = self.bytesend.post(
             f"/contactBooks/{book_id}/contacts/bulk",
             payload,
         )
@@ -101,7 +101,7 @@ class Contacts:
     def bulk_delete(
         self, book_id: str, payload: ContactBulkDelete
     ) -> Tuple[Optional[ContactBulkDeleteResponse], Optional[APIError]]:
-        data, err = self.usesend.delete(
+        data, err = self.bytesend.delete(
             f"/contactBooks/{book_id}/contacts/bulk",
             payload,
         )
@@ -110,10 +110,10 @@ class Contacts:
     def delete(
         self, *, book_id: str, contact_id: str
     ) -> Tuple[Optional[ContactDeleteResponse], Optional[APIError]]:
-        data, err = self.usesend.delete(
+        data, err = self.bytesend.delete(
             f"/contactBooks/{book_id}/contacts/{contact_id}"
         )
         return (data, err)  # type: ignore[return-value]
 
 
-from .usesend import UseSend  # noqa: E402  pylint: disable=wrong-import-position
+from .bytesend import ByteSend  # noqa: E402  pylint: disable=wrong-import-position

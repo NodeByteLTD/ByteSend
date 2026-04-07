@@ -116,8 +116,8 @@ export default async function SubscribePage({
 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full space-y-4 p-8 shadow rounded-xl border">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
           <h1 className="text-2xl font-semibold text-center">
             Subscription Confirmed
           </h1>
@@ -131,8 +131,8 @@ export default async function SubscribePage({
 
   if (status === "error" && (!contactId || !expiresAt || !hash)) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full space-y-4 p-8 shadow rounded-xl border">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
           <h1 className="text-2xl font-semibold text-center">
             Confirmation Failed
           </h1>
@@ -146,8 +146,8 @@ export default async function SubscribePage({
 
   if (!contactId || !expiresAt || !hash || !hasValidExpiry) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full space-y-4 p-8 shadow rounded-xl border">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
           <h1 className="text-2xl font-semibold text-center">Invalid Link</h1>
           <p className="text-sm text-muted-foreground text-center">
             This confirmation link is invalid. Please request a new one.
@@ -159,8 +159,8 @@ export default async function SubscribePage({
 
   if (isExpired) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full space-y-4 p-8 shadow rounded-xl border">
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
           <h1 className="text-2xl font-semibold text-center">
             Confirmation Failed
           </h1>
@@ -173,8 +173,8 @@ export default async function SubscribePage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-md w-full space-y-4 p-8 shadow rounded-xl border">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+      <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
         <h1 className="text-2xl font-semibold text-center">
           Confirm Subscription
         </h1>
@@ -193,7 +193,7 @@ export default async function SubscribePage({
             <input type="hidden" name="hash" value={hash} />
             <button
               type="submit"
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-colors"
             >
               Confirm subscription
             </button>

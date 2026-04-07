@@ -54,8 +54,8 @@ export class Webhooks {
    *
    * @example
    * ```ts
-   * const usesend = new UseSend(apiKey);
-   * const webhooks = usesend.webhooks('whsec_xxx');
+   * const bytesend = new ByteSend(apiKey);
+   * const webhooks = bytesend.webhooks('whsec_xxx');
    *
    * const isValid = webhooks.verify(body, {
    *   headers: request.headers
@@ -91,8 +91,8 @@ export class Webhooks {
    *
    * @example
    * ```ts
-   * const usesend = new UseSend(apiKey);
-   * const webhooks = usesend.webhooks('whsec_xxx');
+   * const bytesend = new ByteSend(apiKey);
+   * const webhooks = bytesend.webhooks('whsec_xxx');
    *
    * // Next.js App Router
    * const event = webhooks.constructEvent(await request.text(), {

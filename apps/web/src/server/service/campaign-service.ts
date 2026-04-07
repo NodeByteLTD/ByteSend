@@ -19,13 +19,14 @@ import {
 import { logger } from "../logger/log";
 import { createWorkerHandler, TeamJob } from "../queue/bullmq-context";
 import { SuppressionService } from "./suppression-service";
-import { UnsendApiError } from "../public-api/api-error";
+import { ByteSendApiError } from "../public-api/api-error";
 import {
   validateApiKeyDomainAccess,
   validateDomainFromEmail,
 } from "./domain-service";
 
 const CAMPAIGN_UNSUB_PLACEHOLDER_TOKENS = [
+  "{{bytesend_unsubscribe_url}}",
   "{{unsend_unsubscribe_url}}",
   "{{usesend_unsubscribe_url}}",
 ] as const;
@@ -299,7 +300,7 @@ export async function createCampaignFromApi({
   batchSize?: number;
 }) {
   if (!content && !html) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "Either content or html must be provided",
     });
@@ -310,7 +311,7 @@ export async function createCampaignFromApi({
       JSON.parse(content);
     } catch (error) {
       logger.error({ err: error }, "Invalid campaign content JSON from API");
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "BAD_REQUEST",
         message: "Invalid content JSON",
       });
@@ -323,7 +324,7 @@ export async function createCampaignFromApi({
   });
 
   if (!contactBook) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "Contact book not found",
     });
@@ -338,7 +339,7 @@ export async function createCampaignFromApi({
     });
 
     if (!apiKey || apiKey.teamId !== teamId) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "FORBIDDEN",
         message: "Invalid API key",
       });
@@ -358,7 +359,7 @@ export async function createCampaignFromApi({
   );
 
   if (!unsubPlaceholderFound) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "Campaign must include an unsubscribe link before sending",
     });
@@ -428,7 +429,7 @@ export async function getCampaignForTeam({
   });
 
   if (!campaign) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
     });
@@ -505,7 +506,7 @@ export async function scheduleCampaign({
     where: { id: campaignId, teamId },
   });
   if (!campaign) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
     });
@@ -517,21 +518,21 @@ export async function scheduleCampaign({
     campaign = prepared.campaign;
     html = prepared.html;
   } catch (err) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: err instanceof Error ? err.message : "Invalid campaign content",
     });
   }
 
   if (!campaign.contactBookId) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "No contact book found for campaign",
     });
   }
 
   if (!html) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "No HTML content for campaign",
     });
@@ -542,7 +543,7 @@ export async function scheduleCampaign({
     html,
   );
   if (!unsubPlaceholderFound) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "Campaign must include an unsubscribe link before scheduling",
     });
@@ -554,7 +555,7 @@ export async function scheduleCampaign({
   });
 
   if (total === 0) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "No subscribed contacts to send",
     });
@@ -595,7 +596,7 @@ export async function pauseCampaign({
   });
 
   if (!campaign) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
     });
@@ -621,7 +622,7 @@ export async function resumeCampaign({
   });
 
   if (!campaign) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
     });
@@ -784,7 +785,7 @@ export async function deleteCampaign(id: string, teamId: number) {
   });
 
   if (!existing) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
     });

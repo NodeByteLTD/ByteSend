@@ -18,7 +18,7 @@ import {
 import { createWorkerHandler, TeamJob } from "../queue/bullmq-context";
 import { logger } from "../logger/log";
 import { LimitService } from "./limit-service";
-import { UnsendApiError } from "../public-api/api-error";
+import { ByteSendApiError } from "../public-api/api-error";
 
 const WEBHOOK_DISPATCH_CONCURRENCY = 25;
 const WEBHOOK_MAX_ATTEMPTS = 6;
@@ -238,7 +238,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Webhook not found",
       });
@@ -261,7 +261,7 @@ export class WebhookService {
     );
 
     if (isLimitReached) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "FORBIDDEN",
         message: reason ?? "Webhook limit reached",
       });
@@ -309,7 +309,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Webhook not found",
       });
@@ -372,7 +372,7 @@ export class WebhookService {
     });
 
     if (matchingDomains.length !== domainIds.length) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "One or more domains were not found",
       });
@@ -389,7 +389,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Webhook not found",
       });
@@ -413,7 +413,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Webhook not found",
       });
@@ -467,7 +467,7 @@ export class WebhookService {
     });
 
     if (!call) {
-      throw new UnsendApiError({
+      throw new ByteSendApiError({
         code: "NOT_FOUND",
         message: "Webhook call not found",
       });

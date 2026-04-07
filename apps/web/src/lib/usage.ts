@@ -6,7 +6,7 @@ export const USAGE_UNIT_PRICE: Record<EmailUsageType, number> = {
 };
 
 /**
- * Unit price for unsend
+ * Unit price for bytesend
  * 1 marketing email = 1 unit
  * 4 transaction emails = 1 unit
  */

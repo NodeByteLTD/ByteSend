@@ -29,11 +29,11 @@ export default function ReSubscribe({
   });
 
   return (
-    <div className="max-w-xl w-full space-y-8 p-10 border shadow rounded-xl">
-      <h2 className=" text-center text-xl font-extrabold ">
+    <div className="max-w-xl w-full space-y-6 p-8 border border-border/40 rounded-2xl bg-card/80">
+      <h2 className="text-center text-xl font-semibold">
         {subscribed ? "You have subscribed again" : "You have unsubscribed"}
       </h2>
-      <div>
+      <div className="text-sm text-muted-foreground text-center">
         {subscribed
           ? "You have been added to our mailing list and will receive all emails at"
           : "You have been removed from our mailing list and won't receive any emails at"}{" "}

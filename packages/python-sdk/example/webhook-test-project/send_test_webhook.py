@@ -48,10 +48,10 @@ def main() -> None:
 
     headers = {
         "Content-Type": "application/json",
-        "X-UseSend-Signature": signature,
-        "X-UseSend-Timestamp": timestamp,
-        "X-UseSend-Event": payload["type"],
-        "X-UseSend-Call": f"call_{uuid.uuid4().hex[:10]}",
+        "X-ByteSend-Signature": signature,
+        "X-ByteSend-Timestamp": timestamp,
+        "X-ByteSend-Event": payload["type"],
+        "X-ByteSend-Call": f"call_{uuid.uuid4().hex[:10]}",
     }
 
     response = requests.post(WEBHOOK_URL, data=body, headers=headers, timeout=10)

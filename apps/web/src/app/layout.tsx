@@ -63,9 +63,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="bg-sidebar-background">
+    <html lang="en" suppressHydrationWarning className="bg-background">
       <body
-        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} app bg-sidebar-background`}
+        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} app bg-background`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Toaster />

@@ -15,12 +15,12 @@ async function UnsubscribePage({
 
   if (!id || !hash) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8 p-10 shadow rounded-xl">
-          <h2 className="mt-6 text-center text-3xl font-extrabold ">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md w-full space-y-4 p-8 rounded-2xl border border-border/40 bg-card/80">
+          <h2 className="text-center text-2xl font-semibold">
             Unsubscribe
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-muted-foreground">
             Invalid unsubscribe link. Please check your URL and try again.
           </p>
         </div>
@@ -31,13 +31,13 @@ async function UnsubscribePage({
   const contact = await unsubscribeContactFromLink(id, hash);
 
   return (
-    <div className="min-h-screen flex items-center justify-center ">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <ReSubscribe id={id} hash={hash} contact={contact} />
 
-      <div className=" fixed bottom-10  p-4">
-        <p>
+      <div className="fixed bottom-10 p-4">
+        <p className="text-sm text-muted-foreground">
           Powered by{" "}
-          <a href="https://bytesend.cloud" className="font-bold" target="_blank">
+          <a href="https://bytesend.cloud" className="font-semibold text-primary hover:underline" target="_blank">
             ByteSend
           </a>
         </p>

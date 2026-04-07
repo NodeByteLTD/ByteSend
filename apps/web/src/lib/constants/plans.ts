@@ -29,12 +29,36 @@ export const PLAN_LIMITS: Record<
     teamMembers: 5,
     webhooks: 3,
   },
+  HOBBY: {
+    emailsPerMonth: 15000,
+    emailsPerDay: 500,
+    domains: 5,
+    contactBooks: 10,
+    teamMembers: 10,
+    webhooks: 5,
+  },
+  LITE: {
+    emailsPerMonth: 50000,
+    emailsPerDay: 2000,
+    domains: 10,
+    contactBooks: 25,
+    teamMembers: 25,
+    webhooks: 10,
+  },
   BASIC: {
     emailsPerMonth: -1, // unlimited
     emailsPerDay: -1, // unlimited
-    domains: -1,
-    contactBooks: -1,
-    teamMembers: -1,
-    webhooks: -1,
+    domains: 100,
+    contactBooks: 500,
+    teamMembers: 50,
+    webhooks: 50,
+  },
+  LIFETIME: {
+    emailsPerMonth: -1, // unlimited
+    emailsPerDay: -1, // unlimited
+    domains: 500,
+    contactBooks: 1000,
+    teamMembers: 200,
+    webhooks: 100,
   },
 };

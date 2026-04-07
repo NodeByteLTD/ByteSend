@@ -1,4 +1,4 @@
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
 
@@ -49,19 +49,19 @@ type DeleteContactBookResponse = {
 };
 
 export class ContactBooks {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async list(): Promise<GetAllContactBooksResponse> {
-    const data = await this.usesend.get<GetAllContactBooksResponseSuccess>(
+    const data = await this.bytesend.get<GetAllContactBooksResponseSuccess>(
       `/contactBooks`,
     );
     return data;
   }
 
   async get(contactBookId: string): Promise<GetContactBookResponse> {
-    const data = await this.usesend.get<GetContactBookResponseSuccess>(
+    const data = await this.bytesend.get<GetContactBookResponseSuccess>(
       `/contactBooks/${contactBookId}`,
     );
     return data;
@@ -70,7 +70,7 @@ export class ContactBooks {
   async create(
     payload: CreateContactBookPayload,
   ): Promise<CreateContactBookResponse> {
-    const data = await this.usesend.post<CreateContactBookResponseSuccess>(
+    const data = await this.bytesend.post<CreateContactBookResponseSuccess>(
       `/contactBooks`,
       payload,
     );
@@ -81,7 +81,7 @@ export class ContactBooks {
     contactBookId: string,
     payload: UpdateContactBookPayload,
   ): Promise<UpdateContactBookResponse> {
-    const data = await this.usesend.patch<UpdateContactBookResponseSuccess>(
+    const data = await this.bytesend.patch<UpdateContactBookResponseSuccess>(
       `/contactBooks/${contactBookId}`,
       payload,
     );
@@ -89,7 +89,7 @@ export class ContactBooks {
   }
 
   async delete(contactBookId: string): Promise<DeleteContactBookResponse> {
-    const data = await this.usesend.delete<DeleteContactBookResponseSuccess>(
+    const data = await this.bytesend.delete<DeleteContactBookResponseSuccess>(
       `/contactBooks/${contactBookId}`,
     );
     return data;

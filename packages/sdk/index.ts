@@ -1,6 +1,6 @@
-export { UseSend } from "./src/usesend";
-export { UseSend as ByteSend } from "./src/usesend"; // primary alias
-export { UseSend as Unsend } from "./src/usesend"; // deprecated alias
+export { ByteSend } from "./src/bytesend";
+export { ByteSend as UseSend } from "./src/bytesend"; // deprecated alias
+export { ByteSend as Unsend } from "./src/bytesend"; // deprecated alias
 export { Campaigns } from "./src/campaign";
 export { ContactBooks } from "./src/contactBook";
 export {

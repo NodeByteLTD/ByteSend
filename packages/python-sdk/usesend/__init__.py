@@ -1,6 +1,6 @@
-"""Python client for the UseSend API."""
+"""Python client for the ByteSend API."""
 
-from .usesend import UseSend, UseSendHTTPError
+from .bytesend import ByteSend, ByteSendHTTPError
 from .contacts import Contacts  # type: ignore
 from .contact_books import ContactBooks  # type: ignore
 from .domains import Domains  # type: ignore
@@ -16,8 +16,8 @@ from .webhooks import (
 from . import types
 
 __all__ = [
-    "UseSend",
-    "UseSendHTTPError",
+    "ByteSend",
+    "ByteSendHTTPError",
     "types",
     "Contacts",
     "ContactBooks",

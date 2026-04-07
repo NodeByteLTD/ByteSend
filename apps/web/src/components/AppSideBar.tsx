@@ -18,6 +18,7 @@ import {
   GaugeIcon,
   UserRoundX,
   Webhook,
+  HouseIcon,
 } from "lucide-react";
 
 function DiscordIcon({ className }: { className?: string }) {
@@ -138,24 +139,26 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 py-3.5 border-b border-sidebar-border/60">
+      <SidebarHeader className="px-3 py-3.5 border-b border-sidebar-border/40">
         <div className="flex items-center gap-2.5">
-          <Image
-            src="/logo-squircle.png"
-            alt="ByteSend"
-            width={28}
-            height={28}
-            className="rounded-md shrink-0"
-          />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 shrink-0">
+            <Image
+              src="/logo-squircle.png"
+              alt="ByteSend"
+              width={22}
+              height={22}
+              className="rounded-sm"
+            />
+          </div>
           <span className="font-semibold text-[15px] tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             ByteSend
           </span>
-          <Badge
+          {/**<Badge
             variant="outline"
-            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-muted-foreground border-border/60 group-data-[collapsible=icon]:hidden"
+            className="ml-auto text-[10px] px-1.5 py-0 font-mono leading-none text-primary border-primary/30 group-data-[collapsible=icon]:hidden"
           >
-            Beta
-          </Badge>
+            v1.0.0-beta
+          </Badge>**/}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -376,6 +379,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/">
+                  <HouseIcon />
+                  Home
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/team">
                   <UsersIcon />

@@ -1,8 +1,8 @@
-# useSend SDK
+# ByteSend SDK
 
 ## Prerequisites
 
-- [useSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- [ByteSend API key](https://bytesend.cloud/dev-settings/api-keys)
 - [Verified domain](https://bytesend.cloud/domains)
 
 ## Installation
@@ -10,58 +10,58 @@
 ### NPM
 
 ```bash
-npm install usesend
+npm install bytesend
 ```
 
 ### Yarn
 
 ```bash
-yarn add usesend
+yarn add bytesend
 ```
 
 ### PNPM
 
 ```bash
-pnpm add usesend
+pnpm add bytesend
 ```
 
 ### Bun
 
 ```bash
-bun add usesend
+bun add bytesend
 ```
 
 ## Usage
 
 ```javascript
-import { UseSend } from "usesend";
+import { ByteSend } from "bytesend";
 
-const usesend = new UseSend("us_12345");
+const bytesend = new ByteSend("bs_12345");
 
 // for self-hosted installations you can pass your base URL
-// const usesend = new UseSend("us_12345", "https://bytesend.cloud");
+// const bytesend = new ByteSend("bs_12345", "https://bytesend.cloud");
 
-usesend.emails.send({
+bytesend.emails.send({
   to: "hello@acme.com",
   from: "hello@company.com",
-  subject: "useSend email",
-  html: "<p>useSend is the best open source product to send emails</p>",
-  text: "useSend is the best open source product to send emails",
+  subject: "ByteSend email",
+  html: "<p>ByteSend is the best product to send emails</p>",
+  text: "ByteSend is the best product to send emails",
 });
 
 // Safely retry sends with an idempotency key
-await usesend.emails.send(
+await bytesend.emails.send(
   {
     to: "hello@acme.com",
     from: "hello@company.com",
-    subject: "useSend email",
-    html: "<p>useSend is the best open source product to send emails</p>",
+    subject: "ByteSend email",
+    html: "<p>ByteSend is the best product to send emails</p>",
   },
   { idempotencyKey: "signup-123" },
 );
 
 // Works for bulk sends too
-await usesend.emails.batch(
+await bytesend.emails.batch(
   [
     {
       to: "a@example.com",
@@ -86,12 +86,12 @@ await usesend.emails.batch(
 Create and manage email campaigns:
 
 ```javascript
-import { UseSend } from "usesend";
+import { ByteSend } from "bytesend";
 
-const usesend = new UseSend("us_12345");
+const bytesend = new ByteSend("bs_12345");
 
 // Create a campaign
-const campaign = await usesend.campaigns.create({
+const campaign = await bytesend.campaigns.create({
   name: "Welcome Series",
   from: "hello@company.com",
   subject: "Welcome to our platform!",
@@ -101,19 +101,19 @@ const campaign = await usesend.campaigns.create({
 });
 
 // Schedule a campaign
-await usesend.campaigns.schedule(campaign.data.id, {
+await bytesend.campaigns.schedule(campaign.data.id, {
   scheduledAt: "2024-12-01T09:00:00Z",
   batchSize: 1000,
 });
 
 // Get campaign details
-const details = await usesend.campaigns.get(campaign.data.id);
+const details = await bytesend.campaigns.get(campaign.data.id);
 
 // Pause a campaign
-await usesend.campaigns.pause(campaign.data.id);
+await bytesend.campaigns.pause(campaign.data.id);
 
 // Resume a campaign
-await usesend.campaigns.resume(campaign.data.id);
+await bytesend.campaigns.resume(campaign.data.id);
 ```
 
 ## Webhooks
@@ -121,10 +121,10 @@ await usesend.campaigns.resume(campaign.data.id);
 Verify webhook signatures and get typed events:
 
 ```ts
-import { UseSend } from "usesend";
+import { ByteSend } from "bytesend";
 
-const usesend = new UseSend("us_12345");
-const webhooks = usesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
+const bytesend = new ByteSend("bs_12345");
+const webhooks = bytesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 
 // In a Next.js App Route
 export async function POST(request: Request) {
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
 You can also use the `Webhooks` class directly:
 
 ```ts
-import { Webhooks } from "usesend";
+import { Webhooks } from "bytesend";
 
 const webhooks = new Webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 const event = webhooks.constructEvent(rawBody, { headers: request.headers });
@@ -168,9 +168,9 @@ Express example (ensure raw body is preserved):
 
 ```ts
 import express from "express";
-import { Webhooks } from "usesend";
+import { Webhooks } from "bytesend";
 
-const webhooks = new Webhooks(process.env.USESEND_WEBHOOK_SECRET!);
+const webhooks = new Webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 
 const app = express();
 app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
@@ -190,11 +190,11 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
 });
 ```
 
-Headers sent by UseSend:
+Headers sent by ByteSend:
 
-- `X-UseSend-Signature`: `v1=` + HMAC-SHA256 of `${timestamp}.${rawBody}`
-- `X-UseSend-Timestamp`: Unix epoch in milliseconds
-- `X-UseSend-Event`: webhook event type
-- `X-UseSend-Call`: unique webhook attempt id
+- `X-ByteSend-Signature`: `v1=` + HMAC-SHA256 of `${timestamp}.${rawBody}`
+- `X-ByteSend-Timestamp`: Unix epoch in milliseconds
+- `X-ByteSend-Event`: webhook event type
+- `X-ByteSend-Call`: unique webhook attempt id
 
 By default, signatures are only accepted within 5 minutes of the timestamp. Override with `toleranceMs` if needed.

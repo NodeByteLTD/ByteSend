@@ -16,7 +16,7 @@ INSERT INTO "Domain" (
 )
 SELECT
   'mail.acme.test', id, 'SUCCESS'::"DomainStatus", 'us-east-1', TRUE, TRUE,
-  'PUBLIC_KEY_SAMPLE', 'usesend', TRUE, NOW(), NOW()
+  'PUBLIC_KEY_SAMPLE', 'bytesend', TRUE, NOW(), NOW()
 FROM "Team"
 WHERE "name" = 'Acme Inc'
 ORDER BY id DESC

@@ -1,68 +1,68 @@
 @reference "tailwindcss";
 
-.unsend-editor .unsend-prose p:where([class~="text-sm"]) {
+.bytesend-editor .bytesend-prose p:where([class~="text-sm"]) {
   font-size: 16px;
 }
 
-.unsend-editor .unsend-prose h1,
-.unsend-editor .unsend-prose h2,
-.unsend-editor .unsend-prose h3 {
+.bytesend-editor .bytesend-prose h1,
+.bytesend-editor .bytesend-prose h2,
+.bytesend-editor .bytesend-prose h3 {
   margin-top: 0;
   margin-bottom: 12px;
 }
 
-.unsend-editor .unsend-prose h1 {
+.bytesend-editor .bytesend-prose h1 {
   @apply text-[29px] font-semibold;
 }
 
-.unsend-editor .unsend-prose h2 {
+.bytesend-editor .bytesend-prose h2 {
   @apply text-2xl font-semibold;
 }
 
-.unsend-editor .unsend-prose h3 {
+.bytesend-editor .bytesend-prose h3 {
   @apply text-lg font-semibold;
 }
 
-.unsend-editor .unsend-prose p {
+.bytesend-editor .bytesend-prose p {
   font-size: 15px;
   margin-bottom: 20px;
 }
 
-.unsend-editor .unsend-prose h1 + p,
-.unsend-editor .unsend-prose h2 + p,
-.unsend-editor .unsend-prose h3 + p,
-.unsend-editor .unsend-prose hr + p {
+.bytesend-editor .bytesend-prose h1 + p,
+.bytesend-editor .bytesend-prose h2 + p,
+.bytesend-editor .bytesend-prose h3 + p,
+.bytesend-editor .bytesend-prose hr + p {
   margin-top: 0;
 }
 
-.unsend-editor .unsend-prose ol,
-.unsend-editor .unsend-prose ul {
+.bytesend-editor .bytesend-prose ol,
+.bytesend-editor .bytesend-prose ul {
   margin-top: 0;
   margin-bottom: 20px;
 }
 
-.unsend-editor .unsend-prose ol {
+.bytesend-editor .bytesend-prose ol {
   @apply list-decimal pl-8;
 }
 
-.unsend-editor .unsend-prose ul {
+.bytesend-editor .bytesend-prose ul {
   @apply list-disc pl-8;
 }
 
-.unsend-editor .unsend-prose li:not(:last-child) {
+.bytesend-editor .bytesend-prose li:not(:last-child) {
   margin-bottom: 8px;
 }
 
-.unsend-editor .unsend-prose li > p {
+.bytesend-editor .bytesend-prose li > p {
   margin: 0;
 }
 
-.unsend-editor .unsend-prose img {
+.bytesend-editor .bytesend-prose img {
   margin-top: 0;
   margin-bottom: 32px;
 }
 
-.unsend-editor .unsend-prose hr {
+.bytesend-editor .bytesend-prose hr {
   margin-block: 32px;
   border-top-width: 1px;
 }
@@ -102,70 +102,70 @@
   }
 }
 
-.unsend-editor .unsend-prose .footer {
+.bytesend-editor .bytesend-prose .footer {
   display: block;
   font-size: 13px;
   margin-bottom: 20px;
   color: rgb(100, 116, 139);
 }
 
-.unsend-editor .unsend-prose .spacer + * {
+.bytesend-editor .bytesend-prose .spacer + * {
   margin-top: 0;
 }
 
-.unsend-editor .unsend-prose p + .spacer {
+.bytesend-editor .bytesend-prose p + .spacer {
   margin-top: -20px;
 }
 
-.unsend-editor .unsend-prose a {
+.bytesend-editor .bytesend-prose a {
   @apply text-blue-500;
 }
 
-.unsend-editor .unsend-prose blockquote + .spacer {
+.bytesend-editor .bytesend-prose blockquote + .spacer {
   margin-top: -16px;
 }
 
-.unsend-editor .unsend-prose h1 + .spacer,
-.unsend-editor .unsend-prose h2 + .spacer,
-.unsend-editor .unsend-prose h3 + .spacer {
+.bytesend-editor .bytesend-prose h1 + .spacer,
+.bytesend-editor .bytesend-prose h2 + .spacer,
+.bytesend-editor .bytesend-prose h3 + .spacer {
   margin-top: -12px;
 }
 
-.unsend-editor .unsend-prose ol + .spacer,
-.unsend-editor .unsend-prose ul + .spacer {
+.bytesend-editor .bytesend-prose ol + .spacer,
+.bytesend-editor .bytesend-prose ul + .spacer {
   margin-top: -20px;
 }
 
-.unsend-editor .unsend-prose img + .spacer {
+.bytesend-editor .bytesend-prose img + .spacer {
   margin-top: -32px;
 }
 
-.unsend-editor .unsend-prose .node-button + .spacer,
-.unsend-editor .unsend-prose .node-linkCard + .spacer,
-.unsend-editor .unsend-prose footer + .spacer {
+.bytesend-editor .bytesend-prose .node-button + .spacer,
+.bytesend-editor .bytesend-prose .node-linkCard + .spacer,
+.bytesend-editor .bytesend-prose footer + .spacer {
   margin-top: -20px;
 }
 
-.unsend-editor .unsend-prose .node-button,
-.unsend-editor .unsend-prose .node-linkCard {
+.bytesend-editor .bytesend-prose .node-button,
+.bytesend-editor .bytesend-prose .node-linkCard {
   margin-top: 0;
   margin-bottom: 20px;
 }
 
-.unsend-editor .unsend-prose .node-image {
+.bytesend-editor .bytesend-prose .node-image {
   line-height: 0;
   margin-top: 0;
   margin-bottom: 32px;
   outline: none;
 }
 
-.unsend-editor .unsend-prose .node-image + .spacer {
+.bytesend-editor .bytesend-prose .node-image + .spacer {
   margin-top: -32px;
 }
 
 /* Remove code ::before and ::after */
-.unsend-editor .unsend-prose code::before,
-.unsend-editor .unsend-prose code::after {
+.bytesend-editor .bytesend-prose code::before,
+.bytesend-editor .bytesend-prose code::after {
   content: none;
 }
 
@@ -215,22 +215,22 @@
   scrollbar-width: none; /* Firefox */
 }
 
-.unsend-editor .react-colorful__alpha {
+.bytesend-editor .react-colorful__alpha {
   border-radius: 0;
 }
 
-.unsend-editor .react-colorful__saturation,
-.unsend-editor .react-colorful__hue,
-.unsend-editor .react-colorful__alpha {
+.bytesend-editor .react-colorful__saturation,
+.bytesend-editor .react-colorful__hue,
+.bytesend-editor .react-colorful__alpha {
   border-radius: 8px;
 }
 
-.unsend-editor .react-colorful__hue,
-.unsend-editor .react-colorful__alpha {
+.bytesend-editor .react-colorful__hue,
+.bytesend-editor .react-colorful__alpha {
   height: 16px;
 }
 
-.unsend-editor .react-colorful__pointer {
+.bytesend-editor .react-colorful__pointer {
   width: 16px;
   height: 16px;
 }
@@ -240,6 +240,6 @@
   background-color: #555 !important;
 }
 
-.unsend-editor .footer {
+.bytesend-editor .footer {
   font-size: 0.8rem;
 }

@@ -5,7 +5,7 @@ export let connection: IORedis | null = null;
 
 /**
  * Key prefix derived from REDIS_KEY_PREFIX env var.
- * When set (e.g. "usesend"), all cache keys become "usesend:team:1", etc.
+ * When set (e.g. "bytesend"), all cache keys become "bytesend:team:1", etc.
  * When empty, keys are unprefixed (backwards compatible).
  */
 export const REDIS_PREFIX = env.REDIS_KEY_PREFIX

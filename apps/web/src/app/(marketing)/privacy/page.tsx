@@ -7,16 +7,19 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-sidebar-background text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight mb-6">
-          Privacy Policy
-        </h1>
-        <p className="text-muted-foreground mb-8">
-          This Privacy Policy explains how NodeByte LTD (&quot;we&quot;,
-          &quot;us&quot;) collects, uses, and shares information when you visit
-          or interact with bytesend.cloud and the ByteSend application (bytesend.cloud).
-        </p>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+        <div className="mb-10">
+          <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Legal</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+            Privacy Policy
+          </h1>
+          <p className="text-muted-foreground">
+            This Privacy Policy explains how NodeByte LTD (&quot;we&quot;,
+            &quot;us&quot;) collects, uses, and shares information when you visit
+            or interact with bytesend.cloud and the ByteSend application (bytesend.cloud).
+          </p>
+        </div>
 
         <section className="space-y-3 mb-8">
           <h2 className="text-xl font-medium">Who We Are</h2>

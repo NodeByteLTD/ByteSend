@@ -147,10 +147,10 @@ bun add bytesend-js
 ### Next.js App Router
 
 ```typescript
-import { UseSend } from "bytesend-js";
+import { ByteSend } from "bytesend-js";
 
-const usesend = new UseSend("bs_your_api_key");
-const webhooks = usesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
+const bytesend = new ByteSend("bs_your_api_key");
+const webhooks = bytesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
 
 export async function POST(request: Request) {
   try {

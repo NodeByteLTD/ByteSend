@@ -1,6 +1,6 @@
 import { paths } from "../types/schema";
 import { ErrorResponse } from "../types";
-import { UseSend } from "./usesend";
+import { ByteSend } from "./bytesend";
 
 type EmailTimeSeriesQuery =
   paths["/v1/analytics/email-time-series"]["get"]["parameters"]["query"];
@@ -25,8 +25,8 @@ type ReputationMetricsResponse = {
 };
 
 export class Analytics {
-  constructor(private readonly usesend: UseSend) {
-    this.usesend = usesend;
+  constructor(private readonly bytesend: ByteSend) {
+    this.bytesend = bytesend;
   }
 
   async emailTimeSeries(
@@ -39,7 +39,7 @@ export class Analytics {
     const qs = params.toString();
     const path = `/analytics/email-time-series${qs ? `?${qs}` : ""}`;
 
-    return this.usesend.get<EmailTimeSeriesResponseSuccess>(path);
+    return this.bytesend.get<EmailTimeSeriesResponseSuccess>(path);
   }
 
   async reputationMetrics(
@@ -51,6 +51,6 @@ export class Analytics {
     const qs = params.toString();
     const path = `/analytics/reputation-metrics${qs ? `?${qs}` : ""}`;
 
-    return this.usesend.get<ReputationMetricsResponseSuccess>(path);
+    return this.bytesend.get<ReputationMetricsResponseSuccess>(path);
   }
 }

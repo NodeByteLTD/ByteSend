@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from usesend import UseSend
+from bytesend import ByteSend
 
 
 class MockResponse:
@@ -61,7 +61,7 @@ def test_contact_books_list_uses_expected_path_and_returns_data() -> None:
             )
         ]
     )
-    client = UseSend("us_test", session=session)
+    client = ByteSend("us_test", session=session)
 
     data, err = client.contact_books.list()
 
@@ -74,7 +74,7 @@ def test_contact_books_list_uses_expected_path_and_returns_data() -> None:
 
 def test_contact_books_alias_matches_js_style_client() -> None:
     session = MockSession([MockResponse({"id": "cb_123", "name": "Book"})])
-    client = UseSend("us_test", session=session)
+    client = ByteSend("us_test", session=session)
 
     data, err = client.contactBooks.get("cb_123")
 
@@ -86,7 +86,7 @@ def test_contact_books_alias_matches_js_style_client() -> None:
 
 def test_contacts_list_encodes_query_params() -> None:
     session = MockSession([MockResponse([])])
-    client = UseSend("us_test", session=session)
+    client = ByteSend("us_test", session=session)
 
     data, err = client.contacts.list(
         "cb_123",
@@ -111,7 +111,7 @@ def test_contacts_bulk_methods_use_expected_payloads() -> None:
             MockResponse({"success": True, "count": 2}),
         ]
     )
-    client = UseSend("us_test", session=session)
+    client = ByteSend("us_test", session=session)
 
     create_data, create_err = client.contacts.bulk_create(
         "cb_123",

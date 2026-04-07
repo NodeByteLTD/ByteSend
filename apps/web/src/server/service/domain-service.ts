@@ -9,7 +9,7 @@ import { logger } from "~/server/logger/log";
 import { sendMail } from "~/server/mailer";
 import { getRedis, redisKey } from "~/server/redis";
 import { SesSettingsService } from "./ses-settings-service";
-import { UnsendApiError } from "../public-api/api-error";
+import { ByteSendApiError } from "../public-api/api-error";
 import { ApiKey, DomainStatus, type Domain } from "@prisma/client";
 import {
   type DomainPayload,
@@ -270,10 +270,10 @@ async function sendDomainStatusNotification({
 
   const subject =
     domain.status === DomainStatus.SUCCESS
-      ? `useSend: ${domain.name} is verified`
+      ? `ByteSend: ${domain.name} is verified`
       : previousStatus === DomainStatus.SUCCESS
-        ? `useSend: ${domain.name} verification status changed`
-        : `useSend: ${domain.name} verification failed`;
+        ? `ByteSend: ${domain.name} verification status changed`
+        : `ByteSend: ${domain.name} verification failed`;
 
   const domainUrl = `${env.NEXTAUTH_URL}/domains/${domain.id}`;
   const html = await renderDomainVerificationStatusEmail({
@@ -340,7 +340,7 @@ export async function validateDomainFromEmail(email: string, teamId: number) {
   }
 
   if (!fromDomain) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "From email is invalid",
     });
@@ -351,14 +351,14 @@ export async function validateDomainFromEmail(email: string, teamId: number) {
   });
 
   if (!domain) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: `Domain: ${fromDomain} of from email is wrong. Use the domain verified by ByteSend`,
     });
   }
 
   if (domain.status !== "SUCCESS") {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: `Domain: ${fromDomain} is not verified`,
     });
@@ -382,7 +382,7 @@ export async function validateApiKeyDomainAccess(
 
   // If API key is restricted to a specific domain, check if it matches
   if (apiKey.domainId !== domain.id) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "FORBIDDEN",
       message: `API key does not have access to domain: ${domain.name}`,
     });
@@ -413,7 +413,7 @@ export async function createDomain(
   }
 
   if (!allowReserved && RESERVED_DOMAINS.some((r) => name === r || name.endsWith(`.${r}`))) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "BAD_REQUEST",
       message: "This domain is reserved and cannot be added.",
     });
@@ -429,7 +429,7 @@ export async function createDomain(
     await LimitService.checkDomainLimit(teamId);
 
   if (isLimitReached) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "FORBIDDEN",
       message: reason ?? "Domain limit reached",
     });
@@ -472,7 +472,7 @@ export async function getDomain(id: number, teamId: number) {
   });
 
   if (!domain) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Domain not found",
     });
@@ -494,7 +494,7 @@ export async function refreshDomainVerification(
       : domainOrId;
 
   if (!domain) {
-    throw new UnsendApiError({
+    throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Domain not found",
     });

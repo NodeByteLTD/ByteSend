@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UnsendApiError } from "~/server/public-api/api-error";
+import { ByteSendApiError } from "~/server/public-api/api-error";
 
 const { mockGetTeamFromToken, mockRedis, mockDb, mockUpdateContactBook } =
   vi.hoisted(() => ({
@@ -253,7 +253,7 @@ describe("PATCH /v1/contactBooks/{contactBookId}", () => {
 
   it("returns service errors from update", async () => {
     mockUpdateContactBook.mockRejectedValue(
-      new UnsendApiError({
+      new ByteSendApiError({
         code: "BAD_REQUEST",
         message:
           "Double opt-in email content must include the {{doubleOptInUrl}} placeholder",

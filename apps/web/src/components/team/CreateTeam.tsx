@@ -52,11 +52,13 @@ export default function CreateTeam() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen ">
-      <div className=" w-[400px] flex flex-col gap-8">
+    <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-120 w-180 rounded-full bg-primary/8 blur-[120px]" />
+      <div className="relative w-[400px] flex flex-col gap-8">
         <JoinTeam showCreateTeam />
         <div>
-          <h1 className=" font-semibold text-center">Create Team</h1>
+          <h1 className="font-semibold text-center text-lg">Create Team</h1>
+          <p className="text-sm text-muted-foreground text-center mt-1">Set up your workspace to start sending</p>
         </div>
         <Form {...form}>
           <form
