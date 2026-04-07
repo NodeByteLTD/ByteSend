@@ -1,6 +1,6 @@
 {
   "name": "bytesend",
-  "license": "AGPL-3.0-only",
+  "license": "NOLICENSE",
   "private": true,
   "engines": {
     "pnpm": ">=9.0.0",
