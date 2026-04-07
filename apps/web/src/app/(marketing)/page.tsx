@@ -12,6 +12,7 @@ export default function Page() {
       <Hero />
       <TrustStrip />
       <Features />
+      <CodeExample />
       <Pricing />
       <ComparisonTable />
       <Cta />
