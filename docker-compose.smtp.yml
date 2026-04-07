@@ -30,12 +30,16 @@ services:
     restart: unless-stopped
     depends_on:
       - certs-dumper
+    expose:
+      - "25"
+      - "587"
+      - "465"
     ports:
-      - "25:25"
-      - "587:587"
-      - "465:465"
       - "2465:2465"
       - "2587:2587"
+    networks:
+      - dokploy-network
+      - default
     volumes:
       # certs-dumper writes to /certs/<domain>/certificate.crt and privatekey.key
       - smtp-certs:/certs:ro
@@ -62,3 +66,7 @@ services:
       - "traefik.tcp.routers.smtp-465.tls.certresolver=letsencrypt"
       - "traefik.tcp.routers.smtp-465.service=smtp-smtps-svc"
       - "traefik.tcp.services.smtp-smtps-svc.loadbalancer.server.port=465"
+
+networks:
+  dokploy-network:
+    external: true
