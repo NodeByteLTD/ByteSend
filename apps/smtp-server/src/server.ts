@@ -7,14 +7,16 @@ import { SMTPServer, SMTPServerOptions, SMTPServerSession } from "smtp-server";
 dotenv.config();
 
 const AUTH_USERNAME = process.env.SMTP_AUTH_USERNAME ?? "bytesend";
-const BASE_URL =
-  process.env.BYTESEND_BASE_URL ??
-  process.env.BYTESEND_BASE_URL ??
-  "https://bytesend.cloud";
-const SSL_KEY_PATH =
-  process.env.BYTESEND_API_KEY_PATH ?? process.env.BYTESEND_API_KEY_PATH;
-const SSL_CERT_PATH =
-  process.env.BYTESEND_API_CERT_PATH ?? process.env.BYTESEND_API_CERT_PATH;
+const BASE_URL = process.env.BYTESEND_BASE_URL ?? "https://bytesend.cloud";
+
+// TLS_MODE controls how TLS is handled:
+//   'traefik' — reverse proxy (e.g. Traefik/Dokploy) terminates TLS; server runs plain
+//   'manual'  — server handles TLS directly using SMTP_TLS_KEY_PATH / SMTP_TLS_CERT_PATH
+//   'none'    — no TLS (default)
+const TLS_MODE = (process.env.SMTP_TLS_MODE ?? "none").toLowerCase();
+
+const SSL_KEY_PATH = process.env.SMTP_TLS_KEY_PATH;
+const SSL_CERT_PATH = process.env.SMTP_TLS_CERT_PATH;
 
 async function sendEmailToByteSend(emailData: any, apiKey: string) {
   try {
@@ -59,6 +61,7 @@ async function sendEmailToByteSend(emailData: any, apiKey: string) {
 }
 
 function loadCertificates(): { key?: Buffer; cert?: Buffer } {
+  if (TLS_MODE !== "manual") return {};
   return {
     key: SSL_KEY_PATH ? readFileSync(SSL_KEY_PATH) : undefined,
     cert: SSL_CERT_PATH ? readFileSync(SSL_CERT_PATH) : undefined,
@@ -126,15 +129,21 @@ function startServers() {
   const servers: SMTPServer[] = [];
   const watchers: FSWatcher[] = [];
 
-  if (SSL_KEY_PATH && SSL_CERT_PATH) {
+  console.log(`SMTP TLS mode: ${TLS_MODE}`);
+
+  if (TLS_MODE === "manual") {
+    if (!SSL_KEY_PATH || !SSL_CERT_PATH) {
+      throw new Error(
+        "SMTP_TLS_MODE is 'manual' but SMTP_TLS_KEY_PATH / SMTP_TLS_CERT_PATH are not set",
+      );
+    }
+
     // Implicit SSL/TLS for ports 465 and 2465
     [465, 2465].forEach((port) => {
       const server = new SMTPServer({ ...serverOptions, secure: true });
 
       server.listen(port, () => {
-        console.log(
-          `Implicit SSL/TLS SMTP server is listening on port ${port}`,
-        );
+        console.log(`Implicit SSL/TLS SMTP server is listening on port ${port}`);
       });
 
       server.on("error", (err) => {
@@ -145,12 +154,20 @@ function startServers() {
     });
   }
 
-  // STARTTLS for ports 25, 587, and 2587
+  // STARTTLS / plain SMTP for ports 25, 587, and 2587
+  // When TLS_MODE is 'traefik', certs are not loaded so the server runs plain —
+  // the reverse proxy has already terminated TLS before forwarding.
   [25, 587, 2587].forEach((port) => {
     const server = new SMTPServer(serverOptions);
 
     server.listen(port, () => {
-      console.log(`STARTTLS SMTP server is listening on port ${port}`);
+      const modeLabel =
+        TLS_MODE === "traefik"
+          ? "plain (TLS handled by reverse proxy)"
+          : TLS_MODE === "manual"
+            ? "STARTTLS"
+            : "plain";
+      console.log(`SMTP server (${modeLabel}) is listening on port ${port}`);
     });
 
     server.on("error", (err) => {
@@ -160,7 +177,7 @@ function startServers() {
     servers.push(server);
   });
 
-  if (SSL_KEY_PATH && SSL_CERT_PATH) {
+  if (TLS_MODE === "manual" && SSL_KEY_PATH && SSL_CERT_PATH) {
     const reloadCertificates = () => {
       try {
         const { key, cert } = loadCertificates();
@@ -177,6 +194,7 @@ function startServers() {
       watchers.push(watch(file, { persistent: false }, reloadCertificates));
     });
   }
+
   return { servers, watchers };
 }
 

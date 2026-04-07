@@ -14,21 +14,23 @@ services:
       - NODE_ENV=production
       - SMTP_AUTH_USERNAME=bytesend
       - BYTESEND_BASE_URL=https://bytesend.cloud
+      - SMTP_TLS_MODE=traefik
     labels:
       - "traefik.enable=true"
-      # Route for Port 587
-      - "traefik.tcp.routers.smtp-submission.entrypoints=smtp-submission"
-      - "traefik.tcp.routers.smtp-submission.rule=HostSNI(`smtp.bytesend.cloud`)"
-      - "traefik.tcp.routers.smtp-submission.tls=true"
-      - "traefik.tcp.routers.smtp-submission.tls.certresolver=letsencrypt"
-      - "traefik.tcp.routers.smtp-submission.service=smtp-svc"
       
-      # Route for Port 465 (SMTPS)
-      - "traefik.tcp.routers.smtps.entrypoints=smtps"
-      - "traefik.tcp.routers.smtps.rule=HostSNI(`smtp.bytesend.cloud`)"
-      - "traefik.tcp.routers.smtps.tls=true"
-      - "traefik.tcp.routers.smtps.tls.certresolver=letsencrypt"
-      - "traefik.tcp.routers.smtps.service=smtp-svc"
+      # Entrypoint for Submission (587)
+      - "traefik.tcp.routers.smtp-587.entrypoints=smtp-submission"
+      - "traefik.tcp.routers.smtp-587.rule=HostSNI(`smtp.bytesend.cloud`)"
+      - "traefik.tcp.routers.smtp-587.tls=true"
+      - "traefik.tcp.routers.smtp-587.tls.certresolver=letsencrypt"
+      
+      # Entrypoint for SMTPS (465)
+      - "traefik.tcp.routers.smtp-465.entrypoints=smtps"
+      - "traefik.tcp.routers.smtp-465.rule=HostSNI(`smtp.bytesend.cloud`)"
+      - "traefik.tcp.routers.smtp-465.tls=true"
+      - "traefik.tcp.routers.smtp-465.tls.certresolver=letsencrypt"
 
-      # The Service (Internal Port)
+      # Point both to the same internal port (587)
+      - "traefik.tcp.routers.smtp-587.service=smtp-svc"
+      - "traefik.tcp.routers.smtp-465.service=smtp-svc"
       - "traefik.tcp.services.smtp-svc.loadbalancer.server.port=587"
