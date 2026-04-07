@@ -19,9 +19,8 @@ services:
       --watch
       --clean=false
     volumes:
-      # Mount Traefik's acme.json (read-only). Adjust path if your Dokploy
-      # instance stores it elsewhere (e.g. /var/lib/dokploy/traefik/acme.json).
-      - /etc/dokploy/traefik/acme.json:/acme.json:ro
+      # Mount Traefik's acme.json (read-only).
+      - /etc/dokploy/traefik/dynamic/acme.json:/acme.json:ro
       - smtp-certs:/certs
 
   smtp:
