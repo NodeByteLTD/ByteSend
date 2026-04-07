@@ -21,6 +21,11 @@ const TLS_MODE = (process.env.SMTP_TLS_MODE ?? "none").toLowerCase();
 const SSL_KEY_PATH = process.env.SMTP_TLS_KEY_PATH;
 const SSL_CERT_PATH = process.env.SMTP_TLS_CERT_PATH;
 
+// When SMTP_ACME_JSON_PATH + SMTP_ACME_DOMAIN are set the server reads certs
+// directly from Traefik's acme.json — no certs-dumper sidecar required.
+const ACME_JSON_PATH = process.env.SMTP_ACME_JSON_PATH;
+const ACME_DOMAIN = process.env.SMTP_ACME_DOMAIN;
+
 async function sendEmailToByteSend(emailData: any, apiKey: string) {
   try {
     const apiEndpoint = "/api/v1/emails";
@@ -63,41 +68,88 @@ async function sendEmailToByteSend(emailData: any, apiKey: string) {
   }
 }
 
+type AcmeCert = { key: Buffer; cert: Buffer };
+
+/**
+ * Parses Traefik's acme.json and returns the cert+key for the given domain.
+ * Searches all resolvers so no resolver name config is needed.
+ */
+function loadCertFromAcme(acmeJsonPath: string, domain: string): AcmeCert | null {
+  try {
+    const raw = JSON.parse(readFileSync(acmeJsonPath, "utf8")) as Record<
+      string,
+      {
+        Certificates?: Array<{
+          domain: { main: string; sans?: string[] };
+          certificate: string;
+          key: string;
+        }>;
+      }
+    >;
+    for (const resolver of Object.values(raw)) {
+      for (const entry of resolver?.Certificates ?? []) {
+        const { main, sans = [] } = entry.domain;
+        if (main === domain || sans.includes(domain)) {
+          return {
+            cert: Buffer.from(entry.certificate, "base64"),
+            key: Buffer.from(entry.key, "base64"),
+          };
+        }
+      }
+    }
+  } catch {
+    // File not yet readable or parse error — caller will retry
+  }
+  return null;
+}
+
 function loadCertificates(): { key?: Buffer; cert?: Buffer } {
-  // Load certs for both 'manual' and 'traefik' modes when paths are provided.
-  // In 'traefik' mode, certs are needed so port 587 STARTTLS can negotiate TLS
-  // directly — Traefik does TCP passthrough for STARTTLS (it only terminates TLS
-  // for implicit-TLS connections on port 465 where TLS starts at byte 1).
   if (TLS_MODE === "none") return {};
+  // Prefer direct acme.json reading when configured.
+  if (ACME_JSON_PATH && ACME_DOMAIN) {
+    const certs = loadCertFromAcme(ACME_JSON_PATH, ACME_DOMAIN);
+    return certs ?? {};
+  }
   return {
     key: SSL_KEY_PATH ? readFileSync(SSL_KEY_PATH) : undefined,
     cert: SSL_CERT_PATH ? readFileSync(SSL_CERT_PATH) : undefined,
   };
 }
 
-/**
- * Polls until both cert files exist or the timeout is reached.
- * certs-dumper writes them shortly after container startup.
- */
+/** Polls until the cert is resolvable, whether from acme.json or from files. */
 async function waitForCertificates(
-  keyPath: string,
-  certPath: string,
   timeoutMs = 120_000,
   intervalMs = 3_000,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (existsSync(keyPath) && existsSync(certPath)) {
-      console.log("TLS certificate files found.");
-      return;
+    if (ACME_JSON_PATH && ACME_DOMAIN) {
+      if (loadCertFromAcme(ACME_JSON_PATH, ACME_DOMAIN)) {
+        console.log(`TLS certificate for ${ACME_DOMAIN} found in acme.json.`);
+        return;
+      }
+      console.log(
+        `Waiting for TLS certificate for ${ACME_DOMAIN} in ${ACME_JSON_PATH}...`,
+      );
+    } else {
+      if (
+        SSL_KEY_PATH && SSL_CERT_PATH &&
+        existsSync(SSL_KEY_PATH) && existsSync(SSL_CERT_PATH)
+      ) {
+        console.log("TLS certificate files found.");
+        return;
+      }
+      console.log(
+        `Waiting for TLS certificate files (${SSL_KEY_PATH}, ${SSL_CERT_PATH})...`,
+      );
     }
-    console.log(
-      `Waiting for TLS certificate files (${keyPath}, ${certPath})...`,
-    );
     await new Promise((r) => setTimeout(r, intervalMs));
   }
+  const location = ACME_JSON_PATH
+    ? `domain ${ACME_DOMAIN} in ${ACME_JSON_PATH}`
+    : `files ${SSL_KEY_PATH}, ${SSL_CERT_PATH}`;
   throw new Error(
-    `TLS certificates not available after ${timeoutMs / 1_000}s — check that certs-dumper is running and acme.json contains the domain.`,
+    `TLS certificates not available after ${timeoutMs / 1_000}s — ${location}`,
   );
 }
 
@@ -172,11 +224,12 @@ function startServers() {
   serverOptions.cert = initialCerts.cert;
 
   // Re-evaluate STARTTLS/auth settings now that we know whether certs are loaded.
+  const hasCert = !!(initialCerts.key && initialCerts.cert);
   serverOptions.disabledCommands =
-    TLS_MODE === "none" || (TLS_MODE === "traefik" && !SSL_KEY_PATH)
+    TLS_MODE === "none" || (TLS_MODE === "traefik" && !hasCert)
       ? ["STARTTLS"]
       : [];
-  serverOptions.allowInsecureAuth = TLS_MODE === "traefik" && !SSL_KEY_PATH;
+  serverOptions.allowInsecureAuth = TLS_MODE === "traefik" && !hasCert;
 
   if (TLS_MODE === "manual") {
     if (!SSL_KEY_PATH || !SSL_CERT_PATH) {
@@ -209,7 +262,7 @@ function startServers() {
 
     server.listen(port, () => {
       const modeLabel =
-        TLS_MODE === "traefik" && SSL_KEY_PATH
+        TLS_MODE === "traefik" && hasCert
           ? "STARTTLS (cert-backed, Traefik passthrough)"
           : TLS_MODE === "traefik"
             ? "plain (no cert — STARTTLS disabled)"
@@ -226,13 +279,17 @@ function startServers() {
     servers.push(server);
   });
 
-  // Watch cert files for renewal in both manual and traefik modes.
-  const needsCertWatch =
-    (TLS_MODE === "manual" || TLS_MODE === "traefik") &&
-    SSL_KEY_PATH &&
-    SSL_CERT_PATH;
+  // Watch for cert renewal in both manual and traefik modes.
+  const filesToWatch: string[] = [];
+  if (TLS_MODE === "manual" || TLS_MODE === "traefik") {
+    if (ACME_JSON_PATH) {
+      filesToWatch.push(ACME_JSON_PATH);
+    } else if (SSL_KEY_PATH && SSL_CERT_PATH) {
+      filesToWatch.push(SSL_KEY_PATH, SSL_CERT_PATH);
+    }
+  }
 
-  if (needsCertWatch) {
+  if (filesToWatch.length > 0) {
     const reloadCertificates = () => {
       try {
         const { key, cert } = loadCertificates();
@@ -245,7 +302,7 @@ function startServers() {
       }
     };
 
-    [SSL_KEY_PATH, SSL_CERT_PATH].forEach((file) => {
+    filesToWatch.forEach((file) => {
       watchers.push(watch(file, { persistent: false }, reloadCertificates));
     });
   }
@@ -254,14 +311,12 @@ function startServers() {
 }
 
 async function main() {
-  // In traefik/manual mode, wait for certs-dumper to write the files before
-  // starting — there is a race between container startup and cert extraction.
-  if (
-    (TLS_MODE === "traefik" || TLS_MODE === "manual") &&
-    SSL_KEY_PATH &&
-    SSL_CERT_PATH
-  ) {
-    await waitForCertificates(SSL_KEY_PATH, SSL_CERT_PATH);
+  if (TLS_MODE !== "none") {
+    const needsCert =
+      (ACME_JSON_PATH && ACME_DOMAIN) || (SSL_KEY_PATH && SSL_CERT_PATH);
+    if (needsCert) {
+      await waitForCertificates();
+    }
   }
 
   const { servers, watchers } = startServers();
