@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import CodeExample from "~/components/marketing/CodeExample";
 import { Button } from "@bytesend/ui/src/button";
-
 
 const APP_URL = "/login";
 
@@ -23,7 +21,7 @@ export default function Page() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-x-clip">
       {/* Gradient orbs */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-150 w-225 rounded-full bg-primary/10 blur-[120px]" />
       <div className="pointer-events-none absolute top-20 left-1/4 h-75 w-100 rounded-full bg-primary/5 blur-[100px]" />
@@ -40,11 +38,11 @@ function Hero() {
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1]">
           Email infrastructure
-          <br className="hidden sm:block" />
+          <br />
           <span className="text-primary"> that just works</span>
         </h1>
 
-        <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-5 text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Transactional emails, marketing campaigns, and analytics all in one
           platform. Start free and pay only for what you send.
         </p>
@@ -105,11 +103,11 @@ function TrustStrip() {
   ];
 
   return (
-    <section className="border-y border-border/40 bg-muted/20">
+    <section className="border-y border-border/30 bg-muted/30">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {stats.map((s) => (
-            <div key={s.label} className="text-center">
+            <div key={s.label} className="rounded-xl bg-card/60 p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-primary">{s.value}</div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </div>
@@ -128,31 +126,37 @@ function Features() {
       icon: BarChartIcon,
       title: "Real-time analytics",
       description: "Track deliveries, opens, clicks, bounces and complaints as they happen.",
+      accent: "bg-blue-500/10 text-blue-500",
     },
     {
       icon: PaintbrushIcon,
       title: "Visual email editor",
       description: "Design campaigns with a Notion-like WYSIWYG editor. No code required.",
+      accent: "bg-purple-500/10 text-purple-500",
     },
     {
       icon: UsersIcon,
       title: "Contact management",
       description: "Manage lists, consent and subscription status. Auto-updated from events.",
+      accent: "bg-emerald-500/10 text-emerald-500",
     },
     {
       icon: ShieldIcon,
       title: "Suppression lists",
       description: "Prevent accidental sends. Auto-populated from bounces and complaints.",
+      accent: "bg-amber-500/10 text-amber-500",
     },
     {
       icon: ServerIcon,
       title: "SMTP relay",
       description: "Drop-in SMTP that works with any app. No vendor lock-in.",
+      accent: "bg-rose-500/10 text-rose-500",
     },
     {
       icon: WebhookIcon,
       title: "Webhooks",
       description: "Real-time event notifications for deliveries, bounces and more.",
+      accent: "bg-cyan-500/10 text-cyan-500",
     },
   ];
 
@@ -165,17 +169,19 @@ function Features() {
             Everything you need to send email
           </h2>
           <p className="mt-4 text-muted-foreground">
-            From transactional receipts to marketing campaigns one platform, one bill.
+            From transactional receipts to marketing campaigns — one platform, one bill.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((f) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((f, i) => (
             <div
               key={f.title}
-              className="group rounded-2xl border border-border/50 bg-card/50 p-6 transition-all hover:border-primary/30 hover:bg-primary/2 hover:shadow-sm"
+              className={`group rounded-2xl border border-border/50 bg-card/50 p-6 transition-all hover:border-primary/30 hover:shadow-sm ${
+                i < 2 ? "lg:col-span-2" : ""
+              }`}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${f.accent} mb-4`}>
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="font-semibold">{f.title}</h3>
@@ -493,7 +499,7 @@ function Cta() {
             Ready to send?
           </h2>
           <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
-            Create your free account in seconds. No credit card required just start sending.
+            Create your free account in seconds. No credit card required — just start sending.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>

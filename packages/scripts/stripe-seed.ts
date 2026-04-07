@@ -8,7 +8,7 @@
  */
 
 import Stripe from "stripe";
-import { syncPlansToStripe, generateEnvOutput } from "../packages/lib/src/stripe/index.ts";
+import { syncPlansToStripe, generateEnvOutput } from "../lib/src/stripe/index.ts";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const ENVIRONMENT = process.argv[2] ?? process.env.NODE_ENV ?? "dev";

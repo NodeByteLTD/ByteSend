@@ -1,6 +1,6 @@
 {
   "name": "bytesend",
-  "license": "NOLICENSE",
+  "license": "UNLICENSED",
   "private": true,
   "engines": {
     "pnpm": ">=9.0.0",
@@ -37,10 +37,11 @@
     "db:studio": "pnpm db db:studio",
     "db": "pnpm load-env -- pnpm --filter=web",
     "load-env": "dotenv -e .env",
-    "stripe:seed": "pnpm load-env -- tsx scripts/stripe-seed.ts",
-    "stripe:seed:dev": "pnpm load-env -- tsx scripts/stripe-seed.ts dev",
-    "stripe:seed:staging": "pnpm load-env -- tsx scripts/stripe-seed.ts staging",
-    "stripe:seed:prod": "pnpm load-env -- tsx scripts/stripe-seed.ts production",
+    "stripe:seed": "pnpm load-env -- tsx packages/scripts/stripe-seed.ts",
+    "stripe:seed:dev": "pnpm load-env -- tsx packages/scripts/stripe-seed.ts dev",
+    "stripe:seed:staging": "pnpm load-env -- tsx packages/scripts/stripe-seed.ts staging",
+    "stripe:seed:prod": "pnpm load-env -- tsx packages/scripts/stripe-seed.ts production",
+    "stripe:listen": "pnpm load-env -- stripe listen --forward-to localhost:3000/api/webhooks/stripe",
     "d": "pnpm dx && pnpm dev",
     "dx": "pnpm i && pnpm dx:up && pnpm db:migrate-dev",
     "dx:up": "docker compose -f docker/dev/compose.yml up -d",

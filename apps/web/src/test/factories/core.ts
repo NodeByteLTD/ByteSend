@@ -15,7 +15,7 @@ export async function createUser(data?: Prisma.UserCreateInput): Promise<User> {
     data: {
       email: `user-${n}@example.com`,
       isBetaUser: true,
-      isWaitlisted: false,
+
       ...data,
     },
   });

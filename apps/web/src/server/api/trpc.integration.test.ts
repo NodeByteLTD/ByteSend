@@ -37,7 +37,6 @@ const createCaller = createCallerFactory(testRouter);
 function createContext(user: {
   id: number;
   email: string;
-  isWaitlisted: boolean;
   isAdmin: boolean;
   isBetaUser: boolean;
 }) {
@@ -63,14 +62,12 @@ describeIntegration("tRPC integration", () => {
     const user = await createUser({
       email: "protected@example.com",
       isBetaUser: true,
-      isWaitlisted: false,
     });
 
     const caller = createCaller(
       createContext({
         id: user.id,
         email: user.email as string,
-        isWaitlisted: false,
         isAdmin: false,
         isBetaUser: true,
       }),
@@ -86,7 +83,6 @@ describeIntegration("tRPC integration", () => {
       createContext({
         id: user.id,
         email: user.email as string,
-        isWaitlisted: false,
         isAdmin: false,
         isBetaUser: true,
       }),
@@ -102,14 +98,12 @@ describeIntegration("tRPC integration", () => {
     const user = await createUser({
       email: "no-team@example.com",
       isBetaUser: true,
-      isWaitlisted: false,
     });
 
     const caller = createCaller(
       createContext({
         id: user.id,
         email: user.email as string,
-        isWaitlisted: false,
         isAdmin: false,
         isBetaUser: true,
       }),

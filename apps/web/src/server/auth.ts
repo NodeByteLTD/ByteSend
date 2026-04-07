@@ -29,7 +29,6 @@ declare module "next-auth" {
       isBetaUser: boolean;
       isAdmin: boolean;
       isFounder: boolean;
-      isWaitlisted: boolean;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -41,7 +40,6 @@ declare module "next-auth" {
     isBetaUser: boolean;
     isAdmin: boolean;
     isFounder: boolean;
-    isWaitlisted: boolean;
   }
 }
 
@@ -134,7 +132,6 @@ export const authOptions: NextAuthOptions = {
           isBetaUser: user.isBetaUser,
           isAdmin,
           isFounder,
-          isWaitlisted: user.isWaitlisted,
         },
       };
     },
@@ -168,7 +165,7 @@ export const authOptions: NextAuthOptions = {
       } else {
         await db.user.update({
           where: { id: user.id },
-          data: { isBetaUser: true, isWaitlisted: true },
+          data: { isBetaUser: true },
         });
       }
     },

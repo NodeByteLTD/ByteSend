@@ -27,8 +27,8 @@ function BlueSkyIcon({ className }: { className?: string }) {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/40">
-      <div className="mx-auto max-w-5xl px-6 py-8">
+    <footer className="bg-background border-t border-border/30">
+      <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           {/* Left: brand + links */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
@@ -58,7 +58,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-6 pt-5 border-t border-border/30 text-center text-xs text-muted-foreground/60">
+        <div className="mt-8 pt-6 border-t border-border/20 text-center text-xs text-muted-foreground/50">
           © {new Date().getFullYear()} NodeByte LTD
         </div>
       </div>

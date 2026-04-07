@@ -18,7 +18,7 @@ export function TopNav() {
   const ctaLabel = session ? "Dashboard" : "Get started";
 
   return (
-    <header className="py-3 border-b border-border/50 sticky top-0 z-20 bg-background/80 backdrop-blur-lg">
+    <header className="py-3 border-b border-border/40 fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-5xl px-6 flex items-center justify-between gap-4 text-sm">
         <Link href="/" className="flex items-center gap-2 group">
           <Image src="/logo-squircle.png" alt="ByteSend" width={28} height={28} />
@@ -51,7 +51,7 @@ export function TopNav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="sm:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
+        <div className="sm:hidden border-t border-border/40 bg-background/90 backdrop-blur-xl">
           <div className="mx-auto max-w-5xl px-6 py-4 flex flex-col gap-1 text-sm">
             <Link href={featuresHref} className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>
             <Link href={pricingHref} className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>

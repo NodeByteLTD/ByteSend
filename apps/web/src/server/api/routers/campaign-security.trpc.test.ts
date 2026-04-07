@@ -44,7 +44,7 @@ function getContext() {
       user: {
         id: 1,
         email: "owner@example.com",
-        isWaitlisted: false,
+
         isAdmin: false,
         isBetaUser: true,
       },

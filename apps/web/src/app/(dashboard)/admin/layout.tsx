@@ -39,11 +39,6 @@ export default function AdminLayout({
             Users
           </SettingsNavButton>
         ) : null}
-        {isCloud() ? (
-          <SettingsNavButton href="/admin/waitlist">
-            Waitlist
-          </SettingsNavButton>
-        ) : null}
       </div>
       <div>{children}</div>
     </div>

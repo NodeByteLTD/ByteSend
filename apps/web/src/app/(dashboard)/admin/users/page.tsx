@@ -95,18 +95,6 @@ export default function AdminUsersPage() {
     },
   });
 
-  const updateWaitlist = api.admin.updateUserWaitlist.useMutation({
-    onSuccess: (updated) => {
-      setUserResult(updated);
-      toast.success(
-        updated.isWaitlisted ? "User added to waitlist" : "User removed from waitlist",
-      );
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Unable to update waitlist status");
-    },
-  });
-
   const updateBeta = api.admin.updateUserBeta.useMutation({
     onSuccess: (updated) => {
       setUserResult(updated);
@@ -201,16 +189,13 @@ export default function AdminUsersPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {userResult.isWaitlisted && (
-                <Badge variant="destructive">Waitlisted</Badge>
-              )}
               {userResult.isBetaUser && (
                 <Badge variant="secondary">Beta</Badge>
               )}
               {userResult.isAdmin && (
                 <Badge variant="outline">Admin</Badge>
               )}
-              {!userResult.isWaitlisted && !userResult.isBetaUser && !userResult.isAdmin && (
+              {!userResult.isBetaUser && !userResult.isAdmin && (
                 <Badge variant="outline">Standard</Badge>
               )}
             </div>
@@ -218,17 +203,6 @@ export default function AdminUsersPage() {
 
           {/* Toggles */}
           <div className="space-y-4 border-t pt-4">
-            <UserToggleRow
-              label="Waitlist"
-              description="Restrict this user from accessing the platform until manually released."
-              checked={userResult.isWaitlisted}
-              onCheckedChange={(val) =>
-                updateWaitlist.mutate({ userId: userResult.id, isWaitlisted: val })
-              }
-              isPending={updateWaitlist.isPending}
-              dangerous
-            />
-
             <UserToggleRow
               label="Beta access"
               description="Grant this user access to beta features before public release."

@@ -93,8 +93,7 @@ export const publicProcedure = t.procedure;
 /**
  * Authenticated (session-required) procedure
  *
- * Ensures a session exists but does not enforce waitlist status. Useful for flows where waitlisted
- * users should still have access (e.g., waitlist management).
+ * Ensures a session exists. Useful for flows where users need access.
  */
 export const authedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
@@ -117,10 +116,6 @@ export const authedProcedure = t.procedure.use(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = authedProcedure.use(({ ctx, next }) => {
-  if (ctx.session.user.isWaitlisted) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
-
   return next();
 });
 

@@ -49,6 +49,7 @@ export default function MarketingLayout({
   return (
     <SessionWrapper>
       <TopNav />
+      <div className="h-[53px]" />
       {children}
       <SiteFooter />
     </SessionWrapper>

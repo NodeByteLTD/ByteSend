@@ -53,7 +53,6 @@ const baseUser = {
   id: 1,
   isBetaUser: true,
   isAdmin: false,
-  isWaitlisted: false,
   email: "user@example.com",
 };
 
@@ -66,18 +65,6 @@ describe("tRPC middleware procedures", () => {
     const caller = createCaller(getContext(null));
     await expect(caller.authedPing()).rejects.toBeInstanceOf(TRPCError);
     await expect(caller.authedPing()).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
-  });
-
-  it("blocks protected procedure for waitlisted users", async () => {
-    const caller = createCaller(
-      getContext({
-        user: { ...baseUser, isWaitlisted: true },
-      }),
-    );
-
-    await expect(caller.protectedPing()).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
   });

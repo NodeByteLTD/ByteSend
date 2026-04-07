@@ -13,6 +13,8 @@ node_modules
 .env.production.local
 .env.selfhost
 .docs
+.docker
+.references
 
 # Testing
 coverage
