@@ -16,7 +16,19 @@ services:
       - BYTESEND_BASE_URL=https://bytesend.cloud
     labels:
       - "traefik.enable=true"
-      - "traefik.tcp.routers.smtp.rule=HostSNI(`smtp.bytesend.cloud`)"
-      - "traefik.tcp.routers.smtp.entrypoints=smtp"
-      - "traefik.tcp.routers.smtp.service=smtp"
-      - "traefik.tcp.services.smtp.loadbalancer.server.port=587"
+      # Route for Port 587
+      - "traefik.tcp.routers.smtp-submission.entrypoints=smtp-submission"
+      - "traefik.tcp.routers.smtp-submission.rule=HostSNI(`smtp.bytesend.cloud`)"
+      - "traefik.tcp.routers.smtp-submission.tls=true"
+      - "traefik.tcp.routers.smtp-submission.tls.certresolver=letsencrypt"
+      - "traefik.tcp.routers.smtp-submission.service=smtp-svc"
+      
+      # Route for Port 465 (SMTPS)
+      - "traefik.tcp.routers.smtps.entrypoints=smtps"
+      - "traefik.tcp.routers.smtps.rule=HostSNI(`smtp.bytesend.cloud`)"
+      - "traefik.tcp.routers.smtps.tls=true"
+      - "traefik.tcp.routers.smtps.tls.certresolver=letsencrypt"
+      - "traefik.tcp.routers.smtps.service=smtp-svc"
+
+      # The Service (Internal Port)
+      - "traefik.tcp.services.smtp-svc.loadbalancer.server.port=587"
