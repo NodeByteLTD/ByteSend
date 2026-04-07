@@ -12,8 +12,6 @@ export async function POST(req: Request) {
       shouldReplaceVariableValues: true,
       linkValues: {
         "{{bytesend_unsubscribe_url}}": "https://bytesend.cloud/unsubscribe",
-        "{{unsend_unsubscribe_url}}": "https://bytesend.cloud/unsubscribe",
-        "{{usesend_unsubscribe_url}}": "https://bytesend.cloud/unsubscribe",
       },
     });
     console.log(`Time taken: ${Date.now() - time}ms`);

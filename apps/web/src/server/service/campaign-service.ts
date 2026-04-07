@@ -27,8 +27,6 @@ import {
 
 const CAMPAIGN_UNSUB_PLACEHOLDER_TOKENS = [
   "{{bytesend_unsubscribe_url}}",
-  "{{unsend_unsubscribe_url}}",
-  "{{usesend_unsubscribe_url}}",
 ] as const;
 
 const CAMPAIGN_UNSUB_PLACEHOLDER_REGEXES =

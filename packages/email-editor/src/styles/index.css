@@ -206,11 +206,11 @@
 }
 
 /* Chrome, Safari and Opera */
-.unsend-no-scrollbar::-webkit-scrollbar {
+.bytesend-no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-.unsend-no-scrollbar {
+.bytesend-no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }

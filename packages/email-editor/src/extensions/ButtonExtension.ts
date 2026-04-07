@@ -54,7 +54,7 @@ export const ButtonExtension = Node.create({
   parseHTML() {
     return [
       {
-        tag: `a[data-unsend-component="${this.name}"]`,
+        tag: `a[data-bytesend-component="${this.name}"]`,
       },
     ];
   },
@@ -64,7 +64,7 @@ export const ButtonExtension = Node.create({
       "a",
       mergeAttributes(
         {
-          "data-unsend-component": this.name,
+          "data-bytesend-component": this.name,
         },
         HTMLAttributes
       ),
@@ -79,7 +79,7 @@ export const ButtonExtension = Node.create({
           return commands.insertContent({
             type: this.name,
             attrs: {
-              unsendComponent: this.name,
+              bytesendComponent: this.name,
             },
           });
         },

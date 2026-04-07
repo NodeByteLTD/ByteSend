@@ -100,7 +100,7 @@ export function getAvailableBillingTiers() {
 }
 
 /**
- * Format plan pricing for display
+ * Format plan pricing for display (CAD)
  */
 export function formatPlanPrice(plan: PlanType): string {
   const pricing = getPlan(plan);
@@ -110,25 +110,23 @@ export function formatPlanPrice(plan: PlanType): string {
   }
 
   if (plan === "LIFETIME") {
-    return `$${((pricing.oneTimePrice ?? 0) / 100).toFixed(0)} one-time`;
+    return `CA$${((pricing.oneTimePrice ?? 0) / 100).toFixed(0)} one-time`;
   }
 
   if (plan === "BASIC") {
-    return `$${(pricing.monthlyPrice / 100).toFixed(2)}/mo + usage`;
+    return `CA$${(pricing.monthlyPrice / 100).toFixed(2)}/mo`;
   }
 
-  return `$${(pricing.monthlyPrice / 100).toFixed(2)}/mo`;
+  return `CA$${(pricing.monthlyPrice / 100).toFixed(2)}/mo`;
 }
 
 /**
- * Get meter rate info for BASIC plan
+ * Get meter rate info for a given plan.
+ * Returns null for plans with usage included (BASIC, LIFETIME).
  */
-export function getMeterRates() {
-  const basicPlan = getPlan("BASIC");
-  return basicPlan.usageMetering || {
-    marketing: 0.001,
-    transactional: 0.0004,
-  };
+export function getMeterRates(plan: PlanType = "LITE") {
+  const planData = getPlan(plan);
+  return planData.usageMetering ?? null;
 }
 
 /**

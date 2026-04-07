@@ -37,7 +37,7 @@ export const UnsubscribeFooterExtension = Node.create({
       "unsub",
       mergeAttributes(
         {
-          "data-unsend-component": this.name,
+          "data-bytesend-component": this.name,
           class: "footer",
           contenteditable: "true",
         },

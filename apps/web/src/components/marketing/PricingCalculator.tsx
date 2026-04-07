@@ -82,9 +82,9 @@ function Slider({
 export function PricingCalculator() {
   // Rates are defined in the ByteSend Stripe lib
   // See: packages/lib/src/stripe/plans.ts (BASIC plan usageMetering)
-  const MARKETING_RATE = 0.001;      // $0.001 per marketing email
-  const TRANSACTIONAL_RATE = 0.0004; // $0.0004 per transactional email
-  const BASE_MONTHLY = 5;             // $5/month minimum for BASIC plan
+  const MARKETING_RATE = 0.001;      // CA$0.001 per marketing email
+  const TRANSACTIONAL_RATE = 0.0004; // CA$0.0004 per transactional email
+  const BASE_MONTHLY = 5;             // CA$5/month minimum for BASIC plan
 
   const [marketing, setMarketing] = React.useState<number>(5000);
   const [transactional, setTransactional] = React.useState<number>(12500);
@@ -132,23 +132,23 @@ export function PricingCalculator() {
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
               <div className="rounded-lg border border-primary/30 p-4">
                 <div className="text-xs text-muted-foreground">Marketing</div>
-                <div className="text-lg font-medium">${marketingCost.toFixed(2)}</div>
+                <div className="text-lg font-medium">CA${marketingCost.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">
-                  @ ${MARKETING_RATE.toFixed(4)} each
+                  @ CA${MARKETING_RATE.toFixed(4)} each
                 </div>
               </div>
               <div className="rounded-lg border border-primary/30 p-4">
                 <div className="text-xs text-muted-foreground">Transactional</div>
-                <div className="text-lg font-medium">${transactionalCost.toFixed(2)}</div>
+                <div className="text-lg font-medium">CA${transactionalCost.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">
-                  @ ${TRANSACTIONAL_RATE.toFixed(4)} each
+                  @ CA${TRANSACTIONAL_RATE.toFixed(4)} each
                 </div>
               </div>
               <div className="rounded-lg border border-primary/30 p-4 bg-primary/10">
                 <div className="text-xs text-muted-foreground">Estimated Total</div>
-                <div className="text-3xl text-primary font-semibold">${totalDue.toFixed(2)}</div>
+                <div className="text-3xl text-primary font-semibold">CA${totalDue.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">
-                  {subtotal < BASE_MONTHLY ? `Minimum $${BASE_MONTHLY} applies` : "before taxes"}
+                  {subtotal < BASE_MONTHLY ? `Minimum CA$${BASE_MONTHLY} applies` : "before taxes"}
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import { db } from "~/server/db";
 import { env } from "~/env";
-import { getUsageDate, getUsageUnits } from "~/lib/usage";
+import { getUsageDate } from "~/lib/usage";
 import { sendUsageToStripe } from "~/server/billing/usage";
 import { getRedis, BULL_PREFIX } from "~/server/redis";
 import { DEFAULT_QUEUE_OPTIONS } from "../queue/queue-constants";
@@ -49,12 +49,16 @@ const worker = new Worker(
         .filter((usage) => usage.type === "MARKETING")
         .reduce((sum, usage) => sum + usage.sent, 0);
 
-      const totalUsage = getUsageUnits(marketingUsage, transactionUsage);
-
       try {
-        await sendUsageToStripe(team.stripeCustomerId, totalUsage);
+        // Report marketing and transactional usage to separate meters
+        if (marketingUsage > 0) {
+          await sendUsageToStripe(team.stripeCustomerId, marketingUsage, "marketing");
+        }
+        if (transactionUsage > 0) {
+          await sendUsageToStripe(team.stripeCustomerId, transactionUsage, "transactional");
+        }
         logger.info(
-          { teamId: team.id, date: getUsageDate(), usage: totalUsage },
+          { teamId: team.id, date: getUsageDate(), marketing: marketingUsage, transactional: transactionUsage },
           `[Usage Reporting] Reported usage for team`,
         );
       } catch (error) {

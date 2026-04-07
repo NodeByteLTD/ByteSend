@@ -40,14 +40,20 @@ async function main() {
 
   console.log(`\n✅  Synced ${result.products.length} plans\n`);
 
-  console.log("📊  Product mappings:");
+  console.log("📊  Billing Meters:");
+  console.log("─────────────────────");
+  console.log(`  Marketing meter    : ${result.meters.marketing}`);
+  console.log(`  Transactional meter: ${result.meters.transactional}`);
+
+  console.log("\n📊  Product mappings:");
   console.log("─────────────────────");
   for (const p of result.products) {
     console.log(`\n  ${p.plan}`);
-    console.log(`    Product ID : ${p.productId}`);
-    if (p.priceIds.monthly) console.log(`    Monthly    : ${p.priceIds.monthly}`);
-    if (p.priceIds.usage)   console.log(`    Usage      : ${p.priceIds.usage}`);
-    if (p.priceIds.oneTime) console.log(`    One-time   : ${p.priceIds.oneTime}`);
+    console.log(`    Product ID          : ${p.productId}`);
+    if (p.priceIds.monthly) console.log(`    Monthly             : ${p.priceIds.monthly}`);
+    if (p.priceIds.marketingUsage) console.log(`    Marketing usage     : ${p.priceIds.marketingUsage}`);
+    if (p.priceIds.transactionalUsage) console.log(`    Transactional usage : ${p.priceIds.transactionalUsage}`);
+    if (p.priceIds.oneTime) console.log(`    One-time            : ${p.priceIds.oneTime}`);
   }
 
   const envOutput = generateEnvOutput(result.products);

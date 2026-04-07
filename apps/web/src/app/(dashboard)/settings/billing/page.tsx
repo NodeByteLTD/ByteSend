@@ -23,7 +23,7 @@ const PLAN_OPTIONS: {
   {
     plan: "HOBBY",
     name: "Hobby",
-    price: "$5 / mo",
+    price: "CA$5 / mo",
     perks: [
       "15,000 emails / month",
       "500 emails / day",
@@ -34,7 +34,7 @@ const PLAN_OPTIONS: {
   {
     plan: "LITE",
     name: "Lite",
-    price: "$10 / mo",
+    price: "CA$10 / mo",
     perks: [
       "50,000 emails / month",
       "2,000 emails / day",
@@ -45,7 +45,7 @@ const PLAN_OPTIONS: {
   {
     plan: "BASIC",
     name: "Professional",
-    price: "$30 / mo",
+    price: "CA$30 / mo",
     perks: [
       "Unlimited emails",
       "No per-email charges",
@@ -57,7 +57,7 @@ const PLAN_OPTIONS: {
   {
     plan: "LIFETIME",
     name: "Lifetime",
-    price: "$60 one-time",
+    price: "CA$60 one-time",
     perks: [
       "Unlimited emails forever",
       "No recurring charges",

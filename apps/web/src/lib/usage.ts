@@ -1,16 +1,34 @@
 import { EmailUsageType, Plan, Subscription } from "@prisma/client";
+import { PLANS, PlanType } from "@bytesend/lib";
 
+/**
+ * Get the per-email usage rate for a specific plan and email type.
+ * Returns the rate in CAD per email.
+ * Plans without usageMetering (BASIC, LIFETIME) return 0 — usage is included.
+ */
+export function getUsageRate(
+  plan: PlanType,
+  type: EmailUsageType
+): number {
+  const planData = PLANS[plan];
+  if (!planData.usageMetering) return 0;
+  return type === EmailUsageType.MARKETING
+    ? planData.usageMetering.marketing
+    : planData.usageMetering.transactional;
+}
+
+/**
+ * Default fallback rates (matches LITE plan)
+ */
 export const USAGE_UNIT_PRICE: Record<EmailUsageType, number> = {
-  [EmailUsageType.MARKETING]: 0.001,
-  [EmailUsageType.TRANSACTIONAL]: 0.0004,
+  [EmailUsageType.MARKETING]: PLANS.LITE.usageMetering!.marketing,
+  [EmailUsageType.TRANSACTIONAL]: PLANS.LITE.usageMetering!.transactional,
 };
 
 /**
- * Unit price for bytesend
- * 1 marketing email = 1 unit
- * 4 transaction emails = 1 unit
+ * Unit price for cost calculations (marketing rate from LITE)
  */
-export const UNIT_PRICE = 0.001;
+export const UNIT_PRICE = PLANS.LITE.usageMetering!.marketing;
 
 export const TRANSACTIONAL_UNIT_CONVERSION =
   UNIT_PRICE / USAGE_UNIT_PRICE[EmailUsageType.TRANSACTIONAL];

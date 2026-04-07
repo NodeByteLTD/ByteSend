@@ -200,19 +200,19 @@ function Features() {
 /* ─────────────────── Pricing ─────────────────── */
 
 const pricingPlans = [
-  { name: "Free", price: "$0", period: "forever", cta: "Get started free", popular: false },
-  { name: "Hobby", price: "$5", period: "/mo", cta: "Start with Hobby", popular: false },
-  { name: "Lite", price: "$10", period: "/mo", cta: "Start with Lite", popular: false },
-  { name: "Professional", price: "$30", period: "/mo", cta: "Go Professional", popular: true },
-  { name: "Lifetime", price: "$60", period: "once", cta: "Buy Lifetime", popular: false, badge: "Best value" },
+  { name: "Free", price: "CA$0", period: "forever", cta: "Get started free", popular: false },
+  { name: "Hobby", price: "CA$5", period: "/mo", cta: "Start with Hobby", popular: false },
+  { name: "Lite", price: "CA$10", period: "/mo", cta: "Start with Lite", popular: false },
+  { name: "Professional", price: "CA$30", period: "/mo", cta: "Go Professional", popular: true },
+  { name: "Lifetime", price: "CA$60", period: "once", cta: "Buy Lifetime", popular: false, badge: "Best value" },
 ];
 
 const pricingFeatures: { label: string; values: (string | boolean)[] }[] = [
   { label: "Monthly emails", values: ["5,000", "15,000", "50,000", "Unlimited", "Unlimited"] },
   { label: "Daily emails", values: ["250", "500", "2,000", "Unlimited", "Unlimited"] },
   { label: "Marketing emails", values: [true, true, true, true, true] },
-  { label: "Transactional rate", values: ["$0.002/ea", "$0.0015/ea", "$0.001/ea", "Included", "Included"] },
-  { label: "Marketing rate", values: ["$0.004/ea", "$0.003/ea", "$0.002/ea", "Included", "Included"] },
+  { label: "Transactional rate", values: ["CA$0.002/ea", "CA$0.0015/ea", "CA$0.001/ea", "Included", "Included"] },
+  { label: "Marketing rate", values: ["CA$0.004/ea", "CA$0.003/ea", "CA$0.002/ea", "Included", "Included"] },
   { label: "Domains", values: ["3", "5", "10", "100", "500"] },
   { label: "Contacts", values: ["500", "2,000", "10,000", "1M", "10M"] },
   { label: "Team members", values: ["5", "10", "25", "50", "200"] },
@@ -322,7 +322,7 @@ const advantages = [
   {
     title: "Pay-once lifetime option",
     description: "One payment, unlimited emails forever. No other provider offers this.",
-    bytesend: "$60 once",
+    bytesend: "CA$60 once",
     others: ["Everyone else: Monthly forever"],
     icon: InfinityIcon,
   },

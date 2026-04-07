@@ -14,8 +14,8 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 0,
     usageMetering: {
-      marketing: 0.004, // $0.004 per marketing email
-      transactional: 0.002, // $0.002 per transactional email
+      marketing: 0.004, // CA$0.004 per marketing email
+      transactional: 0.002, // CA$0.002 per transactional email
     },
     limits: {
       monthlyEmailLimit: 5_000,
@@ -40,10 +40,10 @@ export const PLANS: Record<PlanType, PricingTier> = {
     description: "For hobbyists and side projects",
     order: 2,
     isLimited: true,
-    monthlyPrice: 500, // $5/month in cents
+    monthlyPrice: 500, // CA$5/month in cents
     usageMetering: {
-      marketing: 0.003, // $0.003 per marketing email
-      transactional: 0.0015, // $0.0015 per transactional email
+      marketing: 0.003, // CA$0.003 per marketing email
+      transactional: 0.0015, // CA$0.0015 per transactional email
     },
     limits: {
       monthlyEmailLimit: 15_000,
@@ -68,10 +68,10 @@ export const PLANS: Record<PlanType, PricingTier> = {
     description: "For small teams and growing projects",
     order: 3,
     isLimited: true,
-    monthlyPrice: 1000, // $10/month in cents
+    monthlyPrice: 1000, // CA$10/month in cents
     usageMetering: {
-      marketing: 0.002, // $0.002 per marketing email
-      transactional: 0.001, // $0.001 per transactional email
+      marketing: 0.002, // CA$0.002 per marketing email
+      transactional: 0.001, // CA$0.001 per transactional email
     },
     limits: {
       monthlyEmailLimit: 50_000,
@@ -96,7 +96,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
     description: "For professionals and growing businesses",
     order: 4,
     isLimited: false,
-    monthlyPrice: 3000, // $30/month in cents
+    monthlyPrice: 3000, // CA$30/month in cents
     // Marketing & transactional emails included at no extra cost
     limits: {
       monthlyEmailLimit: Number.POSITIVE_INFINITY,
@@ -122,7 +122,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
     order: 5,
     isLimited: false,
     monthlyPrice: 0,
-    oneTimePrice: 6000, // $60 one-time purchase
+    oneTimePrice: 6000, // CA$60 one-time purchase
     // Marketing & transactional emails included at no extra cost
     limits: {
       monthlyEmailLimit: Number.POSITIVE_INFINITY,

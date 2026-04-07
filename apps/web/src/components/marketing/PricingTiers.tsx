@@ -69,13 +69,13 @@ function PricingTierCard({
           ) : isPayAsYouGo ? (
             <>
               <div className="text-4xl font-bold tracking-tight">
-                ${formatPrice(monthlyPrice)}
+                CA${formatPrice(monthlyPrice)}
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
                 per month + usage-based billing
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Marketing: $0.001/email · Transactional: $0.0004/email
+                Marketing: CA$0.001/email · Transactional: CA$0.0004/email
               </p>
             </>
           ) : isOneTime ? (
@@ -86,7 +86,7 @@ function PricingTierCard({
           ) : (
             <>
               <div className="text-4xl font-bold tracking-tight">
-                ${formatPrice(monthlyPrice)}
+                CA${formatPrice(monthlyPrice)}
               </div>
               <p className="mt-2 text-sm text-muted-foreground">per month</p>
             </>

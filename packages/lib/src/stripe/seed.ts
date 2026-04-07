@@ -5,8 +5,14 @@ import { PLANS } from "./plans";
 
 /**
  * Stripe Seed/Sync Utilities
- * Syncs our plan definitions with Stripe products and prices
+ * Syncs our plan definitions with Stripe products, meters, and prices
  */
+
+/** Meter event names used for usage-based billing */
+export const METER_EVENT_NAMES = {
+  marketing: "bytesend_marketing_emails",
+  transactional: "bytesend_transactional_emails",
+} as const;
 
 export interface StripeProductMapping {
   plan: PlanType;
@@ -27,16 +33,47 @@ export interface StripeProductMapping {
 export interface SyncResult {
   success: boolean;
   products: StripeProductMapping[];
+  meters: { marketing: string; transactional: string };
   errors?: string[];
 }
 
 /**
+ * Ensure a Stripe Billing Meter exists, creating it if needed.
+ */
+async function ensureMeter(
+  stripe: Stripe,
+  eventName: string,
+  displayName: string
+): Promise<Stripe.Billing.Meter> {
+  // List existing meters and find by event_name
+  const meters = await stripe.billing.meters.list({ limit: 100 });
+  const existing = meters.data.find((m) => m.event_name === eventName && m.status === "active");
+
+  if (existing) {
+    console.log(`✓ Meter already exists: ${eventName} (${existing.id})`);
+    return existing;
+  }
+
+  const meter = await stripe.billing.meters.create({
+    display_name: displayName,
+    event_name: eventName,
+    default_aggregation: { formula: "sum" },
+    customer_mapping: {
+      event_payload_key: "stripe_customer_id",
+      type: "by_id",
+    },
+  });
+  console.log(`✓ Created meter: ${eventName} (${meter.id})`);
+  return meter;
+}
+
+/**
  * Sync all plans to Stripe
- * Creates or updates products and prices based on STRIPE_PRODUCTS configuration
+ * Creates or updates products, meters, and prices based on configuration
  *
  * @param stripe Stripe client instance
- * @param environment Environment name (dev, staging, production) - appended to product names
- * @returns Sync result with product mappings
+ * @param environment Environment name (dev, staging, production)
+ * @returns Sync result with product/meter mappings
  */
 export async function syncPlansToStripe(
   stripe: Stripe,
@@ -46,6 +83,21 @@ export async function syncPlansToStripe(
   const errors: string[] = [];
 
   try {
+    // ── Step 1: Ensure Billing Meters exist ──
+    console.log("📊 Ensuring Billing Meters...\n");
+    const marketingMeter = await ensureMeter(
+      stripe,
+      METER_EVENT_NAMES.marketing,
+      "Marketing Emails Sent"
+    );
+    const transactionalMeter = await ensureMeter(
+      stripe,
+      METER_EVENT_NAMES.transactional,
+      "Transactional Emails Sent"
+    );
+    console.log("");
+
+    // ── Step 2: Sync Products & Prices ──
     for (const [planType, config] of Object.entries(STRIPE_PRODUCTS)) {
       try {
         const plan = planType as PlanType;
@@ -62,7 +114,6 @@ export async function syncPlansToStripe(
         let product: Stripe.Product;
 
         if (existingProducts.data.length > 0) {
-          // Update existing product
           product = existingProducts.data[0];
           await stripe.products.update(product.id, {
             name: productName,
@@ -73,95 +124,76 @@ export async function syncPlansToStripe(
               bytesend_plan: plan,
             },
           });
-          console.log(`✓ Updated product for ${plan}: ${product.id}`);
+          console.log(`  ✓ Updated product: ${product.id}`);
         } else {
-          // Create new product
           product = await stripe.products.create({
             name: productName,
             description: config.description,
-            type: "service",
             metadata: {
               plan,
               environment,
               bytesend_plan: plan,
             },
           });
-          console.log(`✓ Created product for ${plan}: ${product.id}`);
+          console.log(`  ✓ Created product: ${product.id}`);
         }
 
-        // Handle pricing based on plan type
-        const priceIds: { monthly?: string; annual?: string; marketingUsage?: string; transactionalUsage?: string; oneTime?: string } =
-          {};
+        const priceIds: StripeProductMapping["priceIds"] = {};
 
+        // ── Base subscription / one-time prices ──
         if (plan === "FREE") {
-          // No base subscription price — only metered usage prices
-          console.log(`  └─ Free plan, skipping base price`);
+          console.log(`  └─ Free plan, no base price`);
         } else if (plan === "LIFETIME") {
-          // One-time purchase — no recurring field in Stripe means type=one_time
           const price = await createOrUpdatePrice(stripe, {
             productId: product.id,
-            amount: config.priceOneTime ?? 29900,
-            currency: "usd",
+            amount: config.priceOneTime ?? 6000,
+            currency: "cad",
             billingScheme: "per_unit",
             recurring: null,
             metadata: { type: "one-time", plan },
           });
           priceIds.oneTime = price.id;
-          console.log(`  └─ Created one-time price ($${((config.priceOneTime ?? 29900) / 100).toFixed(2)}): ${price.id}`);
-        } else if (plan === "BASIC") {
-          // Fixed monthly price — marketing & transactional included
-          const monthlyPrice = await createOrUpdatePrice(stripe, {
-            productId: product.id,
-            amount: config.priceMonthly || 3000,
-            currency: "usd",
-            billingScheme: "per_unit",
-            recurring: { interval: "month", usageType: "licensed" },
-            metadata: { type: "monthly", plan },
-          });
-          priceIds.monthly = monthlyPrice.id;
-          console.log(`  └─ Created monthly price ($${((config.priceMonthly || 3000) / 100).toFixed(2)}/mo): ${monthlyPrice.id}`);
-        } else if (plan === "LITE" || plan === "HOBBY") {
-          // Monthly subscription price
+          console.log(`  └─ One-time: CA$${((config.priceOneTime ?? 6000) / 100).toFixed(2)} → ${price.id}`);
+        } else {
+          // HOBBY, LITE, BASIC — monthly subscription
           const monthlyPrice = await createOrUpdatePrice(stripe, {
             productId: product.id,
             amount: config.priceMonthly!,
-            currency: "usd",
+            currency: "cad",
             billingScheme: "per_unit",
             recurring: { interval: "month", usageType: "licensed" },
             metadata: { type: "monthly", plan },
           });
           priceIds.monthly = monthlyPrice.id;
-          console.log(`  └─ Created monthly price ($${(config.priceMonthly! / 100).toFixed(2)}/mo): ${monthlyPrice.id}`);
+          console.log(`  └─ Monthly: CA$${(config.priceMonthly! / 100).toFixed(2)}/mo → ${monthlyPrice.id}`);
         }
 
-        // Create metered usage prices for plans with usageMetering
+        // ── Metered usage prices (plans with per-email billing) ──
         const planData = PLANS[plan];
         if (planData.usageMetering) {
-          // Rates are in dollars — convert to cents string for Stripe unit_amount_decimal
+          // Marketing metered price — references the marketing meter
           const marketingCents = (planData.usageMetering.marketing * 100).toFixed(4);
-          const transactionalCents = (planData.usageMetering.transactional * 100).toFixed(4);
-
-          const marketingPrice = await createOrUpdatePrice(stripe, {
+          const marketingPrice = await createOrUpdateMeterPrice(stripe, {
             productId: product.id,
             unitAmountDecimal: marketingCents,
-            currency: "usd",
-            billingScheme: "per_unit",
-            recurring: { interval: "month", usageType: "metered", aggregateUsage: "sum" },
+            currency: "cad",
+            meterId: marketingMeter.id,
             metadata: { type: "marketing-usage", plan },
           });
           priceIds.marketingUsage = marketingPrice.id;
-          console.log(`  └─ Created marketing usage price ($${planData.usageMetering.marketing}/email): ${marketingPrice.id}`);
+          console.log(`  └─ Marketing usage: CA$${planData.usageMetering.marketing}/email → ${marketingPrice.id}`);
 
-          const transactionalPrice = await createOrUpdatePrice(stripe, {
+          // Transactional metered price — references the transactional meter
+          const transactionalCents = (planData.usageMetering.transactional * 100).toFixed(4);
+          const transactionalPrice = await createOrUpdateMeterPrice(stripe, {
             productId: product.id,
             unitAmountDecimal: transactionalCents,
-            currency: "usd",
-            billingScheme: "per_unit",
-            recurring: { interval: "month", usageType: "metered", aggregateUsage: "sum" },
+            currency: "cad",
+            meterId: transactionalMeter.id,
             metadata: { type: "transactional-usage", plan },
           });
           priceIds.transactionalUsage = transactionalPrice.id;
-          console.log(`  └─ Created transactional usage price ($${planData.usageMetering.transactional}/email): ${transactionalPrice.id}`);
+          console.log(`  └─ Transactional usage: CA$${planData.usageMetering.transactional}/email → ${transactionalPrice.id}`);
         }
 
         products.push({
@@ -176,13 +208,17 @@ export async function syncPlansToStripe(
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         errors.push(`Failed to sync ${planType}: ${errorMsg}`);
-        console.error(`✗ Error syncing ${planType}:`, error);
+        console.error(`  ✗ Error syncing ${planType}:`, error);
       }
     }
 
     return {
       success: errors.length === 0,
       products,
+      meters: {
+        marketing: marketingMeter.id,
+        transactional: transactionalMeter.id,
+      },
       errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
@@ -190,10 +226,13 @@ export async function syncPlansToStripe(
     return {
       success: false,
       products: [],
+      meters: { marketing: "", transactional: "" },
       errors: [`Fatal error during sync: ${errorMsg}`],
     };
   }
 }
+
+// ── Price creation helpers ──
 
 interface CreatePriceParams {
   productId: string;
@@ -223,19 +262,16 @@ async function createOrUpdatePrice(
     metadata,
   } = params;
 
-  // Search for existing price
+  // Search for existing price with matching metadata
   const existingPrices = await stripe.prices.search({
     query: `product:'${productId}' AND metadata['type']:'${metadata.type}'`,
     limit: 1,
   });
 
   if (existingPrices.data.length > 0) {
-    // Stripe API: prices can't be updated, only created new ones
-    // Return the existing one
     return existingPrices.data[0];
   }
 
-  // Create new price
   const priceData: Stripe.PriceCreateParams = {
     product: productId,
     currency,
@@ -259,8 +295,46 @@ async function createOrUpdatePrice(
     priceData.unit_amount_decimal = unitAmountDecimal;
   }
 
-  const price = await stripe.prices.create(priceData);
-  return price;
+  return stripe.prices.create(priceData);
+}
+
+interface CreateMeterPriceParams {
+  productId: string;
+  unitAmountDecimal: string;
+  currency: string;
+  meterId: string;
+  metadata: Record<string, string>;
+}
+
+async function createOrUpdateMeterPrice(
+  stripe: Stripe,
+  params: CreateMeterPriceParams
+): Promise<Stripe.Price> {
+  const { productId, unitAmountDecimal, currency, meterId, metadata } = params;
+
+  // Search for existing price with matching metadata
+  const existingPrices = await stripe.prices.search({
+    query: `product:'${productId}' AND metadata['type']:'${metadata.type}'`,
+    limit: 1,
+  });
+
+  if (existingPrices.data.length > 0) {
+    return existingPrices.data[0];
+  }
+
+  // Create a meter-based price using the Billing Meters API
+  return stripe.prices.create({
+    product: productId,
+    currency,
+    billing_scheme: "per_unit",
+    unit_amount_decimal: unitAmountDecimal,
+    recurring: {
+      interval: "month",
+      usage_type: "metered",
+      meter: meterId,
+    },
+    metadata,
+  });
 }
 
 /**

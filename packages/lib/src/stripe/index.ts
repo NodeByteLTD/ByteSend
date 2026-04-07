@@ -9,6 +9,7 @@ export { STRIPE_PRODUCTS, STRIPE_ENV_KEYS, getProductConfig, getAllProductConfig
 export {
   type StripeProductMapping,
   type SyncResult,
+  METER_EVENT_NAMES,
   syncPlansToStripe,
   getEnvKeysForPlan,
   generateEnvOutput,

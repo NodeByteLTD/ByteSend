@@ -21,7 +21,7 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     description:
       "For hobbyists and side projects. " +
       "15,000 emails per month included.",
-    priceMonthly: 500, // $5/month
+    priceMonthly: 500, // CA$5/month
   },
 
   LITE: {
@@ -30,7 +30,7 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     description:
       "For small teams and growing projects. " +
       "50,000 emails per month included.",
-    priceMonthly: 1000, // $10/month in cents
+    priceMonthly: 1000, // CA$10/month in cents
   },
 
   BASIC: {
@@ -39,7 +39,7 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     description:
       "For professionals and growing businesses. " +
       "Unlimited emails — marketing & transactional included.",
-    priceMonthly: 3000, // $30/month
+    priceMonthly: 3000, // CA$30/month
   },
 
   LIFETIME: {
@@ -48,7 +48,7 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     description:
       "One-time payment for lifetime access to all ByteSend features, forever. " +
       "No subscriptions, no renewals.",
-    priceOneTime: 6000, // $60 one-time purchase
+    priceOneTime: 6000, // CA$60 one-time purchase
   },
 };
 
