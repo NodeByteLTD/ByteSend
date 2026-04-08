@@ -75,6 +75,14 @@ export class TeamService {
       }
     }
 
+    const nameConflict = await db.team.findFirst({ where: { name: { equals: name, mode: "insensitive" } } });
+    if (nameConflict) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "A team with that name already exists. Please choose a different name.",
+      });
+    }
+
     const created = await db.team.create({
       data: {
         name,
@@ -99,6 +107,17 @@ export class TeamService {
     teamId: number,
     data: Prisma.TeamUpdateInput,
   ): Promise<Team> {
+    if (typeof data.name === "string") {
+      const nameConflict = await db.team.findFirst({
+        where: { name: { equals: data.name, mode: "insensitive" }, NOT: { id: teamId } },
+      });
+      if (nameConflict) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A team with that name already exists. Please choose a different name.",
+        });
+      }
+    }
     const updated = await db.team.update({ where: { id: teamId }, data });
     await TeamService.refreshTeamCache(teamId);
     return updated;

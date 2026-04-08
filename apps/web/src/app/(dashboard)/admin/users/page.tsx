@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@bytesend/ui/src/button";
@@ -36,6 +37,16 @@ type SearchInput = z.infer<typeof searchSchema>;
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type ManagedUser = NonNullable<RouterOutputs["admin"]["findUserByEmail"]>;
+type ListedUser = NonNullable<RouterOutputs["admin"]["listUsers"]>["users"][number];
+
+function formatDisplayName(email: string) {
+  const localPart = email.split("@")[0] ?? email;
+  return localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ") || localPart;
+}
 
 function UserToggleRow({
   label,
@@ -74,6 +85,9 @@ function UserToggleRow({
 export default function AdminUsersPage() {
   const [userResult, setUserResult] = useState<ManagedUser | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersQuery, setUsersQuery] = useState("");
+  const [usersQueryInput, setUsersQueryInput] = useState("");
 
   const form = useForm<SearchInput>({
     resolver: zodResolver(searchSchema),
@@ -118,6 +132,21 @@ export default function AdminUsersPage() {
       toast.error(error.message ?? "Unable to update admin status");
     },
   });
+
+  const banUser = api.admin.banUser.useMutation({
+    onSuccess: (updated) => {
+      setUserResult(updated);
+      toast.success(updated.isBanned ? "User banned" : "User unbanned");
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Unable to update ban status");
+    },
+  });
+
+  const listUsers = api.admin.listUsers.useQuery(
+    { page: usersPage, pageSize: 20, query: usersQuery || undefined },
+    { placeholderData: (prev) => prev },
+  );
 
   const onSubmit = (values: SearchInput) => {
     setHasSearched(false);
@@ -189,13 +218,16 @@ export default function AdminUsersPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              {userResult.isBanned && (
+                <Badge variant="destructive">Banned</Badge>
+              )}
               {userResult.isBetaUser && (
                 <Badge variant="secondary">Beta</Badge>
               )}
               {userResult.isAdmin && (
                 <Badge variant="outline">Admin</Badge>
               )}
-              {!userResult.isBetaUser && !userResult.isAdmin && (
+              {!userResult.isBanned && !userResult.isBetaUser && !userResult.isAdmin && (
                 <Badge variant="outline">Standard</Badge>
               )}
             </div>
@@ -223,9 +255,119 @@ export default function AdminUsersPage() {
               isPending={setAdmin.isPending}
               dangerous
             />
+
+            <UserToggleRow
+              label="Banned"
+              description="Prevents this user from signing in and accessing ByteSend. Use for abuse or ToS violations."
+              checked={userResult.isBanned}
+              onCheckedChange={(val) =>
+                banUser.mutate({ userId: userResult.id, isBanned: val })
+              }
+              isPending={banUser.isPending}
+              dangerous
+            />
           </div>
         </div>
       ) : null}
+
+      {/* All users list */}
+      <div className="space-y-4 rounded-lg border p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">All users</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={usersQueryInput}
+              onChange={(e) => setUsersQueryInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setUsersPage(1);
+                  setUsersQuery(usersQueryInput);
+                }
+              }}
+              placeholder="Filter by name or email…"
+              className="h-8 rounded-md border bg-background px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setUsersPage(1); setUsersQuery(usersQueryInput); }}
+            >
+              Filter
+            </Button>
+          </div>
+        </div>
+
+        {listUsers.isLoading ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+            <Spinner className="h-4 w-4" /> Loading users…
+          </div>
+        ) : listUsers.isError ? (
+          <p className="py-4 text-sm text-destructive">Failed to load users.</p>
+        ) : !listUsers.data?.users.length ? (
+          <p className="py-4 text-sm text-muted-foreground">No users found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4 font-medium">User</th>
+                  <th className="pb-2 pr-4 font-medium">Joined</th>
+                  <th className="pb-2 font-medium">Flags</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {listUsers.data.users.map((u: ListedUser) => (
+                  <tr key={u.id} className={u.isBanned ? "opacity-60" : undefined}>
+                    <td className="py-2 pr-4">
+                      <p className="font-medium">{u.name ?? formatDisplayName(u.email ?? "")}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </td>
+                    <td className="py-2 pr-4 text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true })}
+                    </td>
+                    <td className="py-2">
+                      <div className="flex flex-wrap gap-1">
+                        {u.isBanned && <Badge variant="destructive">Banned</Badge>}
+                        {u.isBetaUser && <Badge variant="secondary">Beta</Badge>}
+                        {u.isAdmin && <Badge variant="outline">Admin</Badge>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {listUsers.data && listUsers.data.total > 20 ? (
+          <div className="flex items-center justify-between border-t pt-3 text-sm">
+            <span className="text-muted-foreground">
+              {(usersPage - 1) * 20 + 1}–{Math.min(usersPage * 20, listUsers.data.total)} of {listUsers.data.total}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={usersPage <= 1}
+                onClick={() => setUsersPage((p) => p - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={usersPage * 20 >= listUsers.data.total}
+                onClick={() => setUsersPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

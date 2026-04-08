@@ -25,7 +25,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Core",
         "groups": [
           {
             "group": "Getting Started",
@@ -33,9 +33,30 @@
               "introduction",
               "get-started/smtp"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Self Hosting",
+        "groups": [
           {
-            "group": "Guides",
+            "group": "Basic Setup",
+            "pages": [
+              "self-hosting/overview",
+              "self-hosting/smtp-server",
+              "self-hosting/certificates",
+              "self-hosting/firewall",
+              "self-hosting/reverse-proxy",
+              "self-hosting/security"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "User Guides",
             "pages": [
               "guides/webhooks",
               "guides/double-opt-in",
@@ -128,8 +149,18 @@
         },
         {
           "anchor": "Community",
-          "href": "https://discord.gg/nodebyte",
+          "href": "https://discord.gg/xqkqzVRC4S",
           "icon": "discord"
+        },
+        {
+          "anchor": "Twitter",
+          "href": "https://twitter.com/TryByteSend",
+          "icon": "twitter"
+        },
+        {
+          "anchor": "Dashboard",
+          "href": "https://bytesend.cloud",
+          "type": "button"
         }
       ]
     }
@@ -153,7 +184,7 @@
     "links": [
       {
         "label": "Support",
-        "href": "https://discord.gg/nodebyte"
+        "href": "https://discord.gg/xqkqzVRC4S"
       }
     ],
     "primary": {

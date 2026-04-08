@@ -1,0 +1,491 @@
+---
+title: ByteSend SMTP Server
+description: "An end-to-end guide on how to self-host the ByteSend SMTP Server."
+---
+
+The ByteSend SMTP Server is an independent, lightweight Node.js application that forwards incoming SMTP connections to the ByteSend API. It runs separately from the main ByteSend application and can be deployed on the same host or an entirely different machine.
+
+**Repository:** [github.com/NodeByteHosting/ByteSend-SMTP](https://github.com/NodeByteHosting/ByteSend-SMTP)
+
+---
+
+## Architecture
+
+The SMTP server:
+- Listens on **ports 25** (MTA/submission), **587** (submission with STARTTLS), and **465** (implicit TLS in manual mode)
+- Accepts SMTP connections from external clients
+- Authenticates clients with a username (default: `bytesend`) and API key as password
+- Parses incoming email messages and forwards them to the ByteSend API
+- Requires network access to your ByteSend instance (e.g., `https://bytesend.cloud` or your self-hosted URL)
+
+---
+
+## TLS Modes
+
+The server supports two TLS configurations:
+
+### Mode: `none` (default)
+- Plain SMTP with no TLS/encryption at the server level
+- Suitable for:
+  - Deployment behind a reverse proxy (nginx, Traefik, etc.) that terminates TLS
+  - Internal networks where clients trust the connection
+  - Development/testing environments
+- `STARTTLS` is disabled; clients receive plain text connections
+- Notes:
+  - If using port 587, clients may expect STARTTLS. Configure your proxy to terminate TLS before forwarding plain TCP to the server.
+  - No certificate files required
+
+### Mode: `manual`
+- Server handles TLS directly
+- Suitable for:
+  - Standalone deployments without a reverse proxy
+  - When clients connect directly to the server (not through a proxy)
+  - Production environments with dedicated certificates
+- Enables:
+  - **STARTTLS** on ports 25, 587, 2587 (clients upgrade to encrypted)
+  - **Implicit TLS (SMTPS)** on ports 465, 2465 (encrypted from the start)
+- Requires:
+  - `SMTP_TLS_CERT_PATH` — full certificate chain (PEM format)
+  - `SMTP_TLS_KEY_PATH` — private key (PEM format)
+  - Certificates reload automatically when files change (zero-downtime renewal)
+
+---
+
+## Installation & Setup
+
+### Option 1: Docker (Recommended)
+
+#### Prerequisites
+- Docker and Docker Compose installed
+- ByteSend instance accessible at a known URL
+- (Optional) SSL certificates if using `SMTP_TLS_MODE=manual`
+
+#### Quick Start
+
+1. **Clone the ByteSend SMTP repository:**
+   ```bash
+   git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git
+   cd ByteSend-SMTP
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   # Copy the example config
+   cp .env.example .env
+   
+   # Edit with your values
+   # BYTESEND_BASE_URL=https://your-bytesend-instance.com
+   # SMTP_AUTH_USERNAME=bytesend
+   # SMTP_TLS_MODE=none  # or 'manual' if you have certs
+   ```
+
+3. **The docker-compose.yml file is pre-configured:**
+   The docker-compose.yml uses environment variable interpolation for easy configuration in platforms like Dokploy:
+   ```yaml
+   version: '3.8'
+
+   services:
+     smtp:
+       build:
+         context: .
+         dockerfile: Dockerfile
+       restart: unless-stopped
+       ports:
+         - "25:25"
+         - "587:587"
+         - "465:465"
+         - "2465:2465"
+         - "2587:2587"
+       environment:
+         - NODE_ENV=${NODE_ENV:-production}
+         - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
+         - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-https://bytesend.cloud}
+         - SMTP_TLS_MODE=${SMTP_TLS_MODE:-none}
+         # Uncomment for manual TLS mode:
+         # - SMTP_TLS_CERT_PATH=${SMTP_TLS_CERT_PATH:-/certs/fullchain.pem}
+         # - SMTP_TLS_KEY_PATH=${SMTP_TLS_KEY_PATH:-/certs/privkey.pem}
+       # volumes:
+       #   - /etc/letsencrypt/live/smtp.example.com:/certs:ro
+   ```
+
+4. **Start the server:**
+   ```bash
+   # Load environment variables from .env and start
+   docker compose up -d --build
+   ```
+   
+   Or with explicit environment variables:
+   ```bash
+   BYTESEND_BASE_URL=https://your-instance.com \
+   SMTP_TLS_MODE=manual \
+   docker compose up -d --build
+   ```
+
+5. **Verify it's running:**
+   ```bash
+   docker compose logs -f smtp
+   ```
+   You should see:
+   ```
+   SMTP server (plain (no TLS)) is listening on port 25
+   SMTP server (plain (no TLS)) is listening on port 587
+   SMTP server (plain (no TLS)) is listening on port 2587
+   ```
+
+---
+
+### Option 2: Manual Installation (Node.js)
+
+#### Prerequisites
+- Node.js 18+ and npm/pnpm installed
+- ByteSend instance accessible
+- (Optional) SSL certificates
+
+#### Steps
+
+1. **Clone and install:**
+   ```bash
+   git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git
+   cd ByteSend-SMTP
+   npm install
+   ```
+
+2. **Build:**
+   ```bash
+   npm run build
+   ```
+
+3. **Set environment variables:**
+   Copy and configure the example file:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   nano .env
+   ```
+
+   Or set them in your shell:
+   ```bash
+   export NODE_ENV=production
+   export SMTP_AUTH_USERNAME=bytesend
+   export BYTESEND_BASE_URL=https://bytesend.cloud
+   export SMTP_TLS_MODE=none
+   # For manual TLS:
+   # export SMTP_TLS_CERT_PATH=/path/to/fullchain.pem
+   # export SMTP_TLS_KEY_PATH=/path/to/privkey.pem
+   ```
+
+4. **Run:**
+   ```bash
+   node dist/server.js
+   ```
+
+---
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SMTP_AUTH_USERNAME` | `bytesend` | Username for SMTP authentication |
+| `BYTESEND_BASE_URL` | `https://bytesend.cloud` | URL to your ByteSend instance (e.g., `https://api.example.com`) |
+| `SMTP_TLS_MODE` | `none` | TLS mode: `none` or `manual` |
+| `SMTP_TLS_CERT_PATH` | — | Path to certificate file (required if `SMTP_TLS_MODE=manual`) |
+| `SMTP_TLS_KEY_PATH` | — | Path to private key file (required if `SMTP_TLS_MODE=manual`) |
+| `NODE_ENV` | `production` | Set to `production` for production use |
+
+### Using `.env` Files
+
+For local development or deployment platforms like Dokploy, use a `.env` file:
+
+```bash
+# Copy the example
+cp .env.example .env
+
+# Edit .env with your values
+echo "BYTESEND_BASE_URL=https://your-instance.com" >> .env
+echo "SMTP_TLS_MODE=manual" >> .env
+echo "SMTP_TLS_CERT_PATH=/certs/fullchain.pem" >> .env
+echo "SMTP_TLS_KEY_PATH=/certs/privkey.pem" >> .env
+
+# Start with the loaded environment
+docker compose up -d
+```
+
+Docker Compose automatically loads variables from `.env` and the docker-compose.yml syntax `${VARIABLE:-default}` allows:
+- **Dokploy Integration:** Add environment variables in Dokploy UI → they override defaults automatically
+- **Local Testing:** Use `.env` file for local development with `docker compose up`
+- **Production:** Both methods work; use .env or set variables directly in your deployment platform
+
+### TLS Certificates
+
+When using `SMTP_TLS_MODE=manual`, you need a valid certificate and private key. See the [Certificate Setup](./certificates) guide for full instructions covering Let's Encrypt (certbot), self-signed certs, and commercial certificates.
+
+---
+
+## Certificate Setup
+
+For full instructions on obtaining and configuring TLS certificates, see the dedicated [Certificate Setup](./certificates) guide.
+
+---
+
+## Reverse Proxy Setup
+
+To run the SMTP server behind nginx or Traefik (with `SMTP_TLS_MODE=none`), see the [Reverse Proxy Setup](./reverse-proxy) guide.
+
+---
+
+## Firewall Setup
+
+To configure UFW rules for SMTP ports — including the Docker + UFW bypass issue — see the [Firewall Setup](./firewall) guide.
+
+---
+
+## Usage
+
+### Connecting an SMTP Client
+
+Once the server is running, configure your email client or application with:
+
+- **Host:** `smtp.example.com` (your server's hostname)
+- **Port:** 
+  - `25` (submission, plain)
+  - `587` (submission with STARTTLS)
+  - `465` (implicit TLS, if using `SMTP_TLS_MODE=manual`)
+- **Username:** `bytesend` (default, or your configured `SMTP_AUTH_USERNAME`)
+- **Password:** Your ByteSend API key (obtain from the ByteSend dashboard)
+- **Encryption:** 
+  - STARTTLS for port 587 (if certs available)
+  - TLS for port 465 (if using manual TLS mode)
+  - None for port 25 (plain)
+
+### Example: Node.js / Nodemailer
+
+```javascript
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.example.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "bytesend",
+    pass: "your_api_key_here",
+  },
+  tls: {
+    rejectUnauthorized: false, // Only for self-signed certs
+  },
+});
+
+transporter.sendMail({
+  from: "sender@example.com",
+  to: "recipient@example.com",
+  subject: "Test Email",
+  text: "Hello from ByteSend SMTP!",
+}, (error, info) => {
+  if (error) console.error(error);
+  else console.log("Email sent:", info.response);
+});
+```
+
+---
+
+## Systemd Service Setup
+
+To run the ByteSend SMTP Server as a systemd service on Linux (without Docker):
+
+<Warning>**If using `SMTP_TLS_MODE=manual`:** Before proceeding with this setup, ensure your certificate files exist and that the `smtp` user will have read access (see **step 4** below). The service will fail to start if it can't read the certificate.</Warning>
+
+### 1. Create a systemd service file
+
+Save as `/etc/systemd/system/bytesend-smtp.service`:
+
+```ini
+[Unit]
+Description=ByteSend SMTP Server
+Documentation=https://github.com/NodeByteHosting/ByteSend-SMTP
+After=network.target
+
+[Service]
+Type=simple
+User=smtp
+WorkingDirectory=/opt/bytesend-smtp
+ExecStart=/usr/bin/node /opt/bytesend-smtp/dist/server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Load environment from .env file (optional)
+EnvironmentFile=-/opt/bytesend-smtp/.env
+
+# Or set directly (override .env if both exist):
+Environment="NODE_ENV=production"
+Environment="SMTP_AUTH_USERNAME=bytesend"
+Environment="BYTESEND_BASE_URL=https://bytesend.cloud"
+Environment="SMTP_TLS_MODE=manual"
+Environment="SMTP_TLS_CERT_PATH=/etc/letsencrypt/live/smtp.example.com/fullchain.pem"
+Environment="SMTP_TLS_KEY_PATH=/etc/letsencrypt/live/smtp.example.com/privkey.pem"
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/bytesend-smtp/logs
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 2. Create the service user
+
+```bash
+sudo useradd --system --home /opt/bytesend-smtp --shell /bin/false smtp
+```
+
+### 3. Set up the application directory
+
+```bash
+sudo mkdir -p /opt/bytesend-smtp
+sudo mkdir -p /opt/bytesend-smtp/logs
+sudo chown smtp:smtp /opt/bytesend-smtp
+sudo chown smtp:smtp /opt/bytesend-smtp/logs
+
+# Clone and build
+cd /opt/bytesend-smtp
+sudo -u smtp HOME=/opt/bytesend-smtp git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git .
+sudo -u smtp HOME=/opt/bytesend-smtp npm install
+sudo -u smtp HOME=/opt/bytesend-smtp npm run build
+
+# (Optional) Copy and configure .env file
+sudo -u smtp cp .env.example .env
+sudo nano /opt/bytesend-smtp/.env  # Edit with your settings
+```
+
+<Note>The `HOME=/opt/bytesend-smtp` prefix is needed if Node.js is installed via snap, which restricts home directory access to `/home`. If you get "home directories outside of /home needs configuration", use this workaround or install Node.js via `apt` or `nvm` instead.</Note>
+
+Alternatively, you can set environment variables directly in the systemd service file (see step 1). Using `.env` is cleaner for configuration management.
+
+### 4. Ensure certificate permissions
+
+The `smtp` user needs read access to certificates:
+
+```bash
+sudo setfacl -R -m u:smtp:rx /etc/letsencrypt/live/smtp.example.com/
+sudo setfacl -R -m u:smtp:rx /etc/letsencrypt/archive/smtp.example.com/
+```
+
+Or, if the `smtp` user should own the certs:
+
+```bash
+sudo chown smtp:smtp /etc/letsencrypt/live/smtp.example.com/fullchain.pem
+sudo chown smtp:smtp /etc/letsencrypt/live/smtp.example.com/privkey.pem
+sudo chmod 600 /etc/letsencrypt/live/smtp.example.com/privkey.pem
+```
+
+### 5. Enable and start the service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable bytesend-smtp
+sudo systemctl start bytesend-smtp
+```
+
+### 6. Verify it's running
+
+```bash
+sudo systemctl status bytesend-smtp
+sudo journalctl -u bytesend-smtp -f  # View logs
+```
+
+### 7. Certificate Renewal with Certbot
+
+If using Let's Encrypt, add a renewal hook to automatically reload the service:
+
+Edit `/etc/letsencrypt/renewal/smtp.example.com.conf` and add:
+
+```ini
+renew_hook = systemctl reload bytesend-smtp
+```
+
+Or create a hook script at `/etc/letsencrypt/renewal-hooks/post/bytesend-smtp.sh`:
+
+```bash
+#!/bin/bash
+systemctl reload bytesend-smtp
+```
+
+Make it executable:
+
+```bash
+sudo chmod +x /etc/letsencrypt/renewal-hooks/post/bytesend-smtp.sh
+```
+
+Test the renewal process:
+
+```bash
+sudo certbot renew --dry-run
+```
+
+---
+
+## Troubleshooting
+
+### "Connection Refused"
+- Verify the server is running: `docker compose ps` or check process list
+- Verify the port is exposed: `netstat -tulpn | grep :587`
+- Verify the host is reachable: `telnet smtp.example.com 587`
+
+### "Authentication Failed" (Invalid API Key)
+- Ensure you're using the correct API key from the ByteSend dashboard
+- Verify `SMTP_AUTH_USERNAME` matches your client's username
+- Check the server logs for the exact error
+
+### "STARTTLS Not Supported"
+- Ensure `SMTP_TLS_MODE` is set to `manual` with valid cert paths
+- In `none` mode, STARTTLS is intentionally disabled (use a reverse proxy instead)
+
+### "Certificate Errors"
+- Verify `SMTP_TLS_CERT_PATH` and `SMTP_TLS_KEY_PATH` point to valid PEM-format files
+- Test the cert: `openssl x509 -in /path/to/cert.pem -text -noout`
+- Check file permissions (the process must be able to read both files)
+
+### "Connection to ByteSend API Failed"
+- Verify `BYTESEND_BASE_URL` is correct and reachable
+- Test connectivity: `curl -v https://bytesend.cloud/api/v1/health` (or your URL)
+- Check network policies and firewalls
+
+---
+
+## Performance & Scaling
+
+- **Concurrency:** The server processes one SMTP session per connection thread
+- **Memory:** Lightweight (~50–100 MB for typical usage)
+- **CPU:** Minimal CPU usage; bounded by email parsing
+- **Disk:** No persistent storage; only logs written to stdout
+
+For high-volume deployments, consider:
+- Running multiple instances behind a load balancer (round-robin on port 25/587)
+- Increasing the ByteSend API quota (contact support)
+- Monitoring email queue depth in ByteSend dashboard
+
+---
+
+## Security Considerations
+
+1. **Use Strong Credentials:** Change `SMTP_AUTH_USERNAME` and ensure API keys are strong
+2. **Network Isolation:** Consider running the SMTP server on a private network if possible
+3. **Rate Limiting:** Implement rate limits at the reverse proxy level if needed
+4. **Certificate Validation:** In production, use trusted CAs (not self-signed)
+5. **Firewall Rules:** Only expose necessary ports; restrict access by IP if possible
+
+---
+
+## Support & Issues
+
+For bugs, feature requests, or questions:
+- **GitHub Issues:** [github.com/NodeByteHosting/ByteSend-SMTP](https://github.com/NodeByteHosting/ByteSend-SMTP)
+- **ByteSend Support:** [Contact us](https://bytesend.cloud/support)
+
+

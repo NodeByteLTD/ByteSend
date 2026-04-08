@@ -5,7 +5,6 @@ import { JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@bytesend/ui";
 import { Toaster } from "@bytesend/ui/src/toaster";
 
-import { TRPCReactProvider } from "~/trpc/react";
 import { Metadata } from "next";
 
 const inter = Inter({
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "ByteSend",
     images: [
       {
-        url: "https://cmap.pics/ibNxG/KgGe77.png",
+        url: "https://embrly.ca/ibNxG/KgGe77.png",
         width: 1200,
         height: 630,
         alt: "ByteSend – The email platform for modern teams",
@@ -45,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ByteSend – The email platform for modern teams",
     description: "Send product, transactional and marketing emails. Pay only for what you send.",
-    images: ["https://cmap.pics/ibNxG/KgGe77.png"],
+    images: ["https://embrly.ca/ibNxG/KgGe77.png"],
   },
   robots: {
     index: true,
@@ -69,7 +68,7 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Toaster />
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

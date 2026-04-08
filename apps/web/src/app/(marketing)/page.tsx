@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@bytesend/ui/src/button";
 
+export const dynamic = "force-static";
+
 const APP_URL = "/login";
 
 export default function Page() {
@@ -71,7 +73,6 @@ function Hero() {
                 height={1914}
                 className="w-full h-auto rounded-xl block dark:hidden"
                 sizes="(min-width: 1024px) 900px, 100vw"
-                loading="eager"
                 priority
               />
               <Image
@@ -81,8 +82,7 @@ function Hero() {
                 height={1914}
                 className="w-full h-auto rounded-xl hidden dark:block"
                 sizes="(min-width: 1024px) 900px, 100vw"
-                loading="eager"
-                priority
+                loading="lazy"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@ function Hero() {
 
 function TrustStrip() {
   const stats = [
-    { value: "99.9%", label: "Uptime SLA" },
+    { value: "96.6%", label: "Uptime SLA" },
     { value: "<2s", label: "Avg. delivery" },
     { value: "1000+", label: "Emails Sent" },
     { value: "24/7", label: "Monitoring" },

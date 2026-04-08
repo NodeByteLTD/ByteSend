@@ -6,31 +6,23 @@ services:
       context: .
       dockerfile: Dockerfile.smtp
     restart: unless-stopped
-    expose:
-      - "25"
-      - "587"
-      - "465"
     ports:
       - "25:25"
       - "587:587"
       - "465:465"
       - "2465:2465"
       - "2587:2587"
-    networks:
-      - dokploy-network
-      - default
-    volumes:
-      # Mount Traefik's acme.json read-only — server parses it directly to get
-      # the cert for SMTP_ACME_DOMAIN, no certs-dumper sidecar required.
-      - /etc/dokploy/traefik/dynamic/acme.json:/acme.json:ro
     environment:
       - NODE_ENV=production
       - SMTP_AUTH_USERNAME=bytesend
       - BYTESEND_BASE_URL=https://bytesend.cloud
-      - SMTP_TLS_MODE=traefik
-      - SMTP_ACME_JSON_PATH=/acme.json
-      - SMTP_ACME_DOMAIN=smtp.bytesend.cloud
+      # TLS_MODE: 'none' (default) — plain SMTP, suitable behind a reverse proxy
+      #           'manual'          — server handles TLS; set cert/key paths below
+      - SMTP_TLS_MODE=none
+      # Uncomment and set these when using SMTP_TLS_MODE=manual:
+      # - SMTP_TLS_CERT_PATH=/certs/fullchain.pem
+      # - SMTP_TLS_KEY_PATH=/certs/privkey.pem
+    # When using manual TLS, mount your cert directory:
+    # volumes:
+    #   - /etc/letsencrypt/live/smtp.example.com:/certs:ro
 
-networks:
-  dokploy-network:
-    external: true

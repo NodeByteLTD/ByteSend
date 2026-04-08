@@ -1,4 +1,4 @@
-![ByteSend](https://embrly.ca/ibNxG/Injl1K.svg)
+![ByteSend](./apps/web/public/nameplate.png)
 
 **Developer-friendly email sending.** A modern alternative to Resend, SendGrid, Mailgun, and Postmark with a REST API, SMTP support, campaigns, contact management, and real-time webhooks.
 

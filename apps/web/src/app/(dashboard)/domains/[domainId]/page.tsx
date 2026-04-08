@@ -23,12 +23,20 @@ import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
 import React, { use } from "react";
 import { Switch } from "@bytesend/ui/src/switch";
 import DeleteDomain from "./delete-domain";
-import SendTestMail from "./send-test-mail";
 import { Button } from "@bytesend/ui/src/button";
 import Link from "next/link";
 import { toast } from "@bytesend/ui/src/toaster";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "~/server/api/root";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@bytesend/ui/src/dropdown-menu";
+import { ChevronDown, RefreshCw, SendHorizonal } from "lucide-react";
+import Spinner from "@bytesend/ui/src/spinner";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type DomainResponse = NonNullable<RouterOutputs["domain"]["getDomain"]>;
@@ -51,6 +59,7 @@ export default function DomainItemPage({
   );
 
   const verifyQuery = api.domain.startVerification.useMutation();
+  const sendTestEmailMutation = api.domain.sendTestEmailFromDomain.useMutation();
 
   const handleVerify = () => {
     verifyQuery.mutate(
@@ -63,17 +72,28 @@ export default function DomainItemPage({
     );
   };
 
+  const handleSendTestEmail = () => {
+    sendTestEmailMutation.mutate(
+      { id: Number(domainId) },
+      {
+        onSuccess: () => {
+          toast.success("Test email sent");
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to send test email");
+        },
+      },
+    );
+  };
+
   return (
     <div>
       {domainQuery.isLoading ? (
         <p>Loading...</p>
       ) : (
         <div className="flex flex-col gap-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center  gap-4">
-              {/* <div className="flex items-center gap-4">
-              <H1>{domainQuery.data?.name}</H1>
-            </div> */}
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex flex-col gap-1.5">
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
@@ -91,26 +111,52 @@ export default function DomainItemPage({
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
-
-              <div className="">
+              <div>
                 <DomainStatusBadge
                   status={domainQuery.data?.status || DomainStatus.NOT_STARTED}
                 />
               </div>
             </div>
             <div className="flex gap-4">
-              <div>
-                <Button variant="outline" onClick={handleVerify}>
-                  {domainQuery.data?.isVerifying
-                    ? "Verifying..."
-                    : domainQuery.data?.status === DomainStatus.SUCCESS
-                      ? "Verify again"
-                      : "Verify domain"}
-                </Button>
-              </div>
-              {domainQuery.data ? (
-                <SendTestMail domain={domainQuery.data} />
-              ) : null}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    Actions
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    onClick={handleVerify}
+                    disabled={verifyQuery.isPending || domainQuery.data?.isVerifying}
+                  >
+                    {verifyQuery.isPending || domainQuery.data?.isVerifying ? (
+                      <Spinner className="h-4 w-4 mr-2" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    {domainQuery.data?.isVerifying
+                      ? "Verifying..."
+                      : domainQuery.data?.status === DomainStatus.SUCCESS
+                        ? "Verify again"
+                        : "Verify domain"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSendTestEmail}
+                    disabled={sendTestEmailMutation.isPending}
+                  >
+                    {sendTestEmailMutation.isPending ? (
+                      <Spinner className="h-4 w-4 mr-2" />
+                    ) : (
+                      <SendHorizonal className="h-4 w-4 mr-2" />
+                    )}
+                    {sendTestEmailMutation.isPending
+                      ? "Sending..."
+                      : "Send test email"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 

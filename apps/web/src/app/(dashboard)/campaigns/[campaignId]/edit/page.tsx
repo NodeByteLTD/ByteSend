@@ -122,7 +122,6 @@ function CampaignEditor({
       setIsSaving(false);
     },
   });
-  const getUploadUrl = api.campaign.generateImagePresignedUrl.useMutation();
 
   function updateEditorContent() {
     if (isApiCampaign) {
@@ -146,22 +145,18 @@ function CampaignEditor({
       );
     }
 
-    const { uploadUrl, imageUrl } = await getUploadUrl.mutateAsync({
-      name: file.name,
-      type: file.type,
-      campaignId: campaign.id,
-    });
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("teamId", String(campaign.teamId));
+    fd.append("type", "asset");
 
-    const response = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-    });
-
+    const response = await fetch("/api/upload", { method: "POST", body: fd });
     if (!response.ok) {
-      throw new Error("Failed to upload file");
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as any)?.error ?? "Failed to upload file");
     }
-
-    return imageUrl;
+    const { publicUrl } = await response.json() as { publicUrl: string };
+    return publicUrl;
   };
 
   const contactBook = contactBooksQuery.data?.find(

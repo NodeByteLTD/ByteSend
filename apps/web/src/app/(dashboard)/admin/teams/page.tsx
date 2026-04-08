@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@bytesend/ui/src/button";
@@ -43,6 +44,7 @@ type SearchInput = z.infer<typeof searchSchema>;
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type TeamAdmin = NonNullable<RouterOutputs["admin"]["findTeam"]>;
+type ListedTeam = NonNullable<RouterOutputs["admin"]["listTeams"]>["teams"][number];
 
 const updateSchema = z.object({
   apiRateLimit: z.coerce.number().int().min(1).max(10_000),
@@ -56,6 +58,9 @@ type UpdateInput = z.infer<typeof updateSchema>;
 export default function AdminTeamsPage() {
   const [team, setTeam] = useState<TeamAdmin | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [teamsPage, setTeamsPage] = useState(1);
+  const [teamsQuery, setTeamsQuery] = useState("");
+  const [teamsQueryInput, setTeamsQueryInput] = useState("");
 
   const searchForm = useForm<SearchInput>({
     resolver: zodResolver(searchSchema),
@@ -132,6 +137,11 @@ export default function AdminTeamsPage() {
     if (!team) return;
     updateTeam.mutate({ teamId: team.id, ...values });
   };
+
+  const listTeams = api.admin.listTeams.useQuery(
+    { page: teamsPage, pageSize: 20, query: teamsQuery || undefined },
+    { placeholderData: (prev) => prev },
+  );
 
   return (
     <div className="space-y-8">
@@ -364,6 +374,109 @@ export default function AdminTeamsPage() {
           </div>
         </div>
       ) : null}
+
+      {/* All teams list */}
+      <div className="space-y-4 rounded-lg border p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">All teams</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={teamsQueryInput}
+              onChange={(e) => setTeamsQueryInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setTeamsPage(1);
+                  setTeamsQuery(teamsQueryInput);
+                }
+              }}
+              placeholder="Filter by name, email\u2026"
+              className="h-8 rounded-md border bg-background px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setTeamsPage(1); setTeamsQuery(teamsQueryInput); }}
+            >
+              Filter
+            </Button>
+          </div>
+        </div>
+
+        {listTeams.isLoading ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+            <Spinner className="h-4 w-4" /> Loading teams\u2026
+          </div>
+        ) : listTeams.isError ? (
+          <p className="py-4 text-sm text-destructive">Failed to load teams.</p>
+        ) : !listTeams.data?.teams.length ? (
+          <p className="py-4 text-sm text-muted-foreground">No teams found.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="pb-2 pr-4 font-medium">Team</th>
+                  <th className="pb-2 pr-4 font-medium">Plan</th>
+                  <th className="pb-2 pr-4 font-medium">Created</th>
+                  <th className="pb-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {listTeams.data.teams.map((t: ListedTeam) => (
+                  <tr key={t.id} className={t.isBlocked ? "opacity-60" : undefined}>
+                    <td className="py-2 pr-4">
+                      <p className="font-medium">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">ID #{t.id}</p>
+                    </td>
+                    <td className="py-2 pr-4">
+                      <Badge variant="outline">{t.plan}</Badge>
+                    </td>
+                    <td className="py-2 pr-4 text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(t.createdAt), { addSuffix: true })}
+                    </td>
+                    <td className="py-2">
+                      {t.isBlocked ? (
+                        <Badge variant="destructive">Blocked</Badge>
+                      ) : (
+                        <Badge variant="outline">Active</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {listTeams.data && listTeams.data.total > 20 ? (
+          <div className="flex items-center justify-between border-t pt-3 text-sm">
+            <span className="text-muted-foreground">
+              {(teamsPage - 1) * 20 + 1}\u2013{Math.min(teamsPage * 20, listTeams.data.total)} of {listTeams.data.total}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={teamsPage <= 1}
+                onClick={() => setTeamsPage((p) => p - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                disabled={teamsPage * 20 >= listTeams.data.total}
+                onClick={() => setTeamsPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

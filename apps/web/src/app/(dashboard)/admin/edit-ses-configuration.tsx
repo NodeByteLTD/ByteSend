@@ -6,10 +6,16 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@bytesend/ui/src/dialog";
-
-import { Edit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@bytesend/ui/src/dropdown-menu";
+import { Edit, EllipsisVertical, Power, PowerOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -35,35 +41,153 @@ const FormSchema = z.object({
   transactionalQuota: z.coerce.number().min(0).max(100),
 });
 
-export default function EditSesConfiguration({
+export default function SesConfigurationActions({
   setting,
 }: {
   setting: SesSetting;
 }) {
-  const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const utils = api.useUtils();
+
+  const toggleActive = api.admin.toggleSesSettingsActive.useMutation({
+    onSuccess: () => {
+      utils.admin.getSesSettings.invalidate();
+      toast.success(
+        setting.isActive
+          ? `${setting.region} marked as inactive`
+          : `${setting.region} marked as active`
+      );
+    },
+    onError: (e) => toast.error("Failed to update status", { description: e.message }),
+  });
+
+  const deleteSetting = api.admin.deleteSesSettings.useMutation({
+    onSuccess: () => {
+      utils.admin.getSesSettings.invalidate();
+      setDeleteOpen(false);
+      toast.success(`${setting.region} configuration deleted`);
+    },
+    onError: (e) => toast.error("Failed to delete", { description: e.message }),
+  });
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(_open) => (_open !== open ? setOpen(_open) : null)}
-    >
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit SES configuration</DialogTitle>
-        </DialogHeader>
-        <div className="py-2">
-          <EditSesSettingsForm
-            setting={setting}
-            onSuccess={() => setOpen(false)}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 data-[state=open]:bg-muted"
+          >
+            <EllipsisVertical className="h-4 w-4" />
+            <span className="sr-only">Open actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+            {setting.region}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              toggleActive.mutate({
+                settingsId: setting.id,
+                isActive: !setting.isActive,
+              })
+            }
+            disabled={toggleActive.isPending}
+          >
+            {setting.isActive ? (
+              <>
+                <PowerOff className="mr-2 h-4 w-4 text-amber-500" />
+                <span className="text-amber-500">Set inactive</span>
+              </>
+            ) : (
+              <>
+                <Power className="mr-2 h-4 w-4 text-emerald-500" />
+                <span className="text-emerald-500">Set active</span>
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setDeleteOpen(true)}
+            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Edit dialog */}
+      <Dialog
+        open={editOpen}
+        onOpenChange={(o) => (o !== editOpen ? setEditOpen(o) : null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit SES configuration</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <EditSesSettingsForm
+              setting={setting}
+              onSuccess={() => setEditOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(o) => (o !== deleteOpen ? setDeleteOpen(o) : null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete SES configuration</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete the{" "}
+              <span className="font-semibold text-foreground">
+                {setting.region}
+              </span>{" "}
+              configuration? This will also delete the associated SNS topic and
+              cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleteSetting.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  deleteSetting.mutate({ settingsId: setting.id })
+                }
+                disabled={deleteSetting.isPending}
+              >
+                {deleteSetting.isPending ? (
+                  <Spinner className="w-4 h-4" />
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

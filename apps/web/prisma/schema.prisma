@@ -38,6 +38,7 @@ model SesSetting {
   configFull           String?
   configFullSuccess    Boolean  @default(false)
   sesEmailRateLimit    Int      @default(1)
+  isActive             Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 }
@@ -86,6 +87,7 @@ model User {
   image            String?
   isBetaUser       Boolean    @default(false)
   isAdmin          Boolean    @default(false)
+  isBanned         Boolean    @default(false)
   createdAt        DateTime   @default(now())
   accounts         Account[]
   sessions         Session[]
@@ -103,7 +105,7 @@ enum Plan {
 
 model Team {
   id               Int               @id @default(autoincrement())
-  name             String
+  name             String            @unique
   image            String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

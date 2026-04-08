@@ -3,12 +3,14 @@
 import { Button } from "@bytesend/ui/src/button";
 import { Input } from "@bytesend/ui/src/input";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClientSafeProvider, LiteralUnion, signIn } from "next-auth/react";
 import { BuiltInProviderType } from "next-auth/providers/index";
 import Spinner from "@bytesend/ui/src/spinner";
 import Link from "next/link";
 import { useSearchParams as useNextSearchParams } from "next/navigation";
+
+const SESSION_EMAIL_KEY = "bytesend_login_email";
 
 const providerIcons: Record<string, React.ReactNode> = {
   github: (
@@ -43,13 +45,56 @@ export default function LoginPage({
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60); // 24 hours in seconds
+  const [showResend, setShowResend] = useState(false);
 
   const searchParams = useNextSearchParams();
   const inviteId = searchParams.get("inviteId");
+  const isVerifying = searchParams.get("verify") === "1";
+  const errorParam = searchParams.get("error");
 
   const callbackUrl = inviteId
     ? `/join-team?inviteId=${inviteId}`
     : "/dashboard";
+
+  // When NextAuth redirects to ?verify=1 after the user clicks the magic link,
+  // restore the email we stored in sessionStorage before submitting
+  useEffect(() => {
+    if (isVerifying) {
+      const stored = sessionStorage.getItem(SESSION_EMAIL_KEY);
+      if (stored) setEmail(stored);
+    }
+  }, [isVerifying]);
+
+  // Countdown timer — runs whenever the code entry UI is shown
+  useEffect(() => {
+    if (!isVerifying && !emailSent) return;
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          setShowResend(true);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isVerifying, emailSent]);
+
+  // Show error message if callback failed (bad/expired token from magic link)
+  useEffect(() => {
+    if (errorParam === "Callback") {
+      setCodeError(
+        "Invalid or expired verification code. Please request a new sign-in link."
+      );
+    }
+  }, [errorParam]);
 
   const handleOAuthSubmit = (provider: LiteralUnion<BuiltInProviderType>) => {
     setSubmittedProvider(provider);
@@ -60,12 +105,67 @@ export default function LoginPage({
     e.preventDefault();
     if (!email) return;
     setEmailLoading(true);
+    setCodeError(null);
     try {
       await signIn("email", { email, callbackUrl, redirect: false });
+      // Persist email so it can be restored when NextAuth redirects to ?verify=1
+      sessionStorage.setItem(SESSION_EMAIL_KEY, email);
       setEmailSent(true);
     } finally {
       setEmailLoading(false);
     }
+  };
+
+  const handleVerificationCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationCode || verificationCode.length !== 6) {
+      setCodeError("Please enter the 6-character code from your email");
+      return;
+    }
+    if (!email) {
+      setCodeError("We lost track of your email address. Please go back and enter it again.");
+      return;
+    }
+
+    setCodeLoading(true);
+    setCodeError(null);
+    // Redirect to NextAuth's email callback with the token the user typed.
+    // NextAuth will verify it against the database and sign the user in.
+    const params = new URLSearchParams({
+      token: verificationCode,
+      email,
+      callbackUrl,
+    });
+    window.location.href = `/api/auth/callback/email?${params.toString()}`;
+  };
+
+  const handleResendEmail = async () => {
+    if (!email) return;
+    setEmailLoading(true);
+    setCodeError(null);
+    try {
+      await signIn("email", { email, callbackUrl, redirect: false });
+      sessionStorage.setItem(SESSION_EMAIL_KEY, email);
+      setTimeRemaining(24 * 60 * 60);
+      setShowResend(false);
+      setVerificationCode("");
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    }
+    return `${secs}s`;
   };
 
   const hasEmailProvider = providers?.some((p) => p.type === "email");
@@ -101,21 +201,112 @@ export default function LoginPage({
           </div>
         </div>
 
-        {/* Email check-your-inbox state */}
-        {emailSent ? (
-          <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 text-center space-y-3">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
-              <svg className="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-              </svg>
+        {/* Email verification with code entry — shown after email is submitted OR after magic link redirect */}
+        {(isVerifying || emailSent) ? (
+          <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 space-y-4">
+            <div className="text-center space-y-3">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
+                <svg
+                  className="size-6 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
+              <p className="text-sm text-muted-foreground">
+                We sent a 6-character code to{" "}
+                {email ? (
+                  <span className="font-medium text-foreground">{email}</span>
+                ) : (
+                  "your email address"
+                )}
+              </p>
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
-            <p className="text-sm text-muted-foreground">
-              We sent a sign-in link to <span className="font-medium text-foreground">{email}</span>
-            </p>
+
+            {/* Error message */}
+            {codeError && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                <p>{codeError}</p>
+              </div>
+            )}
+
+            {/* Code entry form */}
+            <form onSubmit={handleVerificationCodeSubmit} className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Enter code from email
+                </label>
+                <Input
+                  type="text"
+                  placeholder="ABC123"
+                  value={verificationCode.toUpperCase()}
+                  onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="h-11 rounded-xl bg-card/60 border-border/40 font-mono text-center uppercase tracking-widest"
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground/60">
+                  You can also click the magic link in your email to sign in directly
+                </p>
+              </div>
+
+              {/* Time remaining */}
+              {!showResend && (
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${timeRemaining < 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                    Code expires in: <span className="font-semibold">{formatTime(timeRemaining)}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Resend button or submit */}
+              {showResend ? (
+                <Button
+                  onClick={handleResendEmail}
+                  type="button"
+                  className="w-full h-11 rounded-xl"
+                  disabled={emailLoading}
+                >
+                  {emailLoading ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    "Send new code"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-xl shadow-lg shadow-primary/20"
+                  disabled={codeLoading || verificationCode.length !== 6}
+                >
+                  {codeLoading ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    "Verify code"
+                  )}
+                </Button>
+              )}
+            </form>
+
+            {/* Back button */}
             <button
-              onClick={() => setEmailSent(false)}
-              className="text-sm text-primary hover:underline mt-2"
+              onClick={() => {
+                setEmailSent(false);
+                setEmail("");
+                setVerificationCode("");
+                setCodeError(null);
+                sessionStorage.removeItem(SESSION_EMAIL_KEY);
+              }}
+              className="w-full text-center text-sm text-primary hover:underline mt-2"
             >
               Use a different email
             </button>

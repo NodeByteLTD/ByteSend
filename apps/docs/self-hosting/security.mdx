@@ -1,0 +1,305 @@
+---
+title: Security Hardening
+description: "Implement fail2ban, rate limiting, and other security measures for the ByteSend SMTP Server."
+---
+
+This page covers security practices and tools to protect your SMTP server from abuse and attacks.
+
+---
+
+## Fail2ban
+
+[Fail2ban](https://www.fail2ban.org/) monitors logs and temporarily blocks IPs that show malicious behavior (e.g., repeated authentication failures). It's the standard defense against brute-force attacks on SMTP.
+
+### Installation
+
+```bash
+# Debian/Ubuntu
+sudo apt install fail2ban
+
+# Start and enable the service
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+```
+
+### Configure for SMTP
+
+Create a jail for the SMTP server:
+
+```bash
+sudo tee /etc/fail2ban/jail.d/bytesend-smtp.conf > /dev/null <<'EOF'
+[bytesend-smtp]
+enabled  = true
+port     = smtp,ssmtp,submission
+filter   = bytesend-smtp
+logpath  = /var/log/syslog
+          /opt/bytesend-smtp/logs/*
+maxretry = 5
+findtime = 600
+bantime  = 3600
+EOF
+```
+
+Create a filter to match authentication failures in the server logs:
+
+```bash
+sudo tee /etc/fail2ban/filter.d/bytesend-smtp.conf > /dev/null <<'EOF'
+[Definition]
+failregex = SMTP authentication failed.*<HOST>
+            invalid credentials.*<HOST>
+            authentication error.*<HOST>
+ignoreregex =
+EOF
+```
+
+Then reload fail2ban:
+
+```bash
+sudo systemctl reload fail2ban
+```
+
+### Monitor blocked IPs
+
+```bash
+# View current bans
+sudo fail2ban-client status bytesend-smtp
+
+# View logs
+sudo journalctl -u fail2ban -f
+
+# Manually unban an IP (if needed)
+sudo fail2ban-client set bytesend-smtp unbanip 192.0.2.1
+```
+
+### Tune the settings
+
+Adjust maxretry/findtime/bantime to your needs:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `maxretry` | 5 | Ban after 5 failed attempts |
+| `findtime` | 600 | Within this many seconds (10 min) |
+| `bantime` | 3600 | Block for this many seconds (1 hour) |
+
+For stricter security, reduce `maxretry` to 3 and increase `bantime` to 86400 (24 hours).
+
+---
+
+## Rate Limiting
+
+UFW can rate-limit connections on specific ports. This prevents legitimate clients from being blocked while still slowing down scanners:
+
+```bash
+# Limit port 25 to 6 connections per 30 seconds
+sudo ufw limit 25/tcp
+
+# For ports 465/587, allow but track
+sudo ufw allow 465/tcp
+sudo ufw allow 587/tcp
+```
+
+For finer control (e.g., per-IP limits, sliding windows), use `fail2ban`'s `maxretry` and `findtime`, or implement limits in a reverse proxy (nginx's `limit_req_zone`).
+
+---
+
+## Strong Credentials
+
+### API Key Strength
+
+Ensure API keys are long and random. ByteSend should generate them with sufficient entropy (ideally 32+ characters, mix of uppercase, lowercase, numbers, symbols).
+
+### SMTP Authentication Username
+
+Change the default `bytesend` username:
+
+```bash
+# In .env or systemd service:
+SMTP_AUTH_USERNAME=smtp_prod_2024_xyz
+```
+
+This makes brute-force attacks less likely to guess the right account name.
+
+### Rotate Credentials Regularly
+
+- Revoke old API keys in the ByteSend dashboard periodically
+- Change `SMTP_AUTH_USERNAME` every 6–12 months
+- Store credentials in a secret manager (Vault, 1Password, etc.) if possible
+
+---
+
+## Network Isolation
+
+### Bind to localhost (if behind a proxy)
+
+If the SMTP server is behind a reverse proxy on the same machine, bind to `127.0.0.1` instead of `0.0.0.0`. This prevents direct connections and forces traffic through the proxy (which can apply additional security checks).
+
+However, the ByteSend SMTP Server currently binds to all interfaces. For isolation, use:
+
+1. **Firewall rules** (ufw, cloud security groups) to restrict access by IP
+2. **Reverse proxy** (nginx, Traefik) in front to terminate TLS and apply rate limits
+3. **VPN/private network** — run the server on an internal network and expose via VPN only
+
+### Restrict by IP
+
+Allow SMTP connections only from your application servers:
+
+```bash
+# Replace with your app server's IP
+sudo ufw allow from 203.0.113.10 to any port 587 proto tcp
+sudo ufw allow from 203.0.113.10 to any port 465 proto tcp
+sudo ufw allow from 203.0.113.10 to any port 25 proto tcp
+
+# Remove the open rules
+sudo ufw delete allow 587/tcp
+sudo ufw delete allow 465/tcp
+sudo ufw delete allow 25/tcp
+```
+
+---
+
+## TLS & Certificates
+
+### Always use valid certificates in production
+
+- Use **Let's Encrypt** (free, trusted by all clients)
+- Avoid **self-signed certs** in production
+- Renew **before expiry** — set up certbot auto-renewal
+
+See the [Certificate Setup](./certificates) guide for full details.
+
+### Certificate permissions
+
+Ensure only the `smtp` user (or root if running as root) can read the private key:
+
+```bash
+sudo chmod 600 /path/to/privkey.pem
+sudo chown root:root /path/to/privkey.pem  # or smtp:smtp
+```
+
+### Enable only strong TLS versions
+
+In the server config (if supported), limit to TLS 1.2 and 1.3. Most SMTP clients support these; older versions (1.0, 1.1) have known vulnerabilities.
+
+---
+
+## Monitoring & Alerting
+
+### Log rotation
+
+By default, systemd journals logs in `/var/log/journal/`. To avoid disk fill, configure log retention:
+
+```bash
+sudo tee /etc/systemd/journald.conf.d/bytesend-smtp.conf > /dev/null <<'EOF'
+[Journal]
+MaxRetentionSec=30day
+SystemMaxUse=500M
+EOF
+
+sudo systemctl restart systemd-journald
+```
+
+### Monitor for errors
+
+Set up periodic checks for errors in logs:
+
+```bash
+# E.g., in cron: alert if STARTTLS errors spike
+*/5 * * * * journalctl -u bytesend-smtp -n 100 --grep="TLS\|error" | wc -l | [ $1 -gt 10 ] && mail -s "SMTP TLS errors" admin@example.com
+```
+
+### External monitoring
+
+If running on a dedicated VM/server, consider:
+
+- **Uptime monitoring:** Ping the SMTP port periodically (e.g., via Uptimerobot)
+- **Log aggregation:** Forward logs to ELK/Datadog/Sentry
+- **Alerting:** Set up alerts for high error rates, failed authentication, certificate expiry, etc.
+
+---
+
+## OS & Dependency Updates
+
+### Keep the system patched
+
+```bash
+# Update package lists
+sudo apt update
+
+# Install security updates
+sudo apt upgrade
+
+# Or automatically
+sudo apt install unattended-upgrades
+sudo dpkg-reconfigure unattended-upgrades
+```
+
+### Keep Node.js updated
+
+If installed via apt:
+
+```bash
+sudo apt update && sudo apt upgrade nodejs
+sudo systemctl restart bytesend-smtp
+```
+
+If installed via nvm:
+
+```bash
+nvm install node  # installs latest LTS
+nvm use node
+npm install (rebuild if needed)
+sudo systemctl restart bytesend-smtp
+```
+
+---
+
+## Port 25 & Spam
+
+Port 25 is the standard MTA port and is often targeted by spammers. If you're not receiving mail from other servers (i.e., you don't need inbound MX delivery), consider:
+
+1. **Disable port 25** and use only 465/587 for outbound submission
+2. **Implement SPF/DKIM/DMARC** records to help other servers validate your emails
+3. **Monitor bounce rates** — reject undeliverable emails early to reduce spam bounce-back
+
+Most cloud providers block port 25 outbound by default, so if you only need outbound SMTP, use port 587 instead.
+
+---
+
+## Additional Hardening
+
+### AppArmor / SELinux
+
+If supported by your OS, use AppArmor or SELinux to confine the SMTP process:
+
+```bash
+# AppArmor (Debian/Ubuntu)
+sudo apt install apparmor apparmor-utils
+
+# SELinux (RHEL/CentOS)
+sudo yum install selinux-policy selinux-policy-devel
+```
+
+Detailed AppArmor/SELinux profiles for ByteSend SMTP are beyond the scope here, but can be developed per your security requirements.
+
+### Regular backups
+
+Although the SMTP server is stateless, consider backing up:
+
+- `.env` file (contains API keys — encrypt before backup!)
+- Certificate files (for reference)
+- Logs (for audit/forensics)
+
+### Audit logs
+
+If running in a compliance environment, enable audit logging:
+
+```bash
+sudo auditctl -w /opt/bytesend-smtp/ -p wa -k bytesend_changes
+sudo auditctl -w /etc/letsencrypt/live/ -p r -k bytesend_certs
+```
+
+View audit logs:
+
+```bash
+sudo ausearch -k bytesend_changes
+```

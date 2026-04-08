@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "~/env";
+import type { Readable } from "stream";
 
 let S3: S3Client | null = null;
 export const DEFAULT_BUCKET = env.S3_COMPATIBLE_BUCKET || "bytesend";
@@ -60,4 +61,31 @@ export const getDocumentUploadUrl = async (
   );
 
   return url;
+};
+
+/**
+ * Upload a file directly from the server to S3-compatible storage.
+ * Use this instead of presigned URLs to avoid CORS issues.
+ */
+export const uploadObject = async (
+  key: string,
+  body: Buffer | Uint8Array | Readable,
+  contentType: string,
+  bucket: string = DEFAULT_BUCKET,
+): Promise<string> => {
+  const s3Client = getClient();
+  if (!s3Client) {
+    throw new Error("Object storage is not configured");
+  }
+
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+
+  return `${env.S3_COMPATIBLE_PUBLIC_URL}/${key}`;
 };

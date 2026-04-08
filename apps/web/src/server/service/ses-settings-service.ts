@@ -215,6 +215,37 @@ export class SesSettingsService {
     await this.invalidateCache();
   }
 
+  public static async deleteSesSetting(id: string) {
+    await this.checkInitialized();
+
+    const setting = await db.sesSetting.findUnique({ where: { id } });
+    if (!setting) throw new Error(`SesSetting ${id} not found`);
+
+    await db.sesSetting.delete({ where: { id } });
+
+    if (setting.topicArn) {
+      try {
+        await sns.deleteTopic(setting.topicArn, setting.region);
+      } catch (err) {
+        logger.warn({ err }, "Failed to delete SNS topic during SesSetting deletion");
+      }
+    }
+
+    await this.invalidateCache();
+  }
+
+  public static async toggleSesSettingActive(id: string, isActive: boolean) {
+    await this.checkInitialized();
+
+    const setting = await db.sesSetting.update({
+      where: { id },
+      data: { isActive },
+    });
+
+    await this.invalidateCache();
+    return setting;
+  }
+
   public static async checkInitialized() {
     if (!this.initialized) {
       await this.invalidateCache();
