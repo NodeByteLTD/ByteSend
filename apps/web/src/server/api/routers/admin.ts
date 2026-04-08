@@ -11,6 +11,7 @@ import { logger } from "~/server/logger/log";
 import { ByteSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
+import { Target } from "lucide-react";
 
 const userAdminSelection = {
   id: true,
@@ -178,6 +179,36 @@ export const adminRouter = createTRPCRouter({
         data: { isBetaUser: input.isBetaUser },
         select: userAdminSelection,
       });
+    }),
+
+  setUserBan: adminProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        isBanned: z.boolean(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const user = await db.user.findUnique({
+        where: { id: input.userId},
+        select: { id: true, email: true},
+      });
+
+      if (!user) {
+        throw new Error("User not found")
+      }
+
+      if (user.email == env.FOUNDER_EMAIL) {
+        throw new Error("LOL FUCKING IMAGINE TRYING")
+      }
+
+      //? TODO: Add away to prevent admin getting banned
+
+      return db.user.update({
+        where: { id: input.userId },
+        data: { isBanned: input.isBanned },
+        select: userAdminSelection,
+      })
     }),
 
   setUserAdmin: founderProcedure
