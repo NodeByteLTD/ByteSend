@@ -121,18 +121,6 @@ export default function AdminUsersPage() {
     },
   });
 
-  const setBanned = api.admin.setUserBan.useMutation({
-    onSuccess: (updated) => {
-      setUserResult(updated);
-      toast.success(
-        updated.isBanned ? "User has been banned" : "User is now unbanned"
-      )
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Unable to ban this user. Report to ByteSend Core Team!")
-    }
-  })
-
   const setAdmin = api.admin.setUserAdmin.useMutation({
     onSuccess: (updated) => {
       setUserResult(updated);
@@ -270,12 +258,12 @@ export default function AdminUsersPage() {
 
             <UserToggleRow
               label="Banned"
-              description="Bans this user"
+              description="Ban this user from the site."
               checked={userResult.isBanned}
               onCheckedChange={(val) => 
-                setBanned.mutate({ userId: userResult.id, isBanned: val })
+                banUser.mutate({ userId: userResult.id, isBanned: val })
               }
-              isPending={setBanned.isPending}
+              isPending={banUser.isPending}
             />
           </div>
         </div>

@@ -181,36 +181,6 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  setUserBan: adminProcedure
-    .input(
-      z.object({
-        userId: z.number(),
-        isBanned: z.boolean(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const user = await db.user.findUnique({
-        where: { id: input.userId},
-        select: { id: true, email: true},
-      });
-
-      if (!user) {
-        throw new Error("User not found")
-      }
-
-      if (user.email == env.FOUNDER_EMAIL) {
-        throw new Error("LOL FUCKING IMAGINE TRYING")
-      }
-
-      //? TODO: Add away to prevent admin getting banned
-
-      return db.user.update({
-        where: { id: input.userId },
-        data: { isBanned: input.isBanned },
-        select: userAdminSelection,
-      })
-    }),
-
   setUserAdmin: founderProcedure
     .input(
       z.object({
@@ -240,7 +210,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  banUser: founderProcedure
+  banUser: adminProcedure
     .input(
       z.object({
         userId: z.number(),
@@ -268,7 +238,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  listUsers: founderProcedure
+  listUsers: adminProcedure
     .input(
       z.object({
         page: z.number().int().min(1).default(1),
