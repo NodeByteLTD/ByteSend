@@ -46,7 +46,8 @@
               "self-hosting/smtp-server",
               "self-hosting/certificates",
               "self-hosting/firewall",
-              "self-hosting/reverse-proxy"
+              "self-hosting/reverse-proxy",
+              "self-hosting/security"
             ]
           }
         ]
