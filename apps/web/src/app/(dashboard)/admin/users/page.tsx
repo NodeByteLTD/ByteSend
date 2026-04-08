@@ -332,6 +332,16 @@ export default function AdminUsersPage() {
                         {u.isAdmin && <Badge variant="outline">Admin</Badge>}
                       </div>
                     </td>
+                    <td className="py-2">
+                      <Button onClick={() => {
+                        setUsersPage(1)
+                        setHasSearched(false)
+                        setUserResult(null)
+                        findUser.mutate({ email: u.email })
+                      }}>
+                        View User
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
