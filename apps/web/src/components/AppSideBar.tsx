@@ -24,6 +24,7 @@ import {
   Check,
   PlusIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -496,11 +497,20 @@ export function NavUser({
 }
 
 function VersionInfo() {
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/version")
+      .then((r) => r.json())
+      .then((data: { version: string }) => setVersion(data.version))
+      .catch(() => setVersion("v1.0.0-beta.1"));
+  }, []);
+
   return (
     <div className="px-2 py-2 text-xs text-muted-foreground">
       <div className="flex items-center justify-between">
         <span>Version</span>
-        <span className="font-mono">v1.0.0-beta.1</span>
+        <span className="font-mono">{version ?? "..."}</span>
       </div>
     </div>
   );
