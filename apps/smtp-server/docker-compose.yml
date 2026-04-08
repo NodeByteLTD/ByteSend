@@ -4,7 +4,7 @@ services:
   smtp:
     build:
       context: .
-      dockerfile: Dockerfile.smtp
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "25:25"
@@ -13,15 +13,15 @@ services:
       - "2465:2465"
       - "2587:2587"
     environment:
-      - NODE_ENV=production
-      - SMTP_AUTH_USERNAME=bytesend
-      - BYTESEND_BASE_URL=https://bytesend.cloud
+      - NODE_ENV=${NODE_ENV:-production}
+      - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
+      - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-https://bytesend.cloud}
       # TLS_MODE: 'none' (default) — plain SMTP, suitable behind a reverse proxy
       #           'manual'          — server handles TLS; set cert/key paths below
-      - SMTP_TLS_MODE=none
+      - SMTP_TLS_MODE=${SMTP_TLS_MODE:-none}
       # Uncomment and set these when using SMTP_TLS_MODE=manual:
-      # - SMTP_TLS_CERT_PATH=/certs/fullchain.pem
-      # - SMTP_TLS_KEY_PATH=/certs/privkey.pem
+      # - SMTP_TLS_CERT_PATH=${SMTP_TLS_CERT_PATH:-/certs/fullchain.pem}
+      # - SMTP_TLS_KEY_PATH=${SMTP_TLS_KEY_PATH:-/certs/privkey.pem}
     # When using manual TLS, mount your cert directory:
     # volumes:
     #   - /etc/letsencrypt/live/smtp.example.com:/certs:ro

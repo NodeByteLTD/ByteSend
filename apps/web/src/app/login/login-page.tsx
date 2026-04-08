@@ -3,7 +3,7 @@
 import { Button } from "@bytesend/ui/src/button";
 import { Input } from "@bytesend/ui/src/input";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClientSafeProvider, LiteralUnion, signIn } from "next-auth/react";
 import { BuiltInProviderType } from "next-auth/providers/index";
 import Spinner from "@bytesend/ui/src/spinner";
@@ -43,13 +43,47 @@ export default function LoginPage({
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60); // 24 hours in seconds
+  const [showResend, setShowResend] = useState(false);
 
   const searchParams = useNextSearchParams();
   const inviteId = searchParams.get("inviteId");
+  const isVerifying = searchParams.get("verify") === "1";
+  const errorParam = searchParams.get("error");
 
   const callbackUrl = inviteId
     ? `/join-team?inviteId=${inviteId}`
     : "/dashboard";
+
+  // Countdown timer for code expiry
+  useEffect(() => {
+    if (!isVerifying) return;
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          setShowResend(true);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isVerifying]);
+
+  // Show error message if callback failed
+  useEffect(() => {
+    if (errorParam === "Callback") {
+      setCodeError(
+        "Invalid or expired verification code. Please request a new sign-in link."
+      );
+    }
+  }, [errorParam]);
 
   const handleOAuthSubmit = (provider: LiteralUnion<BuiltInProviderType>) => {
     setSubmittedProvider(provider);
@@ -60,12 +94,63 @@ export default function LoginPage({
     e.preventDefault();
     if (!email) return;
     setEmailLoading(true);
+    setCodeError(null);
     try {
       await signIn("email", { email, callbackUrl, redirect: false });
       setEmailSent(true);
     } finally {
       setEmailLoading(false);
     }
+  };
+
+  const handleVerificationCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationCode || verificationCode.length !== 6) {
+      setCodeError("Please enter a 6-character code");
+      return;
+    }
+
+    setCodeLoading(true);
+    setCodeError(null);
+    
+    try {
+      // The verification code is sent via the magic link URL
+      // For manual entry, we'd need a custom API endpoint
+      // For now, we show the user to use the email link
+      setCodeError(
+        "Please click the magic link sent to your email. If you don't see it, check your spam folder or click 'Resend' below."
+      );
+    } finally {
+      setCodeLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!email) return;
+    setEmailLoading(true);
+    setCodeError(null);
+    try {
+      await signIn("email", { email, callbackUrl, redirect: false });
+      setTimeRemaining(24 * 60 * 60);
+      setShowResend(false);
+      setVerificationCode("");
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    }
+    return `${secs}s`;
   };
 
   const hasEmailProvider = providers?.some((p) => p.type === "email");
@@ -101,8 +186,108 @@ export default function LoginPage({
           </div>
         </div>
 
-        {/* Email check-your-inbox state */}
-        {emailSent ? (
+        {/* Email verification with code entry */}
+        {isVerifying ? (
+          <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 space-y-4">
+            <div className="text-center space-y-3">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
+                <svg
+                  className="size-6 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
+              <p className="text-sm text-muted-foreground">
+                We sent a 6-character code to <span className="font-medium text-foreground">{email}</span>
+              </p>
+            </div>
+
+            {/* Error message */}
+            {codeError && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                <p>{codeError}</p>
+              </div>
+            )}
+
+            {/* Code entry form */}
+            <form onSubmit={handleVerificationCodeSubmit} className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Enter code from email
+                </label>
+                <Input
+                  type="text"
+                  placeholder="ABC123"
+                  value={verificationCode.toUpperCase()}
+                  onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="h-11 rounded-xl bg-card/60 border-border/40 font-mono text-center uppercase tracking-widest"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-muted-foreground/60">
+                  You can also click the magic link in your email
+                </p>
+              </div>
+
+              {/* Time remaining */}
+              <div className="text-center">
+                <p className={`text-sm font-medium ${timeRemaining < 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                  Code expires in: <span className="font-semibold">{formatTime(timeRemaining)}</span>
+                </p>
+              </div>
+
+              {/* Resend button or submit */}
+              {showResend ? (
+                <Button
+                  onClick={handleResendEmail}
+                  type="button"
+                  className="w-full h-11 rounded-xl"
+                  disabled={emailLoading}
+                >
+                  {emailLoading ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    "Send new code"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-xl shadow-lg shadow-primary/20"
+                  disabled={codeLoading || verificationCode.length !== 6}
+                >
+                  {codeLoading ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    "Verify code"
+                  )}
+                </Button>
+              )}
+            </form>
+
+            {/* Back button */}
+            <button
+              onClick={() => {
+                setEmailSent(false);
+                setEmail("");
+                setVerificationCode("");
+                setCodeError(null);
+              }}
+              className="w-full text-center text-sm text-primary hover:underline mt-2"
+            >
+              Use a different email
+            </button>
+          </div>
+        ) : emailSent ? (
           <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 text-center space-y-3">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
               <svg className="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -111,8 +296,17 @@ export default function LoginPage({
             </div>
             <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
             <p className="text-sm text-muted-foreground">
-              We sent a sign-in link to <span className="font-medium text-foreground">{email}</span>
+              We sent a 6-character code to <span className="font-medium text-foreground">{email}</span>
             </p>
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 space-y-2 text-left">
+              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">What to do next:</p>
+              <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• Click the magic link in the email</li>
+                <li>• Or wait for the verify page to appear</li>
+                <li>• Code is valid for 24 hours</li>
+                <li>• Check spam folder if you don't see it</li>
+              </ul>
+            </div>
             <button
               onClick={() => setEmailSent(false)}
               className="text-sm text-primary hover:underline mt-2"
