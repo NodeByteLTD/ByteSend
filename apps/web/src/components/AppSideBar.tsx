@@ -11,6 +11,7 @@ import {
   Server,
   Volume2,
   BookOpenText,
+  BookOpenIcon,
   BarChart3,
   LogOutIcon,
   MoreVerticalIcon,
@@ -222,7 +223,7 @@ export function AppSidebar() {
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <a href="/create-team" className="flex items-center gap-2 cursor-pointer">
+                  <a href="/join-team" className="flex items-center gap-2 cursor-pointer">
                     <PlusIcon className="size-3.5" />
                     <span>Create team</span>
                   </a>
@@ -336,33 +337,37 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {showFeedback ? (
+
+        {/* Pinned-to-bottom links inside the scrollable content zone */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {showFeedback ? (
+                <SidebarMenuItem>
+                  <FeedbackDialog
+                    trigger={
+                      <SidebarMenuButton tooltip="Feedback">
+                        <MessageSquare />
+                        <span>Feedback</span>
+                      </SidebarMenuButton>
+                    }
+                  />
+                </SidebarMenuItem>
+              ) : null}
               <SidebarMenuItem>
-                <FeedbackDialog
-                  trigger={
-                    <SidebarMenuButton tooltip="Feedback">
-                      <MessageSquare />
-                      <span>Feedback</span>
-                    </SidebarMenuButton>
-                  }
-                />
+                <SidebarMenuButton asChild tooltip="Discord">
+                  <Link href="https://discord.gg/xqkqzVRC4S" target="_blank">
+                    <DiscordIcon className="size-4 shrink-0" />
+                    <span>Discord</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
-            ) : null}
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Discord">
-                <Link href="https://discord.gg/xqkqzVRC4S" target="_blank">
-                  <DiscordIcon className="size-4 shrink-0" />
-                  <span>Discord</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-        {isSelfHosted() && <VersionInfo />}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="shrink-0">
+        {<VersionInfo />}
         <NavUser
           user={{
             name:
@@ -470,7 +475,7 @@ export function NavUser({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="https://docs.bytesend.cloud">
-                  <GaugeIcon />
+                  <BookOpenIcon />
                   Docs
                 </Link>
               </DropdownMenuItem>
@@ -491,30 +496,11 @@ export function NavUser({
 }
 
 function VersionInfo() {
-  const appVersion = env.NEXT_PUBLIC_APP_VERSION;
-  const gitSha = env.NEXT_PUBLIC_GIT_SHA;
-
-  // If no version info available, don't render anything
-  if (!appVersion && !gitSha) {
-    return null;
-  }
-
-  const displayVersion =
-    appVersion && appVersion !== "unknown"
-      ? appVersion
-      : gitSha && gitSha !== "unknown"
-        ? gitSha.substring(0, 7)
-        : null;
-
-  if (!displayVersion) {
-    return null;
-  }
-
   return (
     <div className="px-2 py-2 text-xs text-muted-foreground">
       <div className="flex items-center justify-between">
         <span>Version</span>
-        <span className="font-mono">{displayVersion}</span>
+        <span className="font-mono">v1.0.0-beta.1</span>
       </div>
     </div>
   );

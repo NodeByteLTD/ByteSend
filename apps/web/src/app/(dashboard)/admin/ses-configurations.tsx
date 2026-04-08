@@ -11,8 +11,9 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { api } from "~/trpc/react";
 import Spinner from "@bytesend/ui/src/spinner";
-import EditSesConfiguration from "./edit-ses-configuration";
+import SesConfigurationActions from "./edit-ses-configuration";
 import { TextWithCopyButton } from "@bytesend/ui/src/text-with-copy";
+import { cn } from "@bytesend/ui/lib/utils";
 
 export default function SesConfigurations() {
   const sesSettingsQuery = api.admin.getSesSettings.useQuery();
@@ -30,13 +31,14 @@ export default function SesConfigurations() {
               <TableHead>Created at</TableHead>
               <TableHead>Send rate</TableHead>
               <TableHead>Transactional quota</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sesSettingsQuery.isLoading ? (
               <TableRow className="h-32">
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   <Spinner
                     className="w-6 h-6 mx-auto"
                     innerSvgClass="stroke-primary"
@@ -45,13 +47,16 @@ export default function SesConfigurations() {
               </TableRow>
             ) : sesSettingsQuery.data?.length === 0 ? (
               <TableRow className="h-32">
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   <p>No SES configurations added</p>
                 </TableCell>
               </TableRow>
             ) : (
               sesSettingsQuery.data?.map((sesSetting) => (
-                <TableRow key={sesSetting.id}>
+                <TableRow
+                  key={sesSetting.id}
+                  className={cn(!sesSetting.isActive && "opacity-60")}
+                >
                   <TableCell>{sesSetting.region}</TableCell>
                   <TableCell>{sesSetting.idPrefix}</TableCell>
                   <TableCell>
@@ -71,7 +76,25 @@ export default function SesConfigurations() {
                   <TableCell>{sesSetting.sesEmailRateLimit}</TableCell>
                   <TableCell>{sesSetting.transactionalQuota}%</TableCell>
                   <TableCell>
-                    <EditSesConfiguration setting={sesSetting} />
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        sesSetting.isActive
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          sesSetting.isActive ? "bg-emerald-500" : "bg-muted-foreground"
+                        )}
+                      />
+                      {sesSetting.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <SesConfigurationActions setting={sesSetting} />
                   </TableCell>
                 </TableRow>
               ))

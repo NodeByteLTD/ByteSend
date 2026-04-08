@@ -10,6 +10,8 @@ import Spinner from "@bytesend/ui/src/spinner";
 import Link from "next/link";
 import { useSearchParams as useNextSearchParams } from "next/navigation";
 
+const SESSION_EMAIL_KEY = "bytesend_login_email";
+
 const providerIcons: Record<string, React.ReactNode> = {
   github: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5" fill="currentColor">
@@ -58,9 +60,18 @@ export default function LoginPage({
     ? `/join-team?inviteId=${inviteId}`
     : "/dashboard";
 
-  // Countdown timer for code expiry
+  // When NextAuth redirects to ?verify=1 after the user clicks the magic link,
+  // restore the email we stored in sessionStorage before submitting
   useEffect(() => {
-    if (!isVerifying) return;
+    if (isVerifying) {
+      const stored = sessionStorage.getItem(SESSION_EMAIL_KEY);
+      if (stored) setEmail(stored);
+    }
+  }, [isVerifying]);
+
+  // Countdown timer — runs whenever the code entry UI is shown
+  useEffect(() => {
+    if (!isVerifying && !emailSent) return;
 
     const interval = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -74,9 +85,9 @@ export default function LoginPage({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isVerifying]);
+  }, [isVerifying, emailSent]);
 
-  // Show error message if callback failed
+  // Show error message if callback failed (bad/expired token from magic link)
   useEffect(() => {
     if (errorParam === "Callback") {
       setCodeError(
@@ -97,6 +108,8 @@ export default function LoginPage({
     setCodeError(null);
     try {
       await signIn("email", { email, callbackUrl, redirect: false });
+      // Persist email so it can be restored when NextAuth redirects to ?verify=1
+      sessionStorage.setItem(SESSION_EMAIL_KEY, email);
       setEmailSent(true);
     } finally {
       setEmailLoading(false);
@@ -106,23 +119,24 @@ export default function LoginPage({
   const handleVerificationCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode || verificationCode.length !== 6) {
-      setCodeError("Please enter a 6-character code");
+      setCodeError("Please enter the 6-character code from your email");
+      return;
+    }
+    if (!email) {
+      setCodeError("We lost track of your email address. Please go back and enter it again.");
       return;
     }
 
     setCodeLoading(true);
     setCodeError(null);
-    
-    try {
-      // The verification code is sent via the magic link URL
-      // For manual entry, we'd need a custom API endpoint
-      // For now, we show the user to use the email link
-      setCodeError(
-        "Please click the magic link sent to your email. If you don't see it, check your spam folder or click 'Resend' below."
-      );
-    } finally {
-      setCodeLoading(false);
-    }
+    // Redirect to NextAuth's email callback with the token the user typed.
+    // NextAuth will verify it against the database and sign the user in.
+    const params = new URLSearchParams({
+      token: verificationCode,
+      email,
+      callbackUrl,
+    });
+    window.location.href = `/api/auth/callback/email?${params.toString()}`;
   };
 
   const handleResendEmail = async () => {
@@ -131,6 +145,7 @@ export default function LoginPage({
     setCodeError(null);
     try {
       await signIn("email", { email, callbackUrl, redirect: false });
+      sessionStorage.setItem(SESSION_EMAIL_KEY, email);
       setTimeRemaining(24 * 60 * 60);
       setShowResend(false);
       setVerificationCode("");
@@ -186,8 +201,8 @@ export default function LoginPage({
           </div>
         </div>
 
-        {/* Email verification with code entry */}
-        {isVerifying ? (
+        {/* Email verification with code entry — shown after email is submitted OR after magic link redirect */}
+        {(isVerifying || emailSent) ? (
           <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 space-y-4">
             <div className="text-center space-y-3">
               <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
@@ -207,7 +222,12 @@ export default function LoginPage({
               </div>
               <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
               <p className="text-sm text-muted-foreground">
-                We sent a 6-character code to <span className="font-medium text-foreground">{email}</span>
+                We sent a 6-character code to{" "}
+                {email ? (
+                  <span className="font-medium text-foreground">{email}</span>
+                ) : (
+                  "your email address"
+                )}
               </p>
             </div>
 
@@ -231,19 +251,22 @@ export default function LoginPage({
                   onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
                   maxLength={6}
                   className="h-11 rounded-xl bg-card/60 border-border/40 font-mono text-center uppercase tracking-widest"
-                  autoComplete="off"
+                  autoComplete="one-time-code"
+                  autoFocus
                 />
                 <p className="text-xs text-muted-foreground/60">
-                  You can also click the magic link in your email
+                  You can also click the magic link in your email to sign in directly
                 </p>
               </div>
 
               {/* Time remaining */}
-              <div className="text-center">
-                <p className={`text-sm font-medium ${timeRemaining < 300 ? "text-destructive" : "text-muted-foreground"}`}>
-                  Code expires in: <span className="font-semibold">{formatTime(timeRemaining)}</span>
-                </p>
-              </div>
+              {!showResend && (
+                <div className="text-center">
+                  <p className={`text-sm font-medium ${timeRemaining < 300 ? "text-destructive" : "text-muted-foreground"}`}>
+                    Code expires in: <span className="font-semibold">{formatTime(timeRemaining)}</span>
+                  </p>
+                </div>
+              )}
 
               {/* Resend button or submit */}
               {showResend ? (
@@ -281,35 +304,9 @@ export default function LoginPage({
                 setEmail("");
                 setVerificationCode("");
                 setCodeError(null);
+                sessionStorage.removeItem(SESSION_EMAIL_KEY);
               }}
               className="w-full text-center text-sm text-primary hover:underline mt-2"
-            >
-              Use a different email
-            </button>
-          </div>
-        ) : emailSent ? (
-          <div className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-6 text-center space-y-3">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10">
-              <svg className="size-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">Check your email</h2>
-            <p className="text-sm text-muted-foreground">
-              We sent a 6-character code to <span className="font-medium text-foreground">{email}</span>
-            </p>
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 space-y-2 text-left">
-              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">What to do next:</p>
-              <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• Click the magic link in the email</li>
-                <li>• Or wait for the verify page to appear</li>
-                <li>• Code is valid for 24 hours</li>
-                <li>• Check spam folder if you don't see it</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => setEmailSent(false)}
-              className="text-sm text-primary hover:underline mt-2"
             >
               Use a different email
             </button>

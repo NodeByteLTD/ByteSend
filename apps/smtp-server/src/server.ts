@@ -189,8 +189,3 @@ function shutdown() {
 ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
   process.on(signal, shutdown);
 });
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});

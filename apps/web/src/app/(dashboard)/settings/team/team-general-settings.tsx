@@ -55,7 +55,6 @@ export default function TeamGeneralSettings() {
 
   const updateTeamMutation = api.team.updateTeam.useMutation();
   const deleteTeamMutation = api.team.deleteTeam.useMutation();
-  const getUploadUrlMutation = api.team.getTeamImageUploadUrl.useMutation();
 
   const form = useForm<FormData>({
     resolver: zodResolver(teamSettingsSchema),
@@ -90,19 +89,17 @@ export default function TeamGeneralSettings() {
 
     setUploading(true);
     try {
-      const { uploadUrl, publicUrl } =
-        await getUploadUrlMutation.mutateAsync({
-          fileName: file.name,
-          contentType: file.type,
-        });
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("teamId", String(currentTeam?.id));
+      fd.append("type", "team-image");
 
-      const res = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any)?.error ?? "Upload failed");
+      }
+      const { publicUrl } = await res.json() as { publicUrl: string };
 
       await updateTeamMutation.mutateAsync({ image: publicUrl });
       setImagePreview(publicUrl);

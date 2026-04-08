@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { FullScreenLoading } from "~/components/FullScreenLoading";
 import { AddSesSettings } from "~/components/settings/AddSesSettings";
 import CreateTeam from "~/components/team/CreateTeam";
+import { ProfileSetup } from "~/components/auth/ProfileSetup";
 import { env } from "~/env";
 import { api } from "~/trpc/react";
 import { TeamProvider } from "./team-context";
@@ -13,7 +14,7 @@ export const DashboardProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const { data: teams, status } = api.team.getTeams.useQuery();
   const { data: settings, status: settingsStatus } =
     api.admin.getSesSettings.useQuery(undefined, {
@@ -22,9 +23,15 @@ export const DashboardProvider = ({
 
   if (
     status === "pending" ||
+    sessionStatus === "loading" ||
     (settingsStatus === "pending" && !env.NEXT_PUBLIC_IS_CLOUD)
   ) {
     return <FullScreenLoading />;
+  }
+
+  // Show profile setup if the user hasn't set a name yet (email-only sign-in)
+  if (session && !session.user.name) {
+    return <ProfileSetup />;
   }
 
   if (

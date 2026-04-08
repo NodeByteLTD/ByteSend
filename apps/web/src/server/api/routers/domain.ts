@@ -26,7 +26,7 @@ function isAdminOrFounder(email: string | null | undefined) {
 export const domainRouter = createTRPCRouter({
   getAvailableRegions: protectedProcedure.query(async () => {
     const settings = await SesSettingsService.getAllSettings();
-    return settings.map((setting) => setting.region);
+    return settings.filter((s) => s.isActive).map((setting) => setting.region);
   }),
 
   createDomain: teamProcedure

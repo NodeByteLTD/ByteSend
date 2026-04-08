@@ -75,7 +75,6 @@ function TemplateEditor({
       setIsSaving(false);
     },
   });
-  const getUploadUrl = api.template.generateImagePresignedUrl.useMutation();
 
   function updateEditorContent() {
     updateTemplateMutation.mutate({
@@ -96,24 +95,18 @@ function TemplateEditor({
       );
     }
 
-    console.log("file type: ", file.type);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("teamId", String(template.teamId));
+    fd.append("type", "asset");
 
-    const { uploadUrl, imageUrl } = await getUploadUrl.mutateAsync({
-      name: file.name,
-      type: file.type,
-      templateId: template.id,
-    });
-
-    const response = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-    });
-
+    const response = await fetch("/api/upload", { method: "POST", body: fd });
     if (!response.ok) {
-      throw new Error("Failed to upload file");
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as any)?.error ?? "Failed to upload file");
     }
-
-    return imageUrl;
+    const { publicUrl } = await response.json() as { publicUrl: string };
+    return publicUrl;
   };
 
   return (

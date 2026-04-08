@@ -18,6 +18,7 @@ const userAdminSelection = {
   name: true,
   isBetaUser: true,
   isAdmin: true,
+  isBanned: true,
   createdAt: true,
 } as const;
 
@@ -113,6 +114,18 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
+  deleteSesSettings: adminProcedure
+    .input(z.object({ settingsId: z.string() }))
+    .mutation(async ({ input }) => {
+      return SesSettingsService.deleteSesSetting(input.settingsId);
+    }),
+
+  toggleSesSettingsActive: adminProcedure
+    .input(z.object({ settingsId: z.string(), isActive: z.boolean() }))
+    .mutation(async ({ input }) => {
+      return SesSettingsService.toggleSesSettingActive(input.settingsId, input.isActive);
+    }),
+
   getSetting: adminProcedure
     .input(
       z.object({
@@ -194,6 +207,69 @@ export const adminRouter = createTRPCRouter({
         data: { isAdmin: input.isAdmin },
         select: userAdminSelection,
       });
+    }),
+
+  banUser: founderProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        isBanned: z.boolean(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const target = await db.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, email: true },
+      });
+
+      if (!target) {
+        throw new Error("User not found");
+      }
+
+      if (target.email === env.FOUNDER_EMAIL) {
+        throw new Error("Cannot ban the founder account");
+      }
+
+      return db.user.update({
+        where: { id: input.userId },
+        data: { isBanned: input.isBanned },
+        select: userAdminSelection,
+      });
+    }),
+
+  listUsers: founderProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, query } = input;
+      const skip = (page - 1) * pageSize;
+
+      const where: Prisma.UserWhereInput = query
+        ? {
+            OR: [
+              { email: { contains: query, mode: "insensitive" } },
+              { name: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {};
+
+      const [users, total] = await Promise.all([
+        db.user.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { createdAt: "desc" },
+          select: userAdminSelection,
+        }),
+        db.user.count({ where }),
+      ]);
+
+      return { users, total, page, pageSize };
     }),
 
   findTeam: adminProcedure
