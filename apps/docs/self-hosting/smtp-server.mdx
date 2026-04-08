@@ -351,13 +351,15 @@ sudo chown smtp:smtp /opt/bytesend-smtp
 # Clone and build
 cd /opt/bytesend-smtp
 sudo -u smtp git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git .
-sudo -u smtp npm install
+sudo -u smtp npm install --unsafe-perm
 sudo -u smtp npm run build
 
 # (Optional) Copy and configure .env file
 sudo -u smtp cp .env.example .env
 sudo nano /opt/bytesend-smtp/.env  # Edit with your settings
 ```
+
+<Note>The `--unsafe-perm` flag is needed when running npm as the `smtp` user with a home directory outside `/home`. This is common if snap is installed on your system — snap restricts home dirs to `/home` by default.</Note>
 
 Alternatively, you can set environment variables directly in the systemd service file (see step 1). Using `.env` is cleaner for configuration management.
 
