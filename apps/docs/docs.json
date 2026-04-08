@@ -35,6 +35,13 @@
             ]
           },
           {
+            "group": "Self Hosting",
+            "pages": [
+              "self-hosting/overview",
+              "self-hosting/smtp-server"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/webhooks",
