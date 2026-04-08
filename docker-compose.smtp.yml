@@ -30,6 +30,12 @@ services:
       - SMTP_TLS_MODE=traefik
       - SMTP_ACME_JSON_PATH=/acme.json
       - SMTP_ACME_DOMAIN=smtp.bytesend.cloud
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.smtp.rule=Host(`smtp.bytesend.cloud`)"
+      - "traefik.http.routers.smtp.entrypoints=websecure"
+      - "traefik.http.routers.smtp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.smtp.loadbalancer.server.port=465"
 
 networks:
   dokploy-network:
