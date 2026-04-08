@@ -527,25 +527,96 @@ transporter.sendMail({
 
 ## Reverse Proxy Setup
 
-### Nginx (Port 587 with STARTTLS)
+### Nginx
 
-If you want to proxy port 587 while keeping TLS at the nginx level:
+Nginx proxies raw TCP (SMTP) via its `stream` module. Each port requires its own `server` block.
+
+<Note>The `stream` module is separate from the `http` module. Ensure your nginx build includes it (`nginx -V 2>&1 | grep stream`), and place `stream {}` at the top level of `nginx.conf` — **not** inside `http {}`.</Note>
+
+#### Port 587 — Submission with STARTTLS
+
+The most common port for application/client email sending. Nginx terminates TLS; the backend receives plain TCP on `127.0.0.1:587` with `SMTP_TLS_MODE=none`.
 
 ```nginx
 stream {
-  upstream smtp {
+  upstream smtp_submission {
     server 127.0.0.1:587;
   }
 
   server {
     listen 587 ssl;
-    proxy_pass smtp;
+    proxy_pass smtp_submission;
 
-    ssl_certificate /etc/letsencrypt/live/smtp.example.com/fullchain.pem;
+    ssl_certificate     /etc/letsencrypt/live/smtp.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/smtp.example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
   }
 }
 ```
+
+#### Port 465 — Implicit TLS (SMTPS)
+
+Used by clients that require an SSL-wrapped connection from the start (no STARTTLS negotiation). Add a second `server` block in the same `stream {}` context:
+
+```nginx
+stream {
+  upstream smtp_submission {
+    server 127.0.0.1:587;
+  }
+
+  upstream smtp_smtps {
+    server 127.0.0.1:465;
+  }
+
+  # Port 587 — STARTTLS
+  server {
+    listen 587 ssl;
+    proxy_pass smtp_submission;
+
+    ssl_certificate     /etc/letsencrypt/live/smtp.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/smtp.example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+  }
+
+  # Port 465 — Implicit TLS
+  server {
+    listen 465 ssl;
+    proxy_pass smtp_smtps;
+
+    ssl_certificate     /etc/letsencrypt/live/smtp.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/smtp.example.com/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+  }
+}
+```
+
+#### Port 25 — MTA (Plain / Inter-server)
+
+Port 25 is used by other mail servers (MX delivery) and typically does **not** need TLS termination at the proxy — pass it straight through. If you do want nginx to sit in front, use a plain TCP proxy without SSL:
+
+```nginx
+stream {
+  upstream smtp_mta {
+    server 127.0.0.1:25;
+  }
+
+  # Port 25 — plain passthrough (no TLS termination)
+  server {
+    listen 25;
+    proxy_pass smtp_mta;
+  }
+}
+```
+
+<Note>Port 25 is frequently blocked by cloud providers and ISPs. Check whether your host allows outbound/inbound traffic on port 25 before relying on it.</Note>
+
+#### Which ports do you need?
+
+| Use case | Port(s) to expose |
+|---|---|
+| App or client sending email | 587 (recommended), 465 optional |
+| Receiving mail from other servers (MX) | 25 |
+| All of the above | 25, 465, 587 |
 
 ### Traefik (TCP Router)
 
