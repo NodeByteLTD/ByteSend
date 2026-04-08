@@ -240,6 +240,242 @@ If you're running the server standalone (not behind a reverse proxy):
 
 ---
 
+## Certificate Setup
+
+This section covers how to obtain and configure TLS certificates for use with `SMTP_TLS_MODE=manual`. Choose the method that fits your deployment.
+
+---
+
+### Option A: Let's Encrypt (Certbot)
+
+Let's Encrypt provides free, trusted certificates that renew automatically. There are two common ways to obtain them depending on whether port 80 is available.
+
+#### Method 1: Standalone (port 80 must be free)
+
+Certbot temporarily binds port 80 to verify domain ownership. Stop any service using port 80 before running:
+
+```bash
+# Install certbot (Debian/Ubuntu)
+sudo apt install certbot
+
+# Obtain the certificate
+sudo certbot certonly --standalone -d smtp.example.com
+```
+
+Certificates are written to:
+- **Chain:** `/etc/letsencrypt/live/smtp.example.com/fullchain.pem`
+- **Key:** `/etc/letsencrypt/live/smtp.example.com/privkey.pem`
+
+#### Method 2: Webroot (port 80 already in use by nginx/Apache)
+
+If a web server is already running on port 80, point certbot at its webroot:
+
+```bash
+sudo certbot certonly --webroot \
+  -w /var/www/html \
+  -d smtp.example.com
+```
+
+#### Method 3: DNS challenge (no open ports required)
+
+Useful when the server has no public HTTP port (e.g., an internal host):
+
+```bash
+sudo certbot certonly --manual --preferred-challenges dns \
+  -d smtp.example.com
+```
+
+Certbot will prompt you to add a `_acme-challenge` TXT record to your DNS zone. After adding it, press Enter to complete the challenge.
+
+#### Configure the server
+
+After obtaining the certificate, set these environment variables (or add them to `.env`):
+
+```bash
+export SMTP_TLS_MODE=manual
+export SMTP_TLS_CERT_PATH=/etc/letsencrypt/live/smtp.example.com/fullchain.pem
+export SMTP_TLS_KEY_PATH=/etc/letsencrypt/live/smtp.example.com/privkey.pem
+```
+
+#### Automatic Renewal
+
+Let's Encrypt certificates expire after 90 days. Set up automatic renewal:
+
+**Systemd timer (recommended):**
+```bash
+# Certbot installs a timer automatically on most distros — verify it:
+sudo systemctl status certbot.timer
+
+# Test renewal without making changes:
+sudo certbot renew --dry-run
+```
+
+**Reload the SMTP server after renewal** by creating a post-renewal hook:
+
+```bash
+# Create the hook script
+sudo tee /etc/letsencrypt/renewal-hooks/post/bytesend-smtp.sh > /dev/null <<'EOF'
+#!/bin/bash
+systemctl reload bytesend-smtp
+EOF
+
+sudo chmod +x /etc/letsencrypt/renewal-hooks/post/bytesend-smtp.sh
+```
+
+Because the ByteSend SMTP Server watches certificate files for changes, it reloads TLS automatically on file updates — no restart required.
+
+---
+
+### Option B: Self-Signed Certificate (Development / Testing)
+
+<Tip>Self-signed certificates are **not trusted by email clients** in production. Use them only for local development or internal testing.</Tip>
+
+Generate a self-signed certificate with `openssl`:
+
+```bash
+# Create a directory to store the certs
+mkdir -p ~/bytesend-certs
+cd ~/bytesend-certs
+
+# Generate a private key and self-signed certificate (valid for 365 days)
+openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
+  -keyout privkey.pem \
+  -out fullchain.pem \
+  -subj "/CN=smtp.example.com" \
+  -addext "subjectAltName=DNS:smtp.example.com,IP:127.0.0.1"
+```
+
+This produces:
+- `fullchain.pem` — self-signed certificate
+- `privkey.pem` — private key
+
+Configure the server:
+
+```bash
+export SMTP_TLS_MODE=manual
+export SMTP_TLS_CERT_PATH=~/bytesend-certs/fullchain.pem
+export SMTP_TLS_KEY_PATH=~/bytesend-certs/privkey.pem
+```
+
+When connecting with Nodemailer or another client, set `rejectUnauthorized: false` to accept the self-signed cert:
+
+```javascript
+tls: {
+  rejectUnauthorized: false,
+}
+```
+
+---
+
+### Option C: Commercial / Pre-Existing Certificate
+
+If you already have a certificate from a CA (e.g., DigiCert, Sectigo, ZeroSSL), ensure it is in **PEM format**:
+
+- The **certificate file** should contain the full chain: your cert followed by any intermediate CA certs.
+- The **key file** should be the unencrypted private key (`BEGIN PRIVATE KEY` or `BEGIN RSA PRIVATE KEY`).
+
+**Converting from other formats:**
+
+```bash
+# PFX/PKCS#12 → PEM
+openssl pkcs12 -in certificate.pfx -nokeys -out fullchain.pem
+openssl pkcs12 -in certificate.pfx -nocerts -nodes -out privkey.pem
+
+# DER → PEM (certificate)
+openssl x509 -inform DER -in certificate.der -out fullchain.pem
+
+# DER → PEM (key)
+openssl rsa -inform DER -in privkey.der -out privkey.pem
+```
+
+**Verify the certificate before use:**
+
+```bash
+# Check certificate details
+openssl x509 -in fullchain.pem -text -noout | grep -E "Subject:|Not After|DNS:"
+
+# Verify the key matches the certificate
+openssl x509 -noout -modulus -in fullchain.pem | openssl md5
+openssl rsa  -noout -modulus -in privkey.pem  | openssl md5
+# Both md5 hashes must match
+```
+
+Configure the server as usual:
+
+```bash
+export SMTP_TLS_MODE=manual
+export SMTP_TLS_CERT_PATH=/path/to/fullchain.pem
+export SMTP_TLS_KEY_PATH=/path/to/privkey.pem
+```
+
+---
+
+### Mounting Certificates into Docker
+
+When running via Docker, the certificate files must be accessible inside the container. Mount the host directory as a read-only volume:
+
+**In `docker-compose.yml`:**
+
+```yaml
+services:
+  smtp:
+    # ...
+    environment:
+      - SMTP_TLS_MODE=manual
+      - SMTP_TLS_CERT_PATH=/certs/fullchain.pem
+      - SMTP_TLS_KEY_PATH=/certs/privkey.pem
+    volumes:
+      - /etc/letsencrypt/live/smtp.example.com:/certs:ro
+```
+
+**Or for a custom cert directory:**
+
+```yaml
+    volumes:
+      - /home/user/bytesend-certs:/certs:ro
+```
+
+For Let's Encrypt you may also need to mount the `archive` directory, since `live/` contains symlinks:
+
+```yaml
+    volumes:
+      - /etc/letsencrypt/live/smtp.example.com:/certs/live:ro
+      - /etc/letsencrypt/archive/smtp.example.com:/certs/archive:ro
+    environment:
+      - SMTP_TLS_CERT_PATH=/certs/live/fullchain.pem
+      - SMTP_TLS_KEY_PATH=/certs/live/privkey.pem
+```
+
+---
+
+### Certificate File Permissions
+
+The process running the server must be able to read both files. Private keys are commonly restricted to `root` by default.
+
+**Docker (runs as root by default):** No changes needed.
+
+**Systemd service (runs as `smtp` user):**
+
+```bash
+# Grant read access using ACLs (recommended — preserves existing permissions)
+sudo setfacl -R -m u:smtp:rx /etc/letsencrypt/live/smtp.example.com/
+sudo setfacl -R -m u:smtp:rx /etc/letsencrypt/archive/smtp.example.com/
+
+# Or transfer ownership (less ideal for shared certs)
+sudo chown smtp:smtp /path/to/fullchain.pem /path/to/privkey.pem
+sudo chmod 600 /path/to/privkey.pem
+sudo chmod 644 /path/to/fullchain.pem
+```
+
+**Self-signed certs in home directory:**
+
+```bash
+chmod 600 ~/bytesend-certs/privkey.pem
+chmod 644 ~/bytesend-certs/fullchain.pem
+```
+
+---
+
 ## Usage
 
 ### Connecting an SMTP Client
