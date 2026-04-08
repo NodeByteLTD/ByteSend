@@ -294,6 +294,8 @@ transporter.sendMail({
 
 To run the ByteSend SMTP Server as a systemd service on Linux (without Docker):
 
+<Warning>**If using `SMTP_TLS_MODE=manual`:** Before proceeding with this setup, ensure your certificate files exist and that the `smtp` user will have read access (see **step 4** below). The service will fail to start if it can't read the certificate.</Warning>
+
 ### 1. Create a systemd service file
 
 Save as `/etc/systemd/system/bytesend-smtp.service`:
