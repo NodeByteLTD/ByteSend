@@ -38,7 +38,9 @@ export default function TemplateList() {
             <TableRow className=" bg-muted/30">
               <TableHead className="rounded-tl-xl">Name</TableHead>
               <TableHead className="">ID</TableHead>
+              <TableHead className="">Last Modified By</TableHead>
               <TableHead className="">Created At</TableHead>
+              <TableHead className="">Last Modified</TableHead>
               <TableHead className="rounded-tr-xl">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,9 +71,17 @@ export default function TemplateList() {
                       className="w-[200px] overflow-hidden"
                     />
                   </TableCell>
+                  <TableCell>
+                    {template.updatedBy}
+                  </TableCell>
                   <TableCell className="">
                     {formatDistanceToNow(new Date(template.createdAt), {
                       addSuffix: true,
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    {formatDistanceToNow(new Date(template.updatedAt), {
+                      addSuffix: true
                     })}
                   </TableCell>
                   <TableCell>

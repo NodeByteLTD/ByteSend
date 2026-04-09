@@ -40,6 +40,7 @@ export const templateRouter = createTRPCRouter({
           subject: true,
           createdAt: true,
           updatedAt: true,
+          updatedBy: true,
           html: true,
         },
         orderBy: {
@@ -96,6 +97,7 @@ export const templateRouter = createTRPCRouter({
         data: {
           ...data,
           html,
+          updatedBy: "Test",
         },
       });
       return template;

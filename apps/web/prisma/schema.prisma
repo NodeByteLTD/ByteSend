@@ -403,6 +403,7 @@ model Template {
   content   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  updatedBy String?
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
