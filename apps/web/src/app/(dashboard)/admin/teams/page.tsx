@@ -442,6 +442,16 @@ export default function AdminTeamsPage() {
                         <Badge variant="outline">Active</Badge>
                       )}
                     </td>
+                    <td className="py-2">
+                      <Button onClick={() => {
+                          setTeamsPage(1)
+                          setHasSearched(false)
+                          setTeam(null)
+                          findTeam.mutate({ query: t.name })
+                        }}>
+                        View Team
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
