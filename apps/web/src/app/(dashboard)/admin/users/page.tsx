@@ -337,7 +337,7 @@ export default function AdminUsersPage() {
                         setUsersPage(1)
                         setHasSearched(false)
                         setUserResult(null)
-                        findUser.mutate({ email: u.email })
+                        findUser.mutate({ email: `${u.email}` })
                       }}>
                         View User
                       </Button>
