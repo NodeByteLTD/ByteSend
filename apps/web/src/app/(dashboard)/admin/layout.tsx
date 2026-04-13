@@ -10,7 +10,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
-  const isFounder = session?.user.isFounder ?? false;
+  const isAdmin = session?.user.isAdmin ?? false;
 
   return (
     <div className="space-y-6">
@@ -34,7 +34,7 @@ export default function AdminLayout({
             Email Analytics
           </SettingsNavButton>
         ) : null}
-        {isCloud() && isFounder ? (
+        {isCloud() && isAdmin ? (
           <SettingsNavButton href="/admin/users">
             Users
           </SettingsNavButton>

@@ -258,13 +258,12 @@ export default function AdminUsersPage() {
 
             <UserToggleRow
               label="Banned"
-              description="Prevents this user from signing in and accessing ByteSend. Use for abuse or ToS violations."
+              description="Ban this user from the site."
               checked={userResult.isBanned}
-              onCheckedChange={(val) =>
+              onCheckedChange={(val) => 
                 banUser.mutate({ userId: userResult.id, isBanned: val })
               }
               isPending={banUser.isPending}
-              dangerous
             />
           </div>
         </div>
@@ -332,6 +331,16 @@ export default function AdminUsersPage() {
                         {u.isBetaUser && <Badge variant="secondary">Beta</Badge>}
                         {u.isAdmin && <Badge variant="outline">Admin</Badge>}
                       </div>
+                    </td>
+                    <td className="py-2">
+                      <Button onClick={() => {
+                        setUsersPage(1)
+                        setHasSearched(false)
+                        setUserResult(null)
+                        findUser.mutate({ email: `${u.email}` })
+                      }}>
+                        View User
+                      </Button>
                     </td>
                   </tr>
                 ))}

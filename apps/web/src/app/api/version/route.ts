@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "~/env";
 
 const REPO = "NodeByteHosting/ByteSend-Cloud";
-const FALLBACK_VERSION = "v1.0.0-beta.1";
+const FALLBACK_VERSION = "canary";
 
 export const revalidate = 3600; // re-fetch from GitHub at most once per hour
 

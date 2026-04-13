@@ -11,6 +11,7 @@ import { logger } from "~/server/logger/log";
 import { ByteSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
+import { Target } from "lucide-react";
 
 const userAdminSelection = {
   id: true,
@@ -138,7 +139,7 @@ export const adminRouter = createTRPCRouter({
       );
     }),
 
-  findUserByEmail: founderProcedure
+  findUserByEmail: adminProcedure
     .input(
       z.object({
         email: z
@@ -209,7 +210,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  banUser: founderProcedure
+  banUser: adminProcedure
     .input(
       z.object({
         userId: z.number(),
@@ -237,7 +238,7 @@ export const adminRouter = createTRPCRouter({
       });
     }),
 
-  listUsers: founderProcedure
+  listUsers: adminProcedure
     .input(
       z.object({
         page: z.number().int().min(1).default(1),
