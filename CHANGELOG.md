@@ -11,6 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-04-23
+
+### Added
+
+#### Domain Verification
+- **DKIM auto-reregistration** — when a DKIM TXT record is confirmed present in DNS but AWS SES has been stuck in a non-`SUCCESS` state for over an hour, the verification cycle now automatically regenerates the DKIM signing attributes and forces a fresh SES check cycle, eliminating the "delete and redo" workaround
+- **Parallel DNS pre-checks** — `refreshDomainVerification` now runs independent DNS lookups for DKIM, SPF, and MX in parallel alongside the SES identity poll, returning a `dnsPrecheck` result with per-record `"found" | "wrong_key" | "not_found"` status
+- **Manual DKIM re-generation** — new `reregisterDkim` tRPC mutation exposed in the domain Actions dropdown; generates a fresh RSA key pair, updates the stored public key, and resets DKIM status to `NOT_STARTED` so the verification loop restarts cleanly
+- **Full domain section redesign** — complete Vercel-inspired overhaul of all domain pages and components:
+  - Domain list rewritten as a full-width column-header table (`Domain / Status / Region / Added`) replacing the old card-stack layout; clickable rows with hover states and empty state illustration
+  - `DomainStatusBadge` redesigned as compact pill badges with Lucide status icons (CheckCircle2, XCircle, Clock, AlertTriangle) and semantic color fills (emerald/red/amber)
+  - `StatusIndicator` simplified to a 1px self-stretch vertical line with the same semantic colors
+  - Domain detail page: removed `max-w-4xl` constraint — layout now fills available width at all breakpoints
+  - Domain detail page header improved: region shown inline, mobile-first `flex-col sm:flex-row` layout, Actions + Send test buttons in a consistent toolbar
+  - DNS status signal cards (`DKIM / SPF / DMARC`) now render full-width in a `grid-cols-1 sm:grid-cols-3` grid with tinted backgrounds per status, icon + label + description + DNS hint in a consistent visual hierarchy
+  - DNS records table: improved column widths, `border-b border-border/40` row separators, `w-55` Name column, `max-w-90 truncate` Value cells
+  - "Add domain" button changed to `variant="outline" size="sm"` matching other dashboard action buttons; dialog form spacing tightened
+
+### Changed
+
+#### Performance
+- **Removed framer-motion entirely** — all framer-motion animations replaced with Tailwind CSS `animate-in` / `animate-out` / `data-[state]` variants:
+  - `email-details.tsx` — fade-in replaced with `animate-in fade-in duration-300`
+  - `campaigns/[campaignId]/page.tsx` — `AnimatePresence` + `motion.div` layout animations removed
+  - `packages/ui/accordion.tsx` — unused framer-motion import removed
+  - `packages/ui/sheet.tsx` — framer-motion overlay and slide animations replaced with Radix `data-[state=open/closed]` Tailwind variants
+
+#### Design System
+- **Geist font** — switched from Inter + JetBrains Mono to Geist Sans + Geist Mono via `next/font/google`; CSS custom properties `--font-geist-sans` / `--font-geist-mono` wired through `@theme` in `globals.css`
+- **Vercel-style neutral palette** — overhauled the entire color system from indigo-tinted backgrounds to pure black/gray neutrals:
+  - Light mode: white background, near-black text (`#171717`), neutral gray borders (`#e5e5e5`), `#f5f5f5` muted surfaces
+  - Dark mode: near-black background (`#0a0a0a`), `#111` card surfaces, `#262626` borders, `#737373` muted foreground
+  - ByteSend electric blue primary (213 76%/94%) unchanged as the brand accent
+
+#### UI / Dashboard
+- **Breadcrumb navigation** — dashboard header now renders a full breadcrumb trail built from the pathname with human-readable segment labels, replacing the single-segment display
+- **Settings nav tabs** — `SettingsNavButton` active indicator switched to `border-foreground`; transitions updated to `transition-all duration-150`
+
+### Fixed
+
+- Domain detail page had duplicate legacy component definitions (`DomainSettings`, `DnsVerificationStatus`, old `DomainItemPage`) left over from a partial edit — removed all stale code
+- `packages/ui/sheet.tsx` no longer depends on framer-motion for slide and fade transitions, resolving WebKit rendering performance issues on Safari
+
+---
+
 ## [1.0.0-beta.1] - 2026-04-08
 
 Initial public beta release of ByteSend — an all-in-one email infrastructure platform for transactional and marketing email delivery.
@@ -159,5 +204,6 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v1.0.0-beta.1...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nodebyte/bytesend/compare/v1.0.0-beta.1...v0.2.0
 [1.0.0-beta.1]: https://github.com/nodebyte/bytesend/releases/tag/v1.0.0-beta.1

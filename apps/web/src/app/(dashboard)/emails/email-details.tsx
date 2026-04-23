@@ -5,7 +5,6 @@ import { api } from "~/trpc/react";
 import { Separator } from "@bytesend/ui/src/separator";
 import { EmailStatusBadge, EmailStatusIcon } from "./email-status-badge";
 import { formatDate } from "date-fns";
-import { motion } from "framer-motion";
 import { EmailStatus } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 import {
@@ -85,13 +84,9 @@ export default function EmailDetails({ emailId }: { emailId: string }) {
             </>
           ) : null}
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2, delay: 0.3 }}
-          >
+          <div className="animate-in fade-in duration-300 delay-300 fill-mode-both">
             <EmailPreview html={emailQuery.data?.html ?? ""} />
-          </motion.div>
+          </div>
         </div>
         {emailQuery.data?.latestStatus !== "SCHEDULED" ? (
           <div className=" border rounded-lg w-full shadow mb-2 ">

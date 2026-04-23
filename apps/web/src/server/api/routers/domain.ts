@@ -13,6 +13,7 @@ import {
   getDomain,
   getDomains,
   updateDomain,
+  reregisterDomainDkim,
 } from "~/server/service/domain-service";
 import { sendEmail } from "~/server/service/email-service";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
@@ -74,6 +75,10 @@ export const domainRouter = createTRPCRouter({
   deleteDomain: domainProcedure.mutation(async ({ input }) => {
     await deleteDomain(input.id);
     return { success: true };
+  }),
+
+  reregisterDkim: domainProcedure.mutation(async ({ input, ctx }) => {
+    return reregisterDomainDkim(input.id, ctx.team.id);
   }),
 
   sendTestEmailFromDomain: domainProcedure.mutation(

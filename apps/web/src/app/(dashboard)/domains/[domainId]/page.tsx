@@ -2,14 +2,6 @@
 
 import { api } from "~/trpc/react";
 import { DomainStatus } from "@prisma/client";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@bytesend/ui/src/breadcrumb";
 import { DomainStatusBadge } from "../domain-badge";
 import {
   Table,
@@ -35,11 +27,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@bytesend/ui/src/dropdown-menu";
-import { ChevronDown, RefreshCw, SendHorizonal } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Globe,
+  KeyRound,
+  RefreshCw,
+  SendHorizonal,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import Spinner from "@bytesend/ui/src/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@bytesend/ui/src/tooltip";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type DomainResponse = NonNullable<RouterOutputs["domain"]["getDomain"]>;
+
+type DnsPrecheck = {
+  dkim: "found" | "wrong_key" | "not_found";
+  spf: "found" | "wrong_key" | "not_found";
+  mx: "found" | "wrong_key" | "not_found";
+};
 
 export default function DomainItemPage({
   params,
@@ -49,17 +64,17 @@ export default function DomainItemPage({
   const { domainId } = use(params);
 
   const domainQuery = api.domain.getDomain.useQuery(
+    { id: Number(domainId) },
     {
-      id: Number(domainId),
-    },
-    {
-      refetchInterval: (q) => (q?.state.data?.isVerifying ? 10000 : false),
+      refetchInterval: (q) => (q?.state.data?.isVerifying ? 8000 : false),
       refetchIntervalInBackground: true,
     },
   );
 
   const verifyQuery = api.domain.startVerification.useMutation();
+  const reregisterDkimMutation = api.domain.reregisterDkim.useMutation();
   const sendTestEmailMutation = api.domain.sendTestEmailFromDomain.useMutation();
+  const utils = api.useUtils();
 
   const handleVerify = () => {
     verifyQuery.mutate(
@@ -67,6 +82,23 @@ export default function DomainItemPage({
       {
         onSettled: () => {
           domainQuery.refetch();
+        },
+      },
+    );
+  };
+
+  const handleReregisterDkim = () => {
+    reregisterDkimMutation.mutate(
+      { id: Number(domainId) },
+      {
+        onSuccess: () => {
+          toast.success(
+            "DKIM keys regenerated — update the TXT record in your DNS with the new value below, then click Verify.",
+          );
+          utils.domain.getDomain.invalidate({ id: Number(domainId) });
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to re-register DKIM");
         },
       },
     );
@@ -86,123 +118,265 @@ export default function DomainItemPage({
     );
   };
 
+  const domain = domainQuery.data;
+  const dnsPrecheck = (domain as any)?.dnsPrecheck as DnsPrecheck | undefined;
+  const dkimReregistered = (domain as any)?.dkimReregistered as boolean | undefined;
+
+  const dkimStatus = domain?.dkimStatus
+    ? (domain.dkimStatus as DomainStatus)
+    : DomainStatus.NOT_STARTED;
+  const spfStatus = domain?.spfDetails
+    ? (domain.spfDetails as DomainStatus)
+    : DomainStatus.NOT_STARTED;
+  const dmarcStatus = domain?.dmarcAdded ? DomainStatus.SUCCESS : DomainStatus.NOT_STARTED;
+
+  const dkimIsStuck = dkimStatus !== DomainStatus.SUCCESS && domain && !domain.isVerifying;
+
   return (
-    <div>
+    <div className="space-y-6">
       {domainQuery.isLoading ? (
-        <p>Loading...</p>
+        <div className="flex items-center justify-center py-24">
+          <Spinner className="h-5 w-5" />
+        </div>
+      ) : !domain ? (
+        <div className="text-muted-foreground text-sm">Domain not found.</div>
       ) : (
-        <div className="flex flex-col gap-8">
-          <div className="flex justify-between items-start gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link href="/domains" className="text-lg">
-                        Domains
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="text-lg" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage className="text-lg ">
-                      {domainQuery.data?.name}
-                    </BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-              <div>
-                <DomainStatusBadge
-                  status={domainQuery.data?.status || DomainStatus.NOT_STARTED}
-                />
+        <>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex flex-col gap-2 min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Globe className="h-5 w-5 text-muted-foreground shrink-0" />
+                <h1 className="text-xl font-semibold tracking-tight text-foreground break-all">
+                  {domain.name}
+                </h1>
+                <DomainStatusBadge status={domain.status} />
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Region: <span className="text-foreground">{domain.region}</span></span>
+                {domain.isVerifying && (
+                  <span className="flex items-center gap-1.5 text-primary">
+                    <Spinner className="h-3 w-3" />
+                    Checking DNS &amp; SES…
+                  </span>
+                )}
               </div>
             </div>
-            <div className="flex gap-4">
+
+            <div className="flex items-center gap-2 shrink-0 self-start">
+              {domain.status === DomainStatus.SUCCESS && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTestEmail}
+                  disabled={sendTestEmailMutation.isPending}
+                  className="gap-1.5"
+                >
+                  {sendTestEmailMutation.isPending ? (
+                    <Spinner className="h-3.5 w-3.5" />
+                  ) : (
+                    <SendHorizonal className="h-3.5 w-3.5" />
+                  )}
+                  Send test
+                </Button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5">
                     Actions
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuItem
                     onClick={handleVerify}
-                    disabled={verifyQuery.isPending || domainQuery.data?.isVerifying}
+                    disabled={verifyQuery.isPending || domain.isVerifying}
                   >
-                    {verifyQuery.isPending || domainQuery.data?.isVerifying ? (
+                    {verifyQuery.isPending || domain.isVerifying ? (
                       <Spinner className="h-4 w-4 mr-2" />
                     ) : (
                       <RefreshCw className="h-4 w-4 mr-2" />
                     )}
-                    {domainQuery.data?.isVerifying
-                      ? "Verifying..."
-                      : domainQuery.data?.status === DomainStatus.SUCCESS
+                    {domain.isVerifying
+                      ? "Verifying…"
+                      : domain.status === DomainStatus.SUCCESS
                         ? "Verify again"
                         : "Verify domain"}
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleSendTestEmail}
-                    disabled={sendTestEmailMutation.isPending}
-                  >
-                    {sendTestEmailMutation.isPending ? (
-                      <Spinner className="h-4 w-4 mr-2" />
-                    ) : (
-                      <SendHorizonal className="h-4 w-4 mr-2" />
-                    )}
-                    {sendTestEmailMutation.isPending
-                      ? "Sending..."
-                      : "Send test email"}
-                  </DropdownMenuItem>
+                  {domain.status !== DomainStatus.SUCCESS && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleReregisterDkim}
+                        disabled={reregisterDkimMutation.isPending}
+                      >
+                        {reregisterDkimMutation.isPending ? (
+                          <Spinner className="h-4 w-4 mr-2" />
+                        ) : (
+                          <KeyRound className="h-4 w-4 mr-2" />
+                        )}
+                        Re-generate DKIM keys
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {domain.status === DomainStatus.SUCCESS && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleSendTestEmail}
+                        disabled={sendTestEmailMutation.isPending}
+                      >
+                        {sendTestEmailMutation.isPending ? (
+                          <Spinner className="h-4 w-4 mr-2" />
+                        ) : (
+                          <SendHorizonal className="h-4 w-4 mr-2" />
+                        )}
+                        Send test email
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          <div className=" border rounded-lg p-4 shadow">
-            <p className="font-semibold text-xl">DNS records</p>
-            <Table className="mt-2">
-              <TableHeader className="">
-                <TableRow className="">
-                  <TableHead className="rounded-tl-xl">Type</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead className="">TTL</TableHead>
-                  <TableHead className="">Priority</TableHead>
-                  <TableHead className="rounded-tr-xl">Status</TableHead>
+          {/* Auto re-registered banner */}
+          {dkimReregistered && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/8 px-4 py-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                DKIM keys were automatically regenerated because the record was found in DNS but SES wasn&apos;t picking it up.
+                Update the DKIM TXT record in your DNS provider with the new value shown below, then click{" "}
+                <button onClick={handleVerify} className="underline font-medium">
+                  Verify domain
+                </button>
+                .
+              </p>
+            </div>
+          )}
+
+          {/* DNS status summary cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <SignalCard
+              label="DKIM"
+              status={dkimStatus}
+              dnsCheck={dnsPrecheck?.dkim}
+              description="Email signing key"
+            />
+            <SignalCard
+              label="SPF"
+              status={spfStatus}
+              dnsCheck={dnsPrecheck?.spf}
+              description="Sender policy"
+            />
+            <SignalCard
+              label="DMARC"
+              status={dmarcStatus}
+              dnsCheck={dnsPrecheck?.mx}
+              description="Abuse policy"
+            />
+          </div>
+
+          {/* DKIM stuck helpers */}
+          {dkimIsStuck && dnsPrecheck?.dkim === "wrong_key" && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/8 px-4 py-3">
+              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-600 dark:text-amber-400 space-y-1">
+                <p className="font-medium">DKIM record found but key doesn&apos;t match</p>
+                <p>
+                  Your DNS has a DKIM TXT record but the public key doesn&apos;t match ByteSend&apos;s expected value.
+                  Use <strong>Actions → Re-generate DKIM keys</strong> to create a new key pair, then update your DNS record with the new value.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {dkimIsStuck && dnsPrecheck?.dkim === "not_found" && dkimStatus !== DomainStatus.NOT_STARTED && (
+            <div className="flex items-start gap-3 rounded-lg border border-blue-500/20 bg-blue-500/8 px-4 py-3">
+              <Clock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-500 dark:text-blue-400">
+                DKIM record not yet found in DNS. Propagation can take up to 48 hours — make sure you&apos;ve added the TXT record exactly as shown below.
+              </p>
+            </div>
+          )}
+
+          {/* DNS Records table */}
+          <div className="rounded-xl border border-border/60 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">DNS Records</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Add these records in your DNS provider to verify ownership and enable sending
+                </p>
+              </div>
+              {!domain.isVerifying && domain.status !== DomainStatus.SUCCESS && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleVerify}
+                  disabled={verifyQuery.isPending}
+                  className="gap-1.5 shrink-0"
+                >
+                  {verifyQuery.isPending ? (
+                    <Spinner className="h-3.5 w-3.5" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  Verify records
+                </Button>
+              )}
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border/60">
+                  <TableHead className="w-16 pl-4">Type</TableHead>
+                  <TableHead className="w-55">Name</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead className="w-16">TTL</TableHead>
+                  <TableHead className="w-20">Priority</TableHead>
+                  <TableHead className="w-32 text-right pr-4">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(domainQuery.data?.dnsRecords ?? []).map((record) => {
+                {domain.dnsRecords.map((record) => {
                   const key = `${record.type}-${record.name}`;
-                  const valueClassName = record.name.includes("_domainkey")
-                    ? "w-[200px] overflow-hidden text-ellipsis"
-                    : "w-[200px] overflow-hidden text-ellipsis text-nowrap";
+                  const isDkim = record.name.includes("_domainkey");
 
                   return (
-                    <TableRow key={key}>
-                      <TableCell className="">{record.type}</TableCell>
+                    <TableRow key={key} className="border-b border-border/40 last:border-0">
+                      <TableCell className="pl-4">
+                        <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {record.type}
+                        </span>
+                      </TableCell>
                       <TableCell>
-                        <div className="flex gap-2 items-center">
-                          {record.recommended ? (
-                            <span className="text-sm text-muted-foreground">
-                              (recommended)
+                        <div className="flex flex-col gap-0.5">
+                          {record.recommended && (
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                              recommended
                             </span>
-                          ) : null}
+                          )}
                           <TextWithCopyButton value={record.name} />
                         </div>
                       </TableCell>
-                      <TableCell className="">
+                      <TableCell>
                         <TextWithCopyButton
                           value={record.value}
-                          className={valueClassName}
+                          className={
+                            isDkim
+                              ? "max-w-90 truncate"
+                              : "max-w-90 truncate"
+                          }
                         />
                       </TableCell>
-                      <TableCell className="">{record.ttl}</TableCell>
-                      <TableCell className="">{record.priority ?? ""}</TableCell>
-                      <TableCell className="">
-                        <DnsVerificationStatus status={record.status} />
+                      <TableCell className="text-muted-foreground text-sm">
+                        {record.ttl}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {record.priority ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-right pr-4">
+                        <DnsStatusBadge status={record.status} />
                       </TableCell>
                     </TableRow>
                   );
@@ -210,112 +384,241 @@ export default function DomainItemPage({
               </TableBody>
             </Table>
           </div>
-          {domainQuery.data ? (
-            <DomainSettings domain={domainQuery.data} />
-          ) : null}
-        </div>
+
+          {/* Settings */}
+          <DomainSettings domain={domain} />
+        </>
       )}
     </div>
   );
 }
 
+/* ---------- sub-components ---------- */
+
+const SignalCard: React.FC<{
+  label: string;
+  status: DomainStatus;
+  dnsCheck?: "found" | "wrong_key" | "not_found";
+  description: string;
+}> = ({ label, status, dnsCheck, description }) => {
+  const isVerified = status === DomainStatus.SUCCESS;
+  const isPending = status === DomainStatus.PENDING || status === DomainStatus.TEMPORARY_FAILURE;
+  const isFailed = status === DomainStatus.FAILED;
+
+  const Icon = isVerified ? CheckCircle2 : isFailed ? XCircle : isPending ? Clock : ShieldCheck;
+
+  const iconClass = isVerified
+    ? "text-emerald-500"
+    : isFailed
+      ? "text-destructive"
+      : isPending
+        ? "text-amber-500"
+        : "text-muted-foreground/60";
+
+  const borderClass = isVerified
+    ? "border-emerald-500/20"
+    : isFailed
+      ? "border-destructive/20"
+      : isPending
+        ? "border-amber-500/20"
+        : "border-border/60";
+
+  const bgClass = isVerified
+    ? "bg-emerald-500/5"
+    : isFailed
+      ? "bg-destructive/5"
+      : isPending
+        ? "bg-amber-500/5"
+        : "bg-card/40";
+
+  const statusLabel =
+    status === DomainStatus.NOT_STARTED
+      ? "Not configured"
+      : status === DomainStatus.SUCCESS
+        ? "Verified"
+        : status
+            .split("_")
+            .map((w) => w[0] + w.slice(1).toLowerCase())
+            .join(" ");
+
+  let hint: string | null = null;
+  if (dnsCheck === "wrong_key") hint = "Key mismatch in DNS";
+  else if (dnsCheck === "not_found" && status !== DomainStatus.NOT_STARTED) hint = "Not found in DNS yet";
+  else if (dnsCheck === "found" && !isVerified) hint = "DNS propagated · awaiting SES";
+
+  const hintClass =
+    dnsCheck === "wrong_key"
+      ? "text-amber-500"
+      : dnsCheck === "found" && !isVerified
+        ? "text-blue-400"
+        : "text-muted-foreground/70";
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`rounded-xl border ${borderClass} ${bgClass} px-4 py-4 flex flex-col gap-3 select-none`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                  {label}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+              </div>
+              <Icon className={`h-4.5 w-4.5 mt-0.5 shrink-0 ${iconClass}`} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{statusLabel}</p>
+              {hint && (
+                <p className={`text-[11px] mt-0.5 ${hintClass}`}>{hint}</p>
+              )}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p className="text-xs">SES status: {status.toLowerCase().replace(/_/g, " ")}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+const DnsStatusBadge: React.FC<{ status: DomainStatus }> = ({ status }) => {
+  type BadgeConfig = { label: string; className: string; Icon: React.ElementType };
+  const config: Record<DomainStatus, BadgeConfig> = {
+    [DomainStatus.SUCCESS]: {
+      label: "Verified",
+      className: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20",
+      Icon: CheckCircle2,
+    },
+    [DomainStatus.FAILED]: {
+      label: "Failed",
+      className: "text-destructive bg-destructive/10 border-destructive/20",
+      Icon: XCircle,
+    },
+    [DomainStatus.PENDING]: {
+      label: "Pending",
+      className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
+      Icon: Clock,
+    },
+    [DomainStatus.TEMPORARY_FAILURE]: {
+      label: "Temp failure",
+      className: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
+      Icon: AlertTriangle,
+    },
+    [DomainStatus.NOT_STARTED]: {
+      label: "Not set up",
+      className: "text-muted-foreground bg-muted border-border/40",
+      Icon: Clock,
+    },
+  };
+
+  const { label, className, Icon } = config[status] ?? config[DomainStatus.NOT_STARTED];
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border whitespace-nowrap ${className}`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  );
+};
+
 const DomainSettings: React.FC<{ domain: DomainResponse }> = ({ domain }) => {
   const updateDomain = api.domain.updateDomain.useMutation();
   const utils = api.useUtils();
 
-  const [clickTracking, setClickTracking] = React.useState(
-    domain.clickTracking,
-  );
+  const [clickTracking, setClickTracking] = React.useState(domain.clickTracking);
   const [openTracking, setOpenTracking] = React.useState(domain.openTracking);
 
   function handleClickTrackingChange() {
-    setClickTracking(!clickTracking);
+    const next = !clickTracking;
+    setClickTracking(next);
     updateDomain.mutate(
-      { id: domain.id, clickTracking: !clickTracking },
+      { id: domain.id, clickTracking: next },
       {
         onSuccess: () => {
           utils.domain.invalidate();
           toast.success("Click tracking updated");
         },
+        onError: () => setClickTracking(!next),
       },
     );
   }
 
   function handleOpenTrackingChange() {
-    setOpenTracking(!openTracking);
+    const next = !openTracking;
+    setOpenTracking(next);
     updateDomain.mutate(
-      { id: domain.id, openTracking: !openTracking },
+      { id: domain.id, openTracking: next },
       {
         onSuccess: () => {
           utils.domain.invalidate();
           toast.success("Open tracking updated");
         },
+        onError: () => setOpenTracking(!next),
       },
     );
   }
-  return (
-    <div className="rounded-lg shadow p-4 border flex flex-col gap-6">
-      <p className="font-semibold text-xl">Settings</p>
-      <div className="flex flex-col gap-1">
-        <div className="font-semibold">Click tracking</div>
-        <p className=" text-muted-foreground text-sm">
-          Track any links in your emails content.{" "}
-        </p>
-        <Switch
-          checked={clickTracking}
-          onCheckedChange={handleClickTrackingChange}
-          className="data-[state=checked]:bg-success"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <div className="font-semibold">Open tracking</div>
-        <p className=" text-muted-foreground text-sm">
-          ByteSend adds a tracking pixel to every email you send. This allows you
-          to see how many people open your emails. This will affect the delivery
-          rate of your emails.
-        </p>
-        <Switch
-          checked={openTracking}
-          onCheckedChange={handleOpenTrackingChange}
-          className="data-[state=checked]:bg-success"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <p className="font-semibold text-lg text-destructive">Danger</p>
-
-        <p className="text-destructive text-sm font-semibold">
-          Deleting a domain will stop sending emails with this domain.
-        </p>
-        <DeleteDomain domain={domain} />
-      </div>
-    </div>
-  );
-};
-
-const DnsVerificationStatus: React.FC<{ status: DomainStatus }> = ({ status }) => {
-  let badgeColor = "bg-gray/10 text-gray border-gray/10"; // Default color
-  switch (status) {
-    case DomainStatus.SUCCESS:
-      badgeColor = "bg-green/15 text-green border border-green/25";
-      break;
-    case DomainStatus.FAILED:
-      badgeColor = "bg-red/10 text-red border border-red/10";
-      break;
-    case DomainStatus.TEMPORARY_FAILURE:
-    case DomainStatus.PENDING:
-      badgeColor = "bg-yellow/20 text-yellow border border-yellow/10";
-      break;
-    default:
-      badgeColor = "bg-gray/10 text-gray border border-gray/20";
-  }
 
   return (
-    <div
-      className={` text-xs text-center min-w-[70px] capitalize rounded-md py-1 justify-center flex items-center ${badgeColor}`}
-    >
-      {status.split("_").join(" ").toLowerCase()}
+    <div className="space-y-4">
+      {/* Tracking */}
+      <div className="rounded-xl border border-border/60 overflow-hidden">
+        <div className="px-4 py-3 border-b border-border/60 bg-muted/20">
+          <p className="text-sm font-semibold text-foreground">Tracking</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Configure link and open tracking for emails sent from this domain
+          </p>
+        </div>
+        <div className="divide-y divide-border/40">
+          <div className="flex items-center justify-between px-4 py-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Click tracking</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Wrap links in emails to track clicks
+              </p>
+            </div>
+            <Switch
+              checked={clickTracking}
+              onCheckedChange={handleClickTrackingChange}
+              disabled={updateDomain.isPending}
+            />
+          </div>
+          <div className="flex items-center justify-between px-4 py-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Open tracking</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Embed a 1×1 pixel to detect opens — may affect deliverability
+              </p>
+            </div>
+            <Switch
+              checked={openTracking}
+              onCheckedChange={handleOpenTrackingChange}
+              disabled={updateDomain.isPending}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Danger zone */}
+      <div className="rounded-xl border border-destructive/30 overflow-hidden">
+        <div className="px-4 py-3 border-b border-destructive/20 bg-destructive/5">
+          <p className="text-sm font-semibold text-destructive">Danger zone</p>
+        </div>
+        <div className="flex items-center justify-between px-4 py-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">Delete domain</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Permanently removes this domain and stops all outbound email from it
+            </p>
+          </div>
+          <DeleteDomain domain={domain} />
+        </div>
+      </div>
     </div>
   );
 };

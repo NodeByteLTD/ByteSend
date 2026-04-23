@@ -21,7 +21,6 @@ import CampaignStatusBadge from "../../campaigns/campaign-status-badge";
 import { Button } from "@bytesend/ui/src/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@bytesend/ui/src/card";
 import { EmailStatusBadge } from "../../emails/email-status-badge";
-import { AnimatePresence, motion } from "framer-motion";
 
 export default function CampaignDetailsPage({
   params,
@@ -199,8 +198,7 @@ export default function CampaignDetailsPage({
                   </div>
                 ) : (
                   <div className="space-y-4 overflow-y-auto overscroll-y-contain pr-1 no-scrollbar">
-                    <AnimatePresence initial={true}>
-                      {latestEmails.map((email) => {
+                    {latestEmails.map((email) => {
                         const recipients = email.to ?? [];
                         const primaryRecipient =
                           recipients.length > 0
@@ -216,13 +214,8 @@ export default function CampaignDetailsPage({
                         });
 
                         return (
-                          <motion.div
+                          <div
                             key={email.id}
-                            layout
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -12 }}
-                            transition={{ duration: 0.2, ease: "easeOut" }}
                             className="flex flex-col gap-2 border-b pb-4 last:border-b-0 last:pb-0"
                           >
                             <div className="text-sm font-mono">
@@ -234,10 +227,9 @@ export default function CampaignDetailsPage({
                                 {relativeTime}
                               </span>
                             </div>
-                          </motion.div>
+                          </div>
                         );
                       })}
-                    </AnimatePresence>
                   </div>
                 )}
               </div>

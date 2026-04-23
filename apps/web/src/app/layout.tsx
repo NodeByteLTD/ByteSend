@@ -1,21 +1,13 @@
 import "./globals.css";
 
-import { Inter } from "next/font/google";
-import { JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@bytesend/ui";
 import { Toaster } from "@bytesend/ui/src/toaster";
 
 import { Metadata } from "next";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-});
+const GeistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const GeistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
   title: "ByteSend – The email platform for modern teams",
@@ -64,7 +56,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body
-        className={`font-sans ${inter.variable} ${jetbrainsMono.variable} app bg-background`}
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable} app bg-background`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Toaster />

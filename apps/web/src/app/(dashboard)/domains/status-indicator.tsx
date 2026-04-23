@@ -1,26 +1,14 @@
 import { DomainStatus } from "@prisma/client";
 
-export const StatusIndicator: React.FC<{ status: DomainStatus }> = ({
-  status,
-}) => {
-  let badgeColor = "bg-gray"; // Default color
-  switch (status) {
-    case DomainStatus.NOT_STARTED:
-      badgeColor = "bg-gray";
-      break;
-    case DomainStatus.SUCCESS:
-      badgeColor = "bg-green";
-      break;
-    case DomainStatus.FAILED:
-      badgeColor = "bg-red";
-      break;
-    case DomainStatus.TEMPORARY_FAILURE:
-    case DomainStatus.PENDING:
-      badgeColor = "bg-yellow";
-      break;
-    default:
-      badgeColor = "bg-gray";
-  }
+export const StatusIndicator: React.FC<{ status: DomainStatus }> = ({ status }) => {
+  const color =
+    status === DomainStatus.SUCCESS
+      ? "bg-emerald-500"
+      : status === DomainStatus.FAILED
+        ? "bg-red-500"
+        : status === DomainStatus.PENDING || status === DomainStatus.TEMPORARY_FAILURE
+          ? "bg-amber-500"
+          : "bg-border";
 
-  return <div className={` w-[2px] ${badgeColor} my-1.5 rounded-full`}></div>;
+  return <div className={`w-px self-stretch ${color} my-3 rounded-full shrink-0`} />;
 };
