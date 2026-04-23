@@ -84,6 +84,9 @@ export const env = createEnv({
         .optional()
         .transform((str) => (str ? parseInt(str, 10) : undefined)),
     GITHUB_RELEASE_TOKEN: z.string().optional(),
+    GITLAB_URL: z.string().url().optional(),
+    GITLAB_REPO_ID: z.string().optional(),
+    GITLAB_RELEASE_TOKEN: z.string().optional(),
   },
 
   /**
@@ -160,6 +163,9 @@ export const env = createEnv({
     CONTACT_BOOK_ID: process.env.CONTACT_BOOK_ID,
     EMAIL_CLEANUP_DAYS: process.env.EMAIL_CLEANUP_DAYS,
     GITHUB_RELEASE_TOKEN: process.env.GITHUB_RELEASE_TOKEN,
+    GITLAB_URL: process.env.GITLAB_URL,
+    GITLAB_REPO_ID: process.env.GITLAB_REPO_ID,
+    GITLAB_RELEASE_TOKEN: process.env.GITLAB_RELEASE_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
