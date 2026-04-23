@@ -126,20 +126,20 @@ export default function AddDomain() {
       onOpenChange={(_open) => (_open !== open ? onOpenChange(_open) : null)}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-1" />
+        <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+          <Plus className="h-4 w-4" />
           Add domain
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a new domain</DialogTitle>
+          <DialogTitle>Add a domain</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <Form {...domainForm}>
             <form
               onSubmit={domainForm.handleSubmit(onDomainAdd)}
-              className="space-y-8"
+              className="space-y-6"
             >
               <FormField
                 control={domainForm.control}
@@ -199,15 +199,14 @@ export default function AddDomain() {
                 />
               )}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <Button
-                  className=" w-[100px]"
                   type="submit"
-                  disabled={
-                    addDomainMutation.isPending || limitsQuery.isLoading
-                  }
+                  size="sm"
+                  className="w-30"
+                  disabled={addDomainMutation.isPending || limitsQuery.isLoading}
                 >
-                  {addDomainMutation.isPending ? "Adding..." : "Add"}
+                  {addDomainMutation.isPending ? "Adding…" : "Add domain"}
                 </Button>
               </div>
             </form>

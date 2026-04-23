@@ -4,6 +4,7 @@ import {
   DeleteEmailIdentityCommand,
   GetEmailIdentityCommand,
   PutEmailIdentityMailFromAttributesCommand,
+  PutEmailIdentityDkimSigningAttributesCommand,
   SendEmailCommand,
   CreateConfigurationSetEventDestinationCommand,
   CreateConfigurationSetCommand,
@@ -195,6 +196,37 @@ export async function getDomainIdentity(domain: string, region: string) {
   });
   const response = await sesClient.send(command);
   return response;
+}
+
+/**
+ * Regenerates the DKIM signing key pair for a domain identity and re-registers
+ * it with SES. This forces SES to do a fresh DNS lookup for the new TXT record.
+ * Returns the new public key that the user must publish in DNS.
+ */
+export async function reregisterDkimSigning(
+  domain: string,
+  region: string,
+  selector: string = "bytesend",
+): Promise<string> {
+  const sesClient = getSesClient(region);
+  const { privateKey, publicKey } = generateKeyPair();
+
+  const command = new PutEmailIdentityDkimSigningAttributesCommand({
+    EmailIdentity: domain,
+    SigningAttributesOrigin: "EXTERNAL",
+    SigningAttributes: {
+      DomainSigningSelector: selector,
+      DomainSigningPrivateKey: privateKey,
+    },
+  });
+
+  const response = await sesClient.send(command);
+
+  if (response.$metadata.httpStatusCode !== 200) {
+    throw new Error("Failed to re-register DKIM signing attributes with SES");
+  }
+
+  return publicKey;
 }
 
 export async function sendRawEmail({

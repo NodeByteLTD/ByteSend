@@ -4,7 +4,6 @@ import * as React from "react";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "../lib/utils";
 
@@ -21,20 +20,15 @@ const SheetOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
+    ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-background/50 backdrop-blur",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out",
+      "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
       className
     )}
     {...props}
-    ref={ref}
-    asChild
-  >
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    />
-  </SheetPrimitive.Overlay>
+  />
 ));
 
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
@@ -44,11 +38,10 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0",
-        bottom: "inset-x-0 bottom-0",
-        left: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm",
-        right:
-          "inset-y-0 right-[32px] h-[95%] my-auto w-3/4 sm:max-w-sm",
+        top: "inset-x-0 top-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
+        bottom: "inset-x-0 bottom-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+        left: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
+        right: "inset-y-0 right-[32px] h-[95%] my-auto w-3/4 sm:max-w-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
       },
     },
     defaultVariants: {
@@ -69,22 +62,14 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ side }), className)}
+      className={cn(sheetVariants({ side }), "duration-300", className)}
       {...props}
-      asChild
     >
-      <motion.div
-        initial={{ x: side === "left" ? "-50%" : "50%" }}
-        animate={{ x: 0 }}
-        exit={{ x: side === "left" ? "-50%" : "50%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 400 }}
-      >
-        {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
-      </motion.div>
+      {children}
+      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>
 ));

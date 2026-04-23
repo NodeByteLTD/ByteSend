@@ -4,11 +4,11 @@
 
 @theme inline {
   --font-sans:
-    Inter, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
-    "JetBrains Mono", Menlo, ui-monospace, SFMono-Regular, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
 
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
@@ -92,27 +92,27 @@
 @layer base {
   :root,
   .light {
-    --background: 210 33% 97%;
-    --background-secondary: 210 20% 95%;
-    --foreground: 218 37% 17%;
+    --background: 0 0% 100%;
+    --background-secondary: 0 0% 98%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 218 37% 17%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 218 37% 17%;
+    --popover-foreground: 0 0% 9%;
 
     --primary: 213 76% 32%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 92%;
-    --secondary-foreground: 218 37% 17%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 210 15% 91%;
-    --muted-foreground: 216 13% 47%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 18% 93%;
-    --accent-foreground: 218 37% 17%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
 
     --destructive: 347 62% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -123,8 +123,8 @@
     --success: 142 49% 44%;
     --success-foreground: 0 0% 100%;
 
-    --border: 210 20% 87%;
-    --input: 210 20% 92%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
     --ring: 213 76% 50%;
 
     --radius: 0.5rem;
@@ -135,13 +135,13 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 218 37% 17%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 9%;
     --sidebar-primary: 213 76% 32%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 15% 95%;
-    --sidebar-accent-foreground: 218 37% 17%;
-    --sidebar-border: 210 20% 90%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 89%;
     --sidebar-ring: 213 76% 50%;
 
     /* Status Colors */
@@ -150,44 +150,44 @@
     --blue: 213 94% 50%;
     --purple: 266 85% 58%;
     --yellow: 35 77% 49%;
-    --gray: 220 9% 46%;
+    --gray: 0 0% 45%;
     --primary-light: 200 80% 42%;
   }
 
   .dark {
-    --background: 252 65% 5%;
-    --background-secondary: 252 65% 10%;
-    --foreground: 240 20% 93%;
+    --background: 0 0% 4%;
+    --background-secondary: 0 0% 7%;
+    --foreground: 0 0% 93%;
 
-    --card: 252 40% 13%;
-    --card-foreground: 240 20% 93%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 93%;
 
-    --popover: 252 38% 14%;
-    --popover-foreground: 240 20% 93%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 93%;
 
     --primary: 213 94% 62%;
-    --primary-foreground: 252 65% 10%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 252 30% 18%;
-    --secondary-foreground: 240 20% 93%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 93%;
 
-    --muted: 252 25% 20%;
-    --muted-foreground: 250 15% 55%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 252 28% 20%;
-    --accent-foreground: 240 20% 93%;
+    --accent: 0 0% 13%;
+    --accent-foreground: 0 0% 93%;
 
     --destructive: 343 81% 73%;
-    --destructive-foreground: 252 65% 10%;
+    --destructive-foreground: 0 0% 4%;
 
     --success: 142 60% 70%;
-    --success-foreground: 252 65% 10%;
+    --success-foreground: 0 0% 4%;
 
     --warning: 41 86% 80%;
-    --warning-foreground: 252 65% 10%;
+    --warning-foreground: 0 0% 4%;
 
-    --border: 252 25% 18%;
-    --input: 252 25% 17%;
+    --border: 0 0% 15%;
+    --input: 0 0% 13%;
     --ring: 213 94% 62%;
 
     --chart-1: 213 94% 62%;
@@ -196,13 +196,13 @@
     --chart-4: 280 65% 70%;
     --chart-5: 340 75% 65%;
 
-    --sidebar-background: 252 65% 7%;
-    --sidebar-foreground: 240 20% 88%;
+    --sidebar-background: 0 0% 3%;
+    --sidebar-foreground: 0 0% 88%;
     --sidebar-primary: 213 94% 62%;
-    --sidebar-primary-foreground: 252 65% 10%;
-    --sidebar-accent: 252 35% 14%;
-    --sidebar-accent-foreground: 240 20% 93%;
-    --sidebar-border: 252 30% 13%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 11%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 12%;
     --sidebar-ring: 213 94% 62%;
 
     /* Status Colors - Dark Mode */
@@ -211,7 +211,7 @@
     --blue: 213 94% 72%;
     --purple: 267 84% 81%;
     --yellow: 41 86% 83%;
-    --gray: 250 11% 62%;
+    --gray: 0 0% 55%;
     --primary-light: 200 90% 60%;
   }
 }

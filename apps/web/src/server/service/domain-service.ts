@@ -32,12 +32,20 @@ type DomainVerificationState = {
 
 type DomainWithDnsRecords = Domain & { dnsRecords: DomainDnsRecord[] };
 
+export type DnsPrecheckResult = {
+  dkim: DnsCheckResult;
+  spf: DnsCheckResult;
+  mx: DnsCheckResult;
+};
+
 type DomainVerificationRefreshResult = DomainWithDnsRecords & {
   verificationError: string | null;
   lastCheckedTime: string | null;
   previousStatus: DomainStatus;
   statusChanged: boolean;
   hasEverVerified: boolean;
+  dnsPrecheck: DnsPrecheckResult;
+  dkimReregistered: boolean;
 };
 
 function parseDomainStatus(status?: string | null): DomainStatus {
@@ -109,6 +117,55 @@ function withDnsRecords<T extends Domain>(
 }
 
 const dnsResolveTxt = util.promisify(dns.resolveTxt);
+const dnsResolveMx = util.promisify(dns.resolveMx);
+
+/** How long DKIM must be stuck in PENDING/NOT_STARTED before we auto-reregister */
+const DKIM_STUCK_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour
+
+type DnsCheckResult = "found" | "wrong_key" | "not_found";
+
+async function checkDkimDnsRecord(
+  selector: string,
+  domainName: string,
+  expectedPublicKey: string,
+): Promise<DnsCheckResult> {
+  try {
+    const records = await dnsResolveTxt(`${selector}._domainkey.${domainName}`);
+    const flat = records.flat().join("");
+    if (flat.includes(`p=${expectedPublicKey}`)) return "found";
+    if (flat.match(/p=[A-Za-z0-9+/=]+/)) return "wrong_key";
+    return "not_found";
+  } catch {
+    return "not_found";
+  }
+}
+
+async function checkSpfDnsRecord(mailDomain: string): Promise<DnsCheckResult> {
+  try {
+    const records = await dnsResolveTxt(mailDomain);
+    const flat = records.flat().join(" ");
+    return flat.includes("v=spf1") && flat.includes("amazonses.com")
+      ? "found"
+      : "not_found";
+  } catch {
+    return "not_found";
+  }
+}
+
+async function checkMxDnsRecord(
+  mailDomain: string,
+  region: string,
+): Promise<DnsCheckResult> {
+  try {
+    const records = await dnsResolveMx(mailDomain);
+    const expected = `feedback-smtp.${region}.amazonses.com`;
+    return records.some((r) => r.exchange.toLowerCase() === expected)
+      ? "found"
+      : "not_found";
+  } catch {
+    return "not_found";
+  }
+}
 
 function getDomainVerificationKey(kind: string, domainId: number) {
   return redisKey(`domain:verification:${kind}:${domainId}`);
@@ -502,11 +559,25 @@ export async function refreshDomainVerification(
 
   const verificationState = await getDomainVerificationState(domain.id);
   const previousStatus = domain.status;
-  const domainIdentity = await ses.getDomainIdentity(
-    domain.name,
-    domain.region,
-  );
-  const dkimStatus = domainIdentity.DkimAttributes?.Status?.toString();
+  const subdomainSuffix = domain.subdomain ? `.${domain.subdomain}` : "";
+  const mailDomain = `mail${subdomainSuffix}.${domain.name}`;
+  const dkimSelector = domain.dkimSelector ?? "bytesend";
+
+  // Run independent DNS pre-checks and SES identity lookup in parallel
+  const [domainIdentity, dkimDns, spfDns, mxDns] = await Promise.all([
+    ses.getDomainIdentity(domain.name, domain.region),
+    checkDkimDnsRecord(dkimSelector, domain.name, domain.publicKey),
+    checkSpfDnsRecord(mailDomain),
+    checkMxDnsRecord(mailDomain, domain.region),
+  ]);
+
+  const dnsPrecheck: DnsPrecheckResult = {
+    dkim: dkimDns,
+    spf: spfDns,
+    mx: mxDns,
+  };
+
+  let dkimStatus = domainIdentity.DkimAttributes?.Status?.toString();
   const spfDetails =
     domainIdentity.MailFromAttributes?.MailFromDomainStatus?.toString();
   const verificationError =
@@ -519,6 +590,44 @@ export async function refreshDomainVerification(
   const _dmarcRecord = baseDomain ? await getDmarcRecord(baseDomain) : null;
   const dmarcRecord = _dmarcRecord?.[0]?.[0];
   const checkedAt = new Date();
+
+  // If DKIM is stuck (PENDING or NOT_STARTED) but the correct DNS record is
+  // found in DNS, the issue is likely SES has a stale negative cache.
+  // Auto re-register the DKIM signing attributes so SES initiates a fresh check.
+  let dkimReregistered = false;
+  const dkimIsStuck =
+    dkimStatus !== DomainStatus.SUCCESS &&
+    (dkimDns === "found" || dkimDns === "wrong_key");
+  const lastChecked = verificationState.lastCheckedAt;
+  const stuckTooLong =
+    !lastChecked ||
+    Date.now() - lastChecked.getTime() > DKIM_STUCK_THRESHOLD_MS;
+
+  if (dkimIsStuck && stuckTooLong) {
+    try {
+      const newPublicKey = await ses.reregisterDkimSigning(
+        domain.name,
+        domain.region,
+        dkimSelector,
+      );
+      // Update public key so the DNS records table reflects the new expected value
+      await db.domain.update({
+        where: { id: domain.id },
+        data: { publicKey: newPublicKey, dkimStatus: DomainStatus.NOT_STARTED },
+      });
+      dkimStatus = DomainStatus.NOT_STARTED;
+      dkimReregistered = true;
+      logger.info(
+        { domainId: domain.id, domain: domain.name },
+        "[DomainService]: Auto re-registered DKIM signing — DNS pre-check found record but SES was stuck",
+      );
+    } catch (err) {
+      logger.error(
+        { err, domainId: domain.id },
+        "[DomainService]: Failed to auto re-register DKIM signing",
+      );
+    }
+  }
 
   const updatedDomain = await db.domain.update({
     where: {
@@ -610,7 +719,48 @@ export async function refreshDomainVerification(
     hasEverVerified:
       verificationState.hasEverVerified ||
       domainWithDns.status === DomainStatus.SUCCESS,
+    dnsPrecheck,
+    dkimReregistered,
   };
+}
+
+/**
+ * Manually re-registers the DKIM signing key pair with SES for a domain.
+ * This generates a new key pair, updates SES, and updates the domain record
+ * so the user can publish the new public key in DNS. Use this when DKIM
+ * verification is stuck after the record has been set in DNS.
+ */
+export async function reregisterDomainDkim(id: number, teamId: number) {
+  const domain = await db.domain.findUnique({
+    where: { id, teamId },
+  });
+
+  if (!domain) {
+    throw new ByteSendApiError({ code: "NOT_FOUND", message: "Domain not found" });
+  }
+
+  const selector = domain.dkimSelector ?? "bytesend";
+  const newPublicKey = await ses.reregisterDkimSigning(
+    domain.name,
+    domain.region,
+    selector,
+  );
+
+  const updated = await db.domain.update({
+    where: { id },
+    data: {
+      publicKey: newPublicKey,
+      dkimStatus: DomainStatus.NOT_STARTED,
+      isVerifying: true,
+    },
+  });
+
+  logger.info(
+    { domainId: id, domain: domain.name },
+    "[DomainService]: DKIM manually re-registered",
+  );
+
+  return withDnsRecords(updated);
 }
 
 export async function updateDomain(

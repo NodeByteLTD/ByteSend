@@ -3,155 +3,76 @@
 import { Domain } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { Switch } from "@bytesend/ui/src/switch";
 import { api } from "~/trpc/react";
-import React from "react";
-import { StatusIndicator } from "./status-indicator";
 import { DomainStatusBadge } from "./domain-badge";
 import Spinner from "@bytesend/ui/src/spinner";
+import { Globe, ChevronRight } from "lucide-react";
 
 export default function DomainsList() {
   const domainsQuery = api.domain.domains.useQuery();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="rounded-xl border border-border/60 overflow-hidden">
+      {/* Table header */}
+      <div className="hidden sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-4 px-4 py-2.5 border-b border-border/60 bg-muted/30">
+        <span className="text-xs font-medium text-muted-foreground">Domain</span>
+        <span className="text-xs font-medium text-muted-foreground">Status</span>
+        <span className="text-xs font-medium text-muted-foreground">Region</span>
+        <span className="text-xs font-medium text-muted-foreground">Added</span>
+        <span className="w-4" />
+      </div>
+
       {domainsQuery.isLoading ? (
         <div className="flex justify-center py-16">
-          <Spinner
-            className="w-6 h-6 mx-auto"
-            innerSvgClass="stroke-primary"
-          />
+          <Spinner className="w-5 h-5" innerSvgClass="stroke-primary" />
         </div>
       ) : domainsQuery.data?.length ? (
-        domainsQuery.data?.map((domain) => (
-          <DomainItem key={domain.id} domain={domain} />
-        ))
+        <div className="divide-y divide-border/40">
+          {domainsQuery.data.map((domain) => (
+            <DomainRow key={domain.id} domain={domain} />
+          ))}
+        </div>
       ) : (
-        <div className="text-center py-16 text-muted-foreground">No domains added</div>
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+          <Globe className="h-8 w-8 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground">No domains yet</p>
+          <p className="text-xs text-muted-foreground">Add a domain to start sending emails</p>
+        </div>
       )}
     </div>
   );
 }
 
-const DomainItem: React.FC<{ domain: Domain }> = ({ domain }) => {
-  const updateDomain = api.domain.updateDomain.useMutation();
-  const utils = api.useUtils();
-
-  const [clickTracking, setClickTracking] = React.useState(
-    domain.clickTracking
-  );
-  const [openTracking, setOpenTracking] = React.useState(domain.openTracking);
-
-  function handleClickTrackingChange() {
-    setClickTracking(!clickTracking);
-    updateDomain.mutate(
-      { id: domain.id, clickTracking: !clickTracking },
-      {
-        onSuccess: () => {
-          utils.domain.domains.invalidate();
-        },
-      }
-    );
-  }
-
-  function handleOpenTrackingChange() {
-    setOpenTracking(!openTracking);
-    updateDomain.mutate(
-      { id: domain.id, openTracking: !openTracking },
-      {
-        onSuccess: () => {
-          utils.domain.domains.invalidate();
-        },
-      }
-    );
-  }
-
+const DomainRow: React.FC<{ domain: Domain }> = ({ domain }) => {
   return (
-    <div className="border border-border/60 rounded-xl overflow-hidden hover:border-border transition-colors">
-      <div className="flex items-stretch">
-        <StatusIndicator status={domain.status} />
-        <div className="flex-1 p-4 sm:p-5">
-          {/* Mobile: stacked layout */}
-          <div className="flex flex-col gap-4 sm:hidden">
-            <div className="flex items-center justify-between">
-              <Link
-                href={`/domains/${domain.id}`}
-                className="text-sm font-medium underline underline-offset-4 decoration-dashed truncate"
-              >
-                {domain.name}
-              </Link>
-              <DomainStatusBadge status={domain.status} />
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p>{formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Region</p>
-                <p>{domain.region}</p>
-              </div>
-            </div>
-            <div className="flex gap-5">
-              <label className="flex items-center gap-2 text-sm">
-                <Switch
-                  checked={clickTracking}
-                  onCheckedChange={handleClickTrackingChange}
-                  className="data-[state=checked]:bg-success"
-                />
-                Click
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <Switch
-                  checked={openTracking}
-                  onCheckedChange={handleOpenTrackingChange}
-                  className="data-[state=checked]:bg-success"
-                />
-                Open
-              </label>
-            </div>
-          </div>
-
-          {/* Desktop: row layout */}
-          <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-6">
-            <div className="flex flex-col gap-1.5 min-w-0 flex-shrink">
-              <Link
-                href={`/domains/${domain.id}`}
-                className="text-sm font-medium underline underline-offset-4 decoration-dashed truncate"
-              >
-                {domain.name}
-              </Link>
-              <DomainStatusBadge status={domain.status} />
-            </div>
-            <div className="flex items-center gap-8 shrink-0 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p>{formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Region</p>
-                <p>{domain.region}</p>
-              </div>
-              <label className="flex items-center gap-2">
-                <Switch
-                  checked={clickTracking}
-                  onCheckedChange={handleClickTrackingChange}
-                  className="data-[state=checked]:bg-success"
-                />
-                <span className="text-xs text-muted-foreground">Click</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <Switch
-                  checked={openTracking}
-                  onCheckedChange={handleOpenTrackingChange}
-                  className="data-[state=checked]:bg-success"
-                />
-                <span className="text-xs text-muted-foreground">Open</span>
-              </label>
-            </div>
-          </div>
-        </div>
+    <Link
+      href={`/domains/${domain.id}`}
+      className="flex sm:grid sm:grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-3 sm:gap-4 px-4 py-3.5 hover:bg-muted/30 transition-colors group"
+    >
+      <div className="flex items-center gap-2.5 min-w-0">
+        <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-sm font-medium truncate">{domain.name}</span>
       </div>
-    </div>
+
+      <div className="hidden sm:block">
+        <DomainStatusBadge status={domain.status} />
+      </div>
+
+      <div className="hidden sm:block">
+        <span className="text-sm text-muted-foreground">{domain.region}</span>
+      </div>
+
+      <div className="hidden sm:block">
+        <span className="text-sm text-muted-foreground">
+          {formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2 ml-auto sm:hidden">
+        <DomainStatusBadge status={domain.status} />
+      </div>
+
+      <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0 hidden sm:block" />
+    </Link>
   );
 };
