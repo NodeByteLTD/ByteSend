@@ -1,12 +1,35 @@
 import { NextResponse } from "next/server";
 import { env } from "~/env";
 
-const REPO = "NodeByteHosting/ByteSend-Cloud";
+const GITHUB_REPO = "NodeByteHosting/ByteSend-Cloud";
 const FALLBACK_VERSION = "canary";
 
-export const revalidate = 3600; // re-fetch from GitHub at most once per hour
+export const revalidate = 3600; // re-fetch at most once per hour
 
-export async function GET() {
+async function fetchFromGitLab(): Promise<string | null> {
+  if (!env.GITLAB_URL || !env.GITLAB_REPO_ID) return null;
+
+  try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (env.GITLAB_RELEASE_TOKEN) {
+      headers["PRIVATE-TOKEN"] = env.GITLAB_RELEASE_TOKEN;
+    }
+
+    const res = await fetch(
+      `${env.GITLAB_URL}/api/v4/projects/${encodeURIComponent(env.GITLAB_REPO_ID)}/releases/permalink/latest`,
+      { headers, next: { revalidate: 3600 } },
+    );
+
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as { tag_name?: string };
+    return data.tag_name ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchFromGitHub(): Promise<string | null> {
   try {
     const headers: Record<string, string> = {
       Accept: "application/vnd.github+json",
@@ -18,19 +41,25 @@ export async function GET() {
     }
 
     const res = await fetch(
-      `https://api.github.com/repos/${REPO}/releases/latest`,
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
       { headers, next: { revalidate: 3600 } },
     );
 
-    if (!res.ok) {
-      return NextResponse.json({ version: FALLBACK_VERSION });
-    }
+    if (!res.ok) return null;
 
     const data = (await res.json()) as { tag_name?: string };
-    const version = data.tag_name ?? FALLBACK_VERSION;
-
-    return NextResponse.json({ version });
+    return data.tag_name ?? null;
   } catch {
-    return NextResponse.json({ version: FALLBACK_VERSION });
+    return null;
   }
+}
+
+export async function GET() {
+  // Prefer GitLab (self-hosted), fall back to GitHub, then canary
+  const version =
+    (await fetchFromGitLab()) ??
+    (await fetchFromGitHub()) ??
+    FALLBACK_VERSION;
+
+  return NextResponse.json({ version });
 }
