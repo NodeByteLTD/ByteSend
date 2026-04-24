@@ -23,8 +23,7 @@ const SheetOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-background/50 backdrop-blur",
-      "data-[state=open]:animate-in data-[state=closed]:animate-out",
-      "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+
       className
     )}
     {...props}
@@ -38,10 +37,10 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top",
-        bottom: "inset-x-0 bottom-0 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
-        right: "inset-y-0 right-[32px] h-[95%] my-auto w-3/4 sm:max-w-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+        top: "inset-x-0 top-0",
+        bottom: "inset-x-0 bottom-0",
+        left: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm",
+        right: "inset-y-0 right-[32px] h-[95%] my-auto w-3/4 sm:max-w-sm",
       },
     },
     defaultVariants: {
@@ -62,7 +61,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ side }), "duration-300", className)}
+      className={cn(sheetVariants({ side }), className)}
       {...props}
     >
       {children}

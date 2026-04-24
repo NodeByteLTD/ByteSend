@@ -37,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `campaigns/[campaignId]/page.tsx` — `AnimatePresence` + `motion.div` layout animations removed
   - `packages/ui/accordion.tsx` — unused framer-motion import removed
   - `packages/ui/sheet.tsx` — framer-motion overlay and slide animations replaced with Radix `data-[state=open/closed]` Tailwind variants
+- **Sheet transition animations removed** — all `animate-in` / `animate-out` slide and fade classes stripped from `SheetOverlay` and all `sheetVariants` sides in `packages/ui/sheet.tsx`; drawer now opens and closes instantly with no layout shift
+- **Float keyframes removed** — `--animate-float`, `--animate-float-delayed`, and the `@keyframes float` block removed from `packages/ui/styles/globals.css`; accordion animation duration reduced from default to `0.2s`
+- **Marketing page animation and gradient cleanup** — removed all gradient overlays (including the `bg-linear-to-b` overlay in `FeatureCard.tsx`) and transition effects from the marketing page; email preview fade-in wrapper removed from `email-details.tsx`
 
 #### Design System
 - **Geist font** — switched from Inter + JetBrains Mono to Geist Sans + Geist Mono via `next/font/google`; CSS custom properties `--font-geist-sans` / `--font-geist-mono` wired through `@theme` in `globals.css`
@@ -44,6 +47,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Light mode: white background, near-black text (`#171717`), neutral gray borders (`#e5e5e5`), `#f5f5f5` muted surfaces
   - Dark mode: near-black background (`#0a0a0a`), `#111` card surfaces, `#262626` borders, `#737373` muted foreground
   - ByteSend electric blue primary (213 76%/94%) unchanged as the brand accent
+
+#### Marketing Site
+- **Full landing page overhaul** — complete Vercel-inspired redesign of `apps/web/src/app/(marketing)/page.tsx`:
+  - **Hero** — typography scaled up (5xl → 7xl), badge updated to "Open source · Self-hostable · Free tier included", added "Read the docs" secondary CTA
+  - **TrustStrip** — full-width divider with column separators (Vercel style), updated platform stats
+  - **DevSection** (new) — split panel with value prop, feature checklist, primary/secondary CTAs on the left, and a terminal-style TypeScript SDK code snippet on the right (static `<pre>/<code>`, no added dependencies)
+  - **Comparison table** — redesigned from a card grid to an HTML `<table>` comparing ByteSend vs Resend vs SendGrid vs Postmark vs AWS SES across key features with ✓ / — cells
+  - **CTA** — `bg-muted/20` alternating background, larger headline, self-hosting note with docs link
+
+#### Version System
+- **Version route rewritten** — `/api/version` now uses a multi-source fallback cascade instead of a single GitLab call:
+  1. `NEXT_PUBLIC_APP_VERSION` build-time env var (CI sets this before `next build`)
+  2. GitLab: `permalink/latest` → releases list → repository tags
+  3. GitHub: `releases/latest` → releases list → tags
+  4. `"canary"` fallback of last resort
+  - Each failed source now logs `console.error` with context so silent failures are visible in server logs
+  - `revalidate` set to `3600` so the version is cached per-deployment rather than fetched on every request
 
 #### UI / Dashboard
 - **Breadcrumb navigation** — dashboard header now renders a full breadcrumb trail built from the pathname with human-readable segment labels, replacing the single-segment display
@@ -53,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Domain detail page had duplicate legacy component definitions (`DomainSettings`, `DnsVerificationStatus`, old `DomainItemPage`) left over from a partial edit — removed all stale code
 - `packages/ui/sheet.tsx` no longer depends on framer-motion for slide and fade transitions, resolving WebKit rendering performance issues on Safari
+- **OAuth profile picture not showing in sidebar** — `PrismaAdapter` only writes `image` to the database on the very first OAuth sign-in via `createUser`; subsequent logins never updated a stale or missing image. The `signIn` callback in `auth.ts` now reads the correct provider-specific image field on every OAuth login (`avatar_url` for GitHub, `picture` for Google, CDN URL constructed from `id`/`avatar` for Discord) and syncs it to the DB when it differs. The `session` callback explicitly forwards `user.image` so the updated value reaches the client immediately without requiring a re-login.
+- **Sidebar mobile footer pushed off-screen** — `overflow-y-auto` on the mobile `SheetContent` wrapper broke the flex layout, causing `SidebarFooter` (with the user avatar and version info) to scroll off-screen on smaller viewports. Changed to `overflow-hidden` so the footer stays pinned and only `SidebarContent` scrolls.
+- **Version route always returning "canary"** — the original implementation only tried a single GitLab endpoint (`permalink/latest`) which requires GitLab 14.2+ with formal releases configured; all failures were silently swallowed with no logging. Replaced with the multi-endpoint cascade described above.
 
 ---
 

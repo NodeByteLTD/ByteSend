@@ -41,6 +41,7 @@ declare module "next-auth" {
     isBetaUser: boolean;
     isAdmin: boolean;
     isFounder: boolean;
+    image?: string | null;
   }
 }
 
@@ -119,17 +120,50 @@ function getProviders() {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    signIn: async ({ user, account, credentials }) => {
+    signIn: async ({ user, account, profile, credentials }) => {
       // For email provider with code verification
       if (account?.provider === "email" && credentials?.code) {
         try {
-          // The email provider will verify the token in the URL
-          // This callback just allows the sign-in to proceed
           return true;
-        } catch (error) {
+        } catch {
           return false;
         }
       }
+
+      // Sync the OAuth provider's profile picture to the User record on every
+      // OAuth sign-in so the avatar stays fresh (covers both first-time OAuth
+      // logins and users who originally signed up via email then linked OAuth).
+      const oauthProviders = ["github", "discord", "google"];
+      if (account?.provider && oauthProviders.includes(account.provider)) {
+        // Each provider uses a different field name in its raw profile response.
+        let freshImage: string | null = null;
+        if (account.provider === "github") {
+          freshImage = (profile as { avatar_url?: string } | undefined)?.avatar_url ?? null;
+        } else if (account.provider === "google") {
+          freshImage = (profile as { picture?: string } | undefined)?.picture ?? null;
+        } else if (account.provider === "discord") {
+          const dp = profile as { image_url?: string; avatar?: string; id?: string } | undefined;
+          freshImage =
+            dp?.image_url ??
+            (dp?.id && dp?.avatar
+              ? `https://cdn.discordapp.com/avatars/${dp.id}/${dp.avatar}.png`
+              : null);
+        }
+
+        if (freshImage && freshImage !== user.image) {
+          try {
+            await db.user.update({
+              where: { id: user.id },
+              data: { image: freshImage },
+            });
+            // Reflect immediately so the session callback sees the new value
+            user.image = freshImage;
+          } catch {
+            // Non-fatal — sign-in still succeeds without the image update
+          }
+        }
+      }
+
       return true;
     },
     session: ({ session, user }) => {
@@ -146,6 +180,9 @@ export const authOptions: NextAuthOptions = {
           isBetaUser: user.isBetaUser,
           isAdmin,
           isFounder,
+          // Explicitly forward the DB image so it always reaches the client,
+          // even when session.user was built before the image update above.
+          image: user.image ?? session.user.image,
         },
       };
     },

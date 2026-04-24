@@ -15,16 +15,8 @@ const config = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "www.gravatar.com",
-      },
-      {
-        protocol: "https",
-        hostname: "cmap.pics",
-      },
-      {
-        protocol: "https",
-        hostname: "embrly.ca",
+        protocol: 'https',
+        hostname: '**'
       },
     ],
   },

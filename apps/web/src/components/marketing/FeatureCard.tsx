@@ -66,7 +66,7 @@ export function FeatureCard({
                 />
               </>
             )}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 sm:h-16 bg-linear-to-b from-transparent via-background/60 to-background" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 sm:h-16" />
           </div>
 
           <div className="p-5 flex-1 flex flex-col">
