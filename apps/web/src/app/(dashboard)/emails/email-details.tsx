@@ -84,7 +84,7 @@ export default function EmailDetails({ emailId }: { emailId: string }) {
             </>
           ) : null}
 
-          <div className="animate-in fade-in duration-300 delay-300 fill-mode-both">
+          <div>
             <EmailPreview html={emailQuery.data?.html ?? ""} />
           </div>
         </div>

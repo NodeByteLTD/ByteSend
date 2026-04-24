@@ -31,7 +31,8 @@
             "group": "Getting Started",
             "pages": [
               "introduction",
-              "get-started/smtp"
+              "get-started/smtp",
+              "get-started/nodejs"
             ]
           }
         ]

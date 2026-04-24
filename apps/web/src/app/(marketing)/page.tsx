@@ -6,12 +6,30 @@ export const dynamic = "force-static";
 
 const APP_URL = "/login";
 
+// Static code snippet shown in the developer section (no Shiki needed)
+const TS_SNIPPET = `import { ByteSend } from "bytesend-js";
+
+const client = new ByteSend("bs_••••••••");
+
+await client.emails.send({
+  to:      "user@acme.com",
+  from:    "noreply@yourapp.com",
+  subject: "Welcome to Acme!",
+  html:    "<h1>Welcome aboard 🎉</h1>",
+  text:    "Welcome aboard!",
+});
+
+// → { id: "em_abc123", success: true }`;
+
+/* ─────────────────────── Page ─────────────────────── */
+
 export default function Page() {
   return (
     <main className="min-h-screen text-foreground bg-background">
       <Hero />
       <TrustStrip />
       <Features />
+      <DevSection />
       <Pricing />
       <ComparisonTable />
       <Cta />
@@ -23,55 +41,50 @@ export default function Page() {
 
 function Hero() {
   return (
-    <section className="relative overflow-x-clip">
-      {/* Gradient orbs */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-150 w-225 rounded-full bg-primary/10 blur-[120px]" />
-      <div className="pointer-events-none absolute top-20 left-1/4 h-75 w-100 rounded-full bg-primary/5 blur-[100px]" />
-
-      <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-16 sm:pt-36 sm:pb-24 text-center">
-        {/* Pill badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 text-xs text-primary mb-8">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
-          No credit card required.
+    <section>
+      <div className="mx-auto max-w-4xl px-6 pt-24 pb-16 sm:pt-36 sm:pb-24 text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground mb-8">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          Open source · Self-hostable · Free tier included
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1]">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05]">
           Email infrastructure
           <br />
-          <span className="text-primary"> that just works</span>
+          <span className="text-primary">that just works</span>
         </h1>
 
-        <p className="mt-5 text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Transactional emails, marketing campaigns, and analytics all in one
-          platform. Start free and pay only for what you send.
+        <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+          Transactional emails, marketing campaigns, and analytics.
+          One platform, one bill. Start free and pay only for what you send.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
+          <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
             <Link href={APP_URL}>Get started free</Link>
           </Button>
           <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
-            <Link href="#pricing">View pricing</Link>
+            <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
+              Read the docs
+            </a>
           </Button>
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Free tier included · No credit card required · Cancel anytime
+          Free forever · No credit card · Self-host with Docker
         </p>
 
-        {/* Hero screenshot */}
+        {/* Dashboard screenshot */}
         <div className="mt-16 sm:mt-20 mx-auto max-w-4xl">
-          <div className="rounded-2xl bg-linear-to-b from-primary/20 to-primary/5 p-0.5">
-            <div className="rounded-[14px] bg-background/80 backdrop-blur p-1">
+          <div className="rounded-2xl border border-border/40 p-0.5">
+            <div className="rounded-[14px] overflow-hidden">
               <Image
                 src="/hero-light.webp"
                 alt="ByteSend dashboard"
                 width={3456}
                 height={1914}
-                className="w-full h-auto rounded-xl block dark:hidden"
+                className="w-full h-auto block dark:hidden"
                 sizes="(min-width: 1024px) 900px, 100vw"
                 priority
               />
@@ -80,7 +93,7 @@ function Hero() {
                 alt="ByteSend dashboard"
                 width={3456}
                 height={1914}
-                className="w-full h-auto rounded-xl hidden dark:block"
+                className="w-full h-auto hidden dark:block"
                 sizes="(min-width: 1024px) 900px, 100vw"
                 loading="lazy"
               />
@@ -92,103 +105,100 @@ function Hero() {
   );
 }
 
-/* ─────────────── Trust Strip ─────────────── */
+/* ─────────────────────── Trust Strip ─────────────────────── */
 
 function TrustStrip() {
   const stats = [
+    { value: "5,000", label: "Free emails/month" },
     { value: "96.6%", label: "Uptime SLA" },
     { value: "<2s", label: "Avg. delivery" },
-    { value: "1000+", label: "Emails Sent" },
     { value: "24/7", label: "Monitoring" },
   ];
 
   return (
-    <section className="border-y border-border/30 bg-muted/30">
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+    <div className="border-y border-border/30">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border/30">
           {stats.map((s) => (
-            <div key={s.label} className="rounded-xl bg-card/60 p-4 text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-primary">{s.value}</div>
+            <div key={s.label} className="py-8 px-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold tabular-nums">{s.value}</div>
               <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
             </div>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
-/* ─────────────────── Features ─────────────────── */
+/* ─────────────────────── Features ─────────────────────── */
+
+const features = [
+  {
+    icon: BarChartIcon,
+    title: "Real-time analytics",
+    description:
+      "Track deliveries, opens, clicks, bounces, and complaints as they happen. Full visibility across transactional and marketing sends.",
+    accent: "bg-blue-500/10 text-blue-500",
+  },
+  {
+    icon: PaintbrushIcon,
+    title: "Visual email editor",
+    description:
+      "Design beautiful campaigns with a drag-and-drop WYSIWYG editor. No code, no external tools — works for developers and non-technical teams alike.",
+    accent: "bg-purple-500/10 text-purple-500",
+  },
+  {
+    icon: UsersIcon,
+    title: "Contact management",
+    description: "Manage subscribers, consent, and lists. Auto-updated from bounce and complaint events.",
+    accent: "bg-emerald-500/10 text-emerald-500",
+  },
+  {
+    icon: ShieldIcon,
+    title: "Suppression lists",
+    description: "Block accidental sends. Auto-populated from bounces and spam complaints.",
+    accent: "bg-amber-500/10 text-amber-500",
+  },
+  {
+    icon: ServerIcon,
+    title: "SMTP relay",
+    description: "Drop-in SMTP that works with any existing app. Change one config line and you're sending through ByteSend.",
+    accent: "bg-rose-500/10 text-rose-500",
+  },
+  {
+    icon: WebhookIcon,
+    title: "Webhooks",
+    description: "Real-time event push for every email event. Build automations on top of delivery, opens, clicks, and more.",
+    accent: "bg-cyan-500/10 text-cyan-500",
+  },
+];
 
 function Features() {
-  const features = [
-    {
-      icon: BarChartIcon,
-      title: "Real-time analytics",
-      description: "Track deliveries, opens, clicks, bounces and complaints as they happen.",
-      accent: "bg-blue-500/10 text-blue-500",
-    },
-    {
-      icon: PaintbrushIcon,
-      title: "Visual email editor",
-      description: "Design campaigns with a Notion-like WYSIWYG editor. No code required.",
-      accent: "bg-purple-500/10 text-purple-500",
-    },
-    {
-      icon: UsersIcon,
-      title: "Contact management",
-      description: "Manage lists, consent and subscription status. Auto-updated from events.",
-      accent: "bg-emerald-500/10 text-emerald-500",
-    },
-    {
-      icon: ShieldIcon,
-      title: "Suppression lists",
-      description: "Prevent accidental sends. Auto-populated from bounces and complaints.",
-      accent: "bg-amber-500/10 text-amber-500",
-    },
-    {
-      icon: ServerIcon,
-      title: "SMTP relay",
-      description: "Drop-in SMTP that works with any app. No vendor lock-in.",
-      accent: "bg-rose-500/10 text-rose-500",
-    },
-    {
-      icon: WebhookIcon,
-      title: "Webhooks",
-      description: "Real-time event notifications for deliveries, bounces and more.",
-      accent: "bg-cyan-500/10 text-cyan-500",
-    },
-  ];
-
   return (
-    <section className="py-20 sm:py-28">
+    <section id="features" className="py-20 sm:py-28 border-t border-border/30">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-12">
           <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Features</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Everything you need to send emails
+            Everything you need to send email
           </h2>
           <p className="mt-4 text-muted-foreground">
-            From transactional receipts to marketing campaigns one platform, one bill.
+            Transactional receipts, marketing campaigns, and everything in between — one platform, one bill.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className={`group relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 p-6 transition-all hover:border-primary/30 hover:bg-card/60 hover:shadow-md ${
-                i < 2 ? "lg:col-span-2" : ""
-              }`}
+              className={`rounded-2xl border border-border/40 bg-card/40 p-6 ${i < 2 ? "lg:col-span-2" : ""}`}
             >
-              {/* Hover glow */}
-              <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              <div className={`relative flex h-11 w-11 items-center justify-center rounded-xl ${f.accent} mb-4 ring-1 ring-current/10`}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${f.accent} mb-4`}>
                 <f.icon className="h-5 w-5" />
               </div>
-              <h3 className="relative font-semibold text-[15px]">{f.title}</h3>
-              <p className="relative mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+              <h3 className="font-semibold mb-2">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
@@ -197,7 +207,72 @@ function Features() {
   );
 }
 
-/* ─────────────────── Pricing ─────────────────── */
+/* ─────────────────────── Developer Section ─────────────────────── */
+
+function DevSection() {
+  return (
+    <section className="border-t border-border/30 bg-muted/20 py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-12 items-start">
+          {/* Left: text */}
+          <div className="lg:pt-4">
+            <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Developer-first</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Up and running<br />in minutes
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              Typed SDK for TypeScript. Simple REST API for every language. Fully documented,
+              consistently designed, with no surprises.
+            </p>
+
+            <ul className="mt-6 space-y-2.5">
+              {[
+                "TypeScript SDK with full type safety",
+                "Simple REST API with Bearer auth",
+                "Webhooks for real-time event delivery",
+                "Drop-in SMTP relay — one config change",
+                "OpenAPI spec included",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <CheckIcon className="h-4 w-4 text-emerald-500 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Button className="rounded-xl" asChild>
+                <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
+                  View the docs
+                </a>
+              </Button>
+              <Button variant="outline" className="rounded-xl" asChild>
+                <Link href={APP_URL}>Get your API key</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Right: code block */}
+          <div className="rounded-xl border border-border/40 overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 bg-muted/40">
+              <div className="flex gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-400/50" />
+                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/50" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-400/50" />
+              </div>
+              <span className="text-xs text-muted-foreground font-mono">send-email.ts</span>
+            </div>
+            <pre className="px-5 py-5 text-[13px] font-mono leading-[1.7] overflow-x-auto text-foreground/85 bg-background">
+              <code>{TS_SNIPPET}</code>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────── Pricing ─────────────────────── */
 
 const pricingPlans: {
   name: string;
@@ -234,7 +309,7 @@ const pricingFeatures: { label: string; values: (string | boolean)[] }[] = [
 
 function Pricing() {
   return (
-    <section id="pricing" className="py-20 sm:py-28">
+    <section id="pricing" className="py-20 sm:py-28 border-t border-border/30">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Pricing</p>
@@ -247,17 +322,16 @@ function Pricing() {
           </p>
         </div>
 
-        {/* Pricing cards grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {pricingPlans.map((plan, planIdx) => (
             <div
               key={plan.name}
-              className={`relative flex flex-col rounded-2xl border p-6 transition-all hover:shadow-md ${
+              className={`relative flex flex-col rounded-2xl border p-6 ${
                 plan.popular
-                  ? "border-primary/40 bg-primary/3 shadow-lg shadow-primary/8 ring-1 ring-primary/20 lg:scale-[1.03] z-10"
+                  ? "border-primary/40 bg-primary/3 ring-1 ring-primary/20 lg:scale-[1.03] z-10"
                   : plan.selfHosted
-                    ? "border-dashed border-border/60 bg-muted/20 hover:border-primary/20"
-                    : "border-border/40 bg-card/40 hover:border-primary/20"
+                    ? "border-dashed border-border/60 bg-muted/20"
+                    : "border-border/40 bg-card/40"
               }`}
             >
               {plan.popular && (
@@ -279,7 +353,6 @@ function Pricing() {
                 </div>
               </div>
 
-              {/* Feature list */}
               <ul className="flex-1 space-y-3 mb-6">
                 {pricingFeatures.map((row) => {
                   const val = row.values[planIdx];
@@ -301,7 +374,7 @@ function Pricing() {
               </ul>
 
               <Button
-                className={`w-full rounded-xl ${plan.popular ? "shadow-lg shadow-primary/20" : ""}`}
+                className={`w-full rounded-xl ${plan.popular ? "shadow-sm" : ""}`}
                 variant={plan.popular ? "default" : plan.selfHosted ? "ghost" : "outline"}
                 size="lg"
                 asChild
@@ -313,118 +386,87 @@ function Pricing() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          † Overage rates apply only after the plan&apos;s included monthly email limit is reached. Free plan is a hard cap no overage billing.
+          † Overage rates apply only after the plan&apos;s included monthly email limit is reached. Free plan is a hard cap — no overage billing.
         </p>
       </div>
     </section>
   );
 }
 
-/* ───────────── Competitor Comparison ───────────── */
+/* ─────────────────────── Comparison Table ─────────────────────── */
 
-const advantages = [
-  {
-    title: "Most generous free tier",
-    description: "5,000 emails/month free. Others cap at 100-3,000.",
-    bytesend: "5,000/mo",
-    others: ["Resend 3k", "SendGrid 100/day", "Postmark 100"],
-    icon: GiftIcon,
-  },
-  {
-    title: "All-in-one platform",
-    description: "Marketing campaigns, transactional emails, contacts, and analytics in one place.",
-    bytesend: "Everything included",
-    others: ["Resend: No campaigns", "Postmark: No campaigns", "SES: No UI"],
-    icon: LayersIcon,
-  },
-  {
-    title: "Pay-once lifetime option",
-    description: "One payment, unlimited emails forever. No other provider offers this.",
-    bytesend: "CA$60 once",
-    others: ["Everyone else: Monthly forever"],
-    icon: InfinityIcon,
-  },
-  {
-    title: "Self-hostable",
-    description: "Run on your own infrastructure with Docker. Full data sovereignty.",
-    bytesend: "Docker ready",
-    others: ["Resend: No", "SendGrid: No", "Postmark: No"],
-    icon: ServerIcon,
-  },
-  {
-    title: "Visual email editor",
-    description: "Notion-like WYSIWYG editor for campaigns. No code, no external tools.",
-    bytesend: "Built-in editor",
-    others: ["Resend: Code only", "Postmark: Templates", "SES: Raw HTML"],
-    icon: PaintbrushIcon,
-  },
-  {
-    title: "SMTP relay included",
-    description: "Drop-in SMTP server that works with any app. Swap one config, done.",
-    bytesend: "Drop-in SMTP",
-    others: ["All providers offer SMTP"],
-    icon: ServerIcon,
-  },
+const comparisonRows: { feature: string; bs: string | boolean; resend: string | boolean; sendgrid: string | boolean; postmark: string | boolean; ses: string | boolean }[] = [
+  { feature: "Free tier",             bs: "5,000/mo",     resend: "3,000/mo",    sendgrid: "100/day",     postmark: "100 test/mo",  ses: "Pay-per-use" },
+  { feature: "Marketing campaigns",   bs: true,           resend: false,         sendgrid: true,          postmark: false,          ses: false },
+  { feature: "Visual email editor",   bs: true,           resend: false,         sendgrid: "Basic",       postmark: false,          ses: false },
+  { feature: "Self-hostable",         bs: true,           resend: false,         sendgrid: false,         postmark: false,          ses: false },
+  { feature: "Contact management",    bs: true,           resend: false,         sendgrid: true,          postmark: "Lists only",   ses: false },
+  { feature: "Webhooks",              bs: true,           resend: true,          sendgrid: true,          postmark: true,           ses: false },
+  { feature: "SMTP relay",            bs: true,           resend: true,          sendgrid: true,          postmark: true,           ses: true },
+  { feature: "Analytics dashboard",   bs: true,           resend: "Basic",       sendgrid: true,          postmark: "Basic",        ses: false },
+  { feature: "Lifetime plan",         bs: "CA$60 once",   resend: false,         sendgrid: false,         postmark: false,          ses: false },
 ];
 
+function CompCell({ val }: { val: string | boolean }) {
+  if (val === true) return <span className="text-emerald-500 font-semibold">✓</span>;
+  if (val === false) return <span className="text-muted-foreground/40">—</span>;
+  return <span>{val}</span>;
+}
+
 function ComparisonTable() {
+  const cols = ["ByteSend", "Resend", "SendGrid", "Postmark", "AWS SES"] as const;
+  const vals = (row: (typeof comparisonRows)[0]) => [row.bs, row.resend, row.sendgrid, row.postmark, row.ses] as (string | boolean)[];
+
   return (
     <section className="py-20 sm:py-28 border-t border-border/30">
       <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">
-            Compare
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Why teams choose ByteSend
-          </h2>
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Compare</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Why teams choose ByteSend</h2>
           <p className="mt-4 text-muted-foreground">
-            See how we compare against Resend, SendGrid, Postmark, and AWS SES.
+            See how we stack up against Resend, SendGrid, Postmark, and AWS SES.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {advantages.map((a) => (
-            <div
-              key={a.title}
-              className="group relative rounded-2xl border border-border/40 bg-card/40 p-6 transition-all hover:border-primary/30 hover:shadow-sm"
-            >
-              {/* Icon */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
-                <a.icon className="h-5 w-5" />
-              </div>
-
-              <h3 className="font-semibold mb-1">{a.title}</h3>
-              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">{a.description}</p>
-
-              {/* ByteSend value */}
-              <div className="rounded-xl bg-primary/6 border border-primary/15 px-4 py-2.5 mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <span className="text-xs font-medium text-primary">ByteSend</span>
-                </div>
-                <p className="mt-1 text-sm font-semibold">{a.bytesend}</p>
-              </div>
-
-              {/* Others */}
-              <div className="space-y-1.5">
-                {a.others.map((o) => (
-                  <div key={o} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="h-1 w-1 rounded-full bg-muted-foreground/30 shrink-0" />
-                    {o}
-                  </div>
+        <div className="overflow-x-auto rounded-2xl border border-border/40">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-border/40 bg-muted/30">
+                <th className="text-left font-medium text-muted-foreground px-5 py-3.5 w-[220px]">Feature</th>
+                {cols.map((col, i) => (
+                  <th
+                    key={col}
+                    className={`text-center font-semibold px-4 py-3.5 ${i === 0 ? "text-primary" : "text-foreground/70"}`}
+                  >
+                    {col}
+                  </th>
                 ))}
-              </div>
-            </div>
-          ))}
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonRows.map((row, ri) => (
+                <tr
+                  key={row.feature}
+                  className={`border-b border-border/30 last:border-0 ${ri % 2 === 0 ? "" : "bg-muted/10"}`}
+                >
+                  <td className="px-5 py-3.5 text-muted-foreground font-medium">{row.feature}</td>
+                  {vals(row).map((val, vi) => (
+                    <td
+                      key={vi}
+                      className={`text-center px-4 py-3.5 tabular-nums ${vi === 0 ? "font-medium" : "text-muted-foreground"}`}
+                    >
+                      <CompCell val={val} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Bottom CTA */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground mb-4">
-            Ready to switch? Migration takes minutes.
-          </p>
-          <Button size="lg" className="px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
+        <div className="mt-10 text-center">
+          <p className="text-sm text-muted-foreground mb-4">Ready to switch? Migration takes minutes.</p>
+          <Button size="lg" className="px-8 h-12 text-base rounded-xl" asChild>
             <Link href={APP_URL}>Get started free</Link>
           </Button>
         </div>
@@ -433,54 +475,47 @@ function ComparisonTable() {
   );
 }
 
-/* ─────────────────── CTA ─────────────────── */
+/* ─────────────────────── CTA ─────────────────────── */
 
 function Cta() {
   return (
-    <section className="py-20 sm:py-28">
-      <div className="mx-auto max-w-4xl px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 px-8 py-16 sm:px-16 text-center">
-          {/* Background gradient layers */}
-          <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/12 via-primary/4 to-transparent" />
-          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-[80px]" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-60 w-60 rounded-full bg-primary/8 blur-[60px]" />
-
-          {/* Grid dot pattern */}
-          <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/5 px-4 py-1.5 text-xs text-primary mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Free tier available
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Ready to send?
-            </h2>
-            <p className="mt-4 text-muted-foreground max-w-lg mx-auto">
-              Create your free account in seconds. No credit card required just sign up and start sending.
-            </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl shadow-lg shadow-primary/20" asChild>
-                <Link href={APP_URL}>Get started free</Link>
-              </Button>
-              <Button variant="ghost" size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
-                <Link href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
-                  Read the docs
-                </Link>
-              </Button>
-            </div>
-          </div>
+    <section className="py-20 sm:py-28 border-t border-border/30 bg-muted/20">
+      <div className="mx-auto max-w-4xl px-6 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background px-4 py-1.5 text-xs text-muted-foreground mb-8">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          Free tier available — no credit card required
         </div>
+
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+          Start sending today.
+        </h2>
+        <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
+          Create your free account in seconds. 5,000 emails per month, forever.
+        </p>
+
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Button size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
+            <Link href={APP_URL}>Get started free</Link>
+          </Button>
+          <Button variant="outline" size="lg" className="w-full sm:w-auto px-8 h-12 text-base rounded-xl" asChild>
+            <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer">
+              Read the docs
+            </a>
+          </Button>
+        </div>
+
+        <p className="mt-5 text-xs text-muted-foreground">
+          Also available as a Docker container for self-hosting.{" "}
+          <a href="https://docs.bytesend.cloud/self-hosting/overview" className="underline underline-offset-2 hover:text-foreground" target="_blank" rel="noopener noreferrer">
+            Learn more →
+          </a>
+        </p>
       </div>
     </section>
   );
 }
 
-/* ─────────────────── Icons ─────────────────── */
+/* ─────────────────────── Icons ─────────────────────── */
 
 function CheckIcon({ className = "" }: { className?: string }) {
   return (
@@ -534,30 +569,6 @@ function WebhookIcon({ className = "" }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
       <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" /><path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06" /><path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8H12" />
-    </svg>
-  );
-}
-
-function GiftIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
-    </svg>
-  );
-}
-
-function LayersIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" /><path d="m22.54 12.43-10 4.56a2 2 0 0 1-1.66 0l-9.42-4.29" /><path d="m22.54 16.43-10 4.56a2 2 0 0 1-1.66 0l-9.42-4.29" />
-    </svg>
-  );
-}
-
-function InfinityIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
-      <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z" />
     </svg>
   );
 }
