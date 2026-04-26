@@ -65,6 +65,51 @@ const teamAdminSelection = {
   },
 } as const;
 
+const adminDomainSelection = {
+  id: true,
+  name: true,
+  status: true,
+  region: true,
+  clickTracking: true,
+  openTracking: true,
+  isVerifying: true,
+  createdAt: true,
+  team: {
+    select: {
+      id: true,
+      name: true,
+      plan: true,
+      isBlocked: true,
+    },
+  },
+} as const;
+
+const adminWebhookSelection = {
+  id: true,
+  url: true,
+  status: true,
+  eventTypes: true,
+  domainIds: true,
+  consecutiveFailures: true,
+  lastFailureAt: true,
+  lastSuccessAt: true,
+  createdAt: true,
+  team: {
+    select: {
+      id: true,
+      name: true,
+      plan: true,
+    },
+  },
+  createdBy: {
+    select: {
+      id: true,
+      email: true,
+      name: true,
+    },
+  },
+} as const;
+
 export const adminRouter = createTRPCRouter({
   getSesSettings: adminProcedure.query(async () => {
     return SesSettingsService.getAllSettings();
@@ -397,6 +442,142 @@ export const adminRouter = createTRPCRouter({
       });
 
       return updatedTeam;
+    }),
+
+  listAdminDomains: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, query } = input;
+      const skip = (page - 1) * pageSize;
+
+      const where: Prisma.DomainWhereInput = query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { region: { contains: query, mode: "insensitive" } },
+              { team: { name: { contains: query, mode: "insensitive" } } },
+            ],
+          }
+        : {};
+
+      const [domains, total] = await Promise.all([
+        db.domain.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { createdAt: "desc" },
+          select: adminDomainSelection,
+        }),
+        db.domain.count({ where }),
+      ]);
+
+      return { domains, total, page, pageSize };
+    }),
+
+  listAdminWebhooks: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, query } = input;
+      const skip = (page - 1) * pageSize;
+
+      const where: Prisma.WebhookWhereInput = query
+        ? {
+            OR: [
+              { url: { contains: query, mode: "insensitive" } },
+              { team: { name: { contains: query, mode: "insensitive" } } },
+              { createdBy: { email: { contains: query, mode: "insensitive" } } },
+            ],
+          }
+        : {};
+
+      const [webhooks, total] = await Promise.all([
+        db.webhook.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { createdAt: "desc" },
+          select: adminWebhookSelection,
+        }),
+        db.webhook.count({ where }),
+      ]);
+
+      return { webhooks, total, page, pageSize };
+    }),
+
+  listAdminBilling: adminProcedure
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
+        query: z.string().optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, query } = input;
+      const skip = (page - 1) * pageSize;
+
+      const where: Prisma.TeamWhereInput = query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { billingEmail: { contains: query, mode: "insensitive" } },
+              { stripeCustomerId: { contains: query, mode: "insensitive" } },
+              {
+                subscription: {
+                  some: {
+                    id: { contains: query, mode: "insensitive" },
+                  },
+                },
+              },
+            ],
+          }
+        : {};
+
+      const [teams, total] = await Promise.all([
+        db.team.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            name: true,
+            plan: true,
+            isActive: true,
+            isBlocked: true,
+            billingEmail: true,
+            stripeCustomerId: true,
+            createdAt: true,
+            subscription: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: {
+                id: true,
+                status: true,
+                currentPeriodStart: true,
+                currentPeriodEnd: true,
+                cancelAtPeriodEnd: true,
+                createdAt: true,
+              },
+            },
+          },
+        }),
+        db.team.count({ where }),
+      ]);
+
+      return { teams, total, page, pageSize };
     }),
 
   getEmailAnalytics: adminProcedure

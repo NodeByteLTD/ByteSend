@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-04-26
+
+### Added
+
+#### Admin Panel
+- **Domains admin section** — added a global domains view to the admin panel with filtering, pagination, team ownership, region, verification status, tracking flags, and verification-in-progress visibility
+- **Webhooks admin section** — added a global webhooks view to the admin panel with filtering, pagination, owning team, creator, status, subscribed event summary, consecutive failure count, and last success/failure timestamps
+- **Billing admin section** — added a global billing view to the admin panel with summary cards and per-team billing records covering plan, latest subscription, billing email, Stripe customer ID, period end, and cancel-at-period-end state
+
+### Changed
+
+#### Admin Panel
+- **Expanded admin navigation** — admin tabs now include Domains, Webhooks, and Billing alongside SES Configurations, Teams, Email Analytics, and Users
+- **Teams and Users tables redesigned** — the Teams and Users admin lists now use the same shared table primitives and muted header-row treatment as SES Configurations, replacing the older hand-rolled tables and bright blue row actions with a more consistent admin UI
+- **Admin status styling unified** — teams and users now use compact semantic pill indicators for active/blocked and user flag states so status presentation matches the rest of the admin panel
+
+### Fixed
+
+- **Mobile sidebar user section still clipped in portrait** — the previous sidebar fix was incomplete on short mobile viewports. The mobile drawer now uses a viewport-bounded height (`svh` with `dvh` support), a `min-h-0` inner column, safe-area bottom padding, and non-shrinking sidebar header/footer regions so the user section remains visible in portrait as well as landscape
+- **JavaScript SDK repository metadata** — corrected the npm package repository URL in `packages/sdk/package.json` from the old repository path to `https://github.com/NodeByteHosting/bytesend-cloud`, so published package metadata now points to the right source repository
+
+---
+
 ## [0.2.0] - 2026-04-23
 
 ### Added
@@ -227,6 +250,7 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/nodebyte/bytesend/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nodebyte/bytesend/compare/v1.0.0-beta.1...v0.2.0
 [1.0.0-beta.1]: https://github.com/nodebyte/bytesend/releases/tag/v1.0.0-beta.1

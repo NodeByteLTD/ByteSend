@@ -25,13 +25,28 @@ export default function AdminLayout({
           SES Configurations
         </SettingsNavButton>
         {isCloud() ? (
-          <SettingsNavButton href="/admin/teams">
-            Teams
+          <SettingsNavButton href="/admin/email-analytics">
+            Email Analytics
           </SettingsNavButton>
         ) : null}
         {isCloud() ? (
-          <SettingsNavButton href="/admin/email-analytics">
-            Email Analytics
+          <SettingsNavButton href="/admin/domains">
+            Domains
+          </SettingsNavButton>
+        ) : null}
+        {isCloud() ? (
+          <SettingsNavButton href="/admin/webhooks">
+            Webhooks
+          </SettingsNavButton>
+        ) : null}
+        {isCloud() ? (
+          <SettingsNavButton href="/admin/billing">
+            Billing
+          </SettingsNavButton>
+        ) : null}
+        {isCloud() ? (
+          <SettingsNavButton href="/admin/teams">
+            Teams
           </SettingsNavButton>
         ) : null}
         {isCloud() && isAdmin ? (

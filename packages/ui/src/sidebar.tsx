@@ -212,7 +212,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden overflow-hidden"
+            className="h-[100svh] max-h-[100svh] w-[var(--sidebar-width)] overflow-hidden bg-sidebar p-0 text-sidebar-foreground supports-[height:100dvh]:h-[100dvh] supports-[height:100dvh]:max-h-[100dvh] [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -224,7 +224,9 @@ const Sidebar = React.forwardRef<
               <SheetTitle>Sidebar</SheetTitle>
               <SheetDescription>Displays the mobile sidebar.</SheetDescription>
             </SheetHeader>
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div className="box-border flex h-full min-h-0 w-full flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+              {children}
+            </div>
           </SheetContent>
         </Sheet>
       );
@@ -376,7 +378,7 @@ const SidebarHeader = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="header"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("shrink-0 flex flex-col gap-2 p-2", className)}
       {...props}
     />
   );
@@ -391,7 +393,7 @@ const SidebarFooter = React.forwardRef<
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("shrink-0 flex flex-col gap-2 p-2", className)}
       {...props}
     />
   );

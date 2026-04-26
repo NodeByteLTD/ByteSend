@@ -7,6 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@bytesend/ui/src/button";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@bytesend/ui/src/table";
+import {
   Form,
   FormControl,
   FormField,
@@ -25,6 +33,7 @@ import { api } from "~/trpc/react";
 import { isCloud } from "~/utils/common";
 import type { AppRouter } from "~/server/api/root";
 import type { inferRouterOutputs } from "@trpc/server";
+import { cn } from "@bytesend/ui/lib/utils";
 
 const searchSchema = z.object({
   email: z
@@ -38,6 +47,29 @@ type SearchInput = z.infer<typeof searchSchema>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type ManagedUser = NonNullable<RouterOutputs["admin"]["findUserByEmail"]>;
 type ListedUser = NonNullable<RouterOutputs["admin"]["listUsers"]>["users"][number];
+
+function AdminFlagPill({ label, tone = "neutral" }: { label: string; tone?: "neutral" | "success" | "danger" }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        tone === "success" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        tone === "danger" && "bg-destructive/10 text-destructive",
+        tone === "neutral" && "bg-muted text-muted-foreground",
+      )}
+    >
+      <span
+        className={cn(
+          "h-1.5 w-1.5 rounded-full",
+          tone === "success" && "bg-emerald-500",
+          tone === "danger" && "bg-destructive",
+          tone === "neutral" && "bg-muted-foreground",
+        )}
+      />
+      {label}
+    </span>
+  );
+}
 
 function formatDisplayName(email: string) {
   const localPart = email.split("@")[0] ?? email;
@@ -270,7 +302,7 @@ export default function AdminUsersPage() {
       ) : null}
 
       {/* All users list */}
-      <div className="space-y-4 rounded-lg border p-6 shadow-sm">
+      <div className="space-y-4 rounded-xl border p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">All users</h2>
           <div className="flex items-center gap-2">
@@ -306,46 +338,55 @@ export default function AdminUsersPage() {
         ) : !listUsers.data?.users.length ? (
           <p className="py-4 text-sm text-muted-foreground">No users found.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="pb-2 pr-4 font-medium">User</th>
-                  <th className="pb-2 pr-4 font-medium">Joined</th>
-                  <th className="pb-2 font-medium">Flags</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+          <div className="overflow-x-auto rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="rounded-tl-xl">User</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead>Flags</TableHead>
+                  <TableHead className="rounded-tr-xl text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {listUsers.data.users.map((u: ListedUser) => (
-                  <tr key={u.id} className={u.isBanned ? "opacity-60" : undefined}>
-                    <td className="py-2 pr-4">
+                  <TableRow key={u.id} className={cn(u.isBanned && "opacity-60")}>
+                    <TableCell>
                       <p className="font-medium">{u.name ?? formatDisplayName(u.email ?? "")}</p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
-                    </td>
-                    <td className="py-2 pr-4 text-xs text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(u.createdAt), { addSuffix: true })}
-                    </td>
-                    <td className="py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {u.isBanned && <Badge variant="destructive">Banned</Badge>}
-                        {u.isBetaUser && <Badge variant="secondary">Beta</Badge>}
-                        {u.isAdmin && <Badge variant="outline">Admin</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1.5">
+                        {u.isBanned ? <AdminFlagPill label="Banned" tone="danger" /> : null}
+                        {u.isBetaUser ? <AdminFlagPill label="Beta" tone="neutral" /> : null}
+                        {u.isAdmin ? <AdminFlagPill label="Admin" tone="success" /> : null}
+                        {!u.isBanned && !u.isBetaUser && !u.isAdmin ? (
+                          <AdminFlagPill label="Standard" tone="neutral" />
+                        ) : null}
                       </div>
-                    </td>
-                    <td className="py-2">
-                      <Button onClick={() => {
-                        setUsersPage(1)
-                        setHasSearched(false)
-                        setUserResult(null)
-                        findUser.mutate({ email: `${u.email}` })
-                      }}>
-                        View User
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-foreground hover:bg-muted"
+                        onClick={() => {
+                          setUsersPage(1);
+                          setHasSearched(false);
+                          setUserResult(null);
+                          findUser.mutate({ email: `${u.email}` });
+                        }}
+                      >
+                        View user
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 

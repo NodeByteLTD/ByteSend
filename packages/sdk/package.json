@@ -4,7 +4,7 @@
   "description": "Official JavaScript SDK for ByteSend, the email sending service built for developers.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NodeByteHosting/bytesend"
+    "url": "https://github.com/NodeByteHosting/bytesend-cloud"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
