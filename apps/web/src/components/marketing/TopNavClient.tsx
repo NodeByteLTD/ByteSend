@@ -38,6 +38,7 @@ export function TopNavClient() {
           <div className="mx-auto max-w-5xl px-6 py-4 flex flex-col gap-1 text-sm">
             <Link href="/#features" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>
             <Link href="/#pricing" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>
+            <Link href="/changelog" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Changelog</Link>
             <a href="https://discord.gg/xqkqzVRC4S" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Discord</a>
             <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Docs</a>
             <Button className="w-full mt-2 rounded-lg" asChild>

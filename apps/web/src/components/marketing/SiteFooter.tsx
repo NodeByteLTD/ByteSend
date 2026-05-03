@@ -38,6 +38,7 @@ export function SiteFooter() {
             </Link>
             <nav className="flex items-center gap-4 text-[13px] text-muted-foreground">
               <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Docs</a>
+              <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
               <a href="https://status.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>
