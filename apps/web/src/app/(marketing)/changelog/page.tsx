@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-export const revalidate = 3600; // re-fetch at most once per hour
+// Force server-render on every request so the page isn't baked at build time
+// (env vars like GITLAB_URL are only available at runtime, not during `next build`).
+// The individual fetch() calls below still use next: { revalidate: 3600 } for
+// data-level caching, so we don't hammer the API on every request.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Changelog – ByteSend",

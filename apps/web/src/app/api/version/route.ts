@@ -13,7 +13,8 @@ const BUILD_VERSION =
     ? _buildVersion
     : null;
 
-export const revalidate = 3600; // re-validate at most once per hour
+// Force dynamic so this isn't frozen as a static response at build time
+export const dynamic = "force-dynamic";
 
 /** Tries GitLab: permalink/latest first, then releases list, then tags. */
 async function fetchFromGitLab(): Promise<string | null> {
