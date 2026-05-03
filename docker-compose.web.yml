@@ -78,7 +78,12 @@ services:
       
       # API Keys
       - BYTESEND_API_KEY=${BYTESEND_API_KEY}
-      - BYTESEND_API_KEY=${BYTESEND_API_KEY}
+
+      # Changelog / Releases
+      - GITLAB_URL=${GITLAB_URL}
+      - GITLAB_REPO_ID=${GITLAB_REPO_ID}
+      - GITLAB_RELEASE_TOKEN=${GITLAB_RELEASE_TOKEN}
+      - GITHUB_RELEASE_TOKEN=${GITHUB_RELEASE_TOKEN}
       
       # Features
       - NEXT_PUBLIC_IS_CLOUD=${NEXT_PUBLIC_IS_CLOUD}
