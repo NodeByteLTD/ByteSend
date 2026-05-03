@@ -13,6 +13,24 @@ import { LimitService } from "./limit-service";
 import { sanitizeCustomHeaders } from "~/server/utils/email-headers";
 // Notifications about limits are handled inside LimitService.
 
+// SES error names that are transient and should be retried
+const TRANSIENT_SES_ERRORS = new Set([
+  "TooManyRequestsException",
+  "ServiceUnavailableException",
+  "InternalFailureException",
+]);
+
+function isSesTransientError(error: any): boolean {
+  return (
+    TRANSIENT_SES_ERRORS.has(error?.name) ||
+    TRANSIENT_SES_ERRORS.has(error?.Code) ||
+    error?.["$fault"] === "server"
+  );
+}
+
+const EMAIL_JOB_ATTEMPTS = 3;
+const EMAIL_JOB_BACKOFF_MS = 10_000;
+
 type QueueEmailJob = TeamJob<{
   emailId: string;
   timestamp: number;
@@ -33,6 +51,14 @@ function createQueueAndWorker(region: string, quota: number, suffix: string) {
     connection,
     prefix: BULL_PREFIX,
     skipVersionCheck: true,
+  });
+
+  worker.on("error", (error) => {
+    logger.error({ err: error, region, suffix }, "[EmailQueueService]: Worker error");
+  });
+
+  worker.on("stalled", (jobId) => {
+    logger.warn({ jobId, region, suffix }, "[EmailQueueService]: Job stalled");
   });
 
   return { queue, worker };
@@ -137,7 +163,13 @@ export class EmailQueueService {
         isBulk,
         teamId,
       },
-      { jobId: emailId, delay, ...DEFAULT_QUEUE_OPTIONS }
+      {
+        jobId: emailId,
+        delay,
+        ...DEFAULT_QUEUE_OPTIONS,
+        attempts: EMAIL_JOB_ATTEMPTS,
+        backoff: { type: "exponential", delay: EMAIL_JOB_BACKOFF_MS },
+      }
     );
   }
 
@@ -228,7 +260,9 @@ export class EmailQueueService {
         opts: {
           jobId: job.emailId, // Use emailId as jobId
           delay: job.delay,
-          ...DEFAULT_QUEUE_OPTIONS, // Apply default options (attempts, backoff)
+          ...DEFAULT_QUEUE_OPTIONS,
+          attempts: EMAIL_JOB_ATTEMPTS,
+          backoff: { type: "exponential", delay: EMAIL_JOB_BACKOFF_MS },
         },
       }));
 
@@ -348,6 +382,22 @@ async function executeEmail(job: QueueEmailJob) {
   );
 
   if (!configurationSetName) {
+    logger.error(
+      { emailId: email.id },
+      "[EmailQueueService]: No SES configuration set found — marking email as failed"
+    );
+    await db.emailEvent.create({
+      data: {
+        emailId: email.id,
+        status: "FAILED",
+        data: { error: "No SES configuration set found for domain" },
+        teamId: email.teamId,
+      },
+    });
+    await db.email.update({
+      where: { id: email.id },
+      data: { latestStatus: "FAILED" },
+    });
     return;
   }
 
@@ -433,13 +483,22 @@ async function executeEmail(job: QueueEmailJob) {
       data: { sesEmailId: messageId, text, attachments: null, headers: null },
     });
   } catch (error: any) {
+    if (isSesTransientError(error)) {
+      logger.warn(
+        { emailId: email.id, err: error, attempt: job.attemptsMade + 1, maxAttempts: EMAIL_JOB_ATTEMPTS },
+        "[EmailQueueService]: Transient SES error — will retry"
+      );
+      // Re-throw so BullMQ retries with exponential backoff
+      throw error;
+    }
+
+    // Permanent failure — mark and do not retry
+    logger.error({ emailId: email.id, err: error }, "[EmailQueueService]: Permanent SES error");
     await db.emailEvent.create({
       data: {
         emailId: email.id,
         status: "FAILED",
-        data: {
-          error: error.toString(),
-        },
+        data: { error: error.toString() },
         teamId: email.teamId,
       },
     });

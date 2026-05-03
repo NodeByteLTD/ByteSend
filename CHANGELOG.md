@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] - 2026-05-03
+
+### Fixed
+
+#### Email Delivery
+- **Emails stuck as QUEUED forever** — when `getConfigurationSetName()` returned `null` the job silently returned success to BullMQ without marking the email as failed, leaving it in `QUEUED` state indefinitely. Now explicitly marks the email `FAILED` with a descriptive error event so the problem is visible in the email log
+- **No retry on transient SES errors** — any SES error (throttle, 5xx, network hiccup) was immediately written as a permanent `FAILED` with no retry. Transient errors (`TooManyRequestsException`, `ServiceUnavailableException`, server-fault responses) are now re-thrown so BullMQ retries the job automatically
+- **Zero retry budget on email jobs** — `DEFAULT_QUEUE_OPTIONS` had no `attempts` key so BullMQ defaulted to 1 attempt. Email jobs now receive **3 attempts** with **10 s exponential backoff** (10 s → 20 s → 40 s)
+- **Silent worker crashes** — email queue workers had no `error` or `stalled` event listeners; a crashed worker left jobs orphaned with no log trace. Both events are now logged with region and queue context
+
+#### Domain / DKIM
+- **DKIM auto-reregister infinite loop** — the hourly background verification job triggered auto-reregistration on `wrong_key` DNS status and also when `lastCheckedAt` was `null`, causing an endless re-registration cycle for newly added domains. Auto-reregister now only fires when the DKIM record is confirmed `found` in DNS (propagation confirmed) but SES has not acknowledged it for over 1 hour, and requires a non-null `lastCheckedAt`
+- **Verify button inaccessible after DKIM re-generation** — reregistration set `isVerifying: true`, which hid the Verify button and locked users out of the verification flow. Now sets `isVerifying: false` and uses a Redis-backed `dkimReregistered` flag (24 h TTL) to show an amber guidance banner with instructions; the banner clears automatically when the user clicks Verify
+
+#### Version Display
+- **Version always showing "unknown" in production** — Docker Compose defaulted `APP_VERSION` to the string literal `"unknown"` when not provided by CI; the `/api/version` route immediately returned this sentinel without attempting the GitHub API fallback. The route now ignores `"unknown"` and `"canary"` as sentinel values, and the Docker Compose `APP_VERSION` arg now defaults to empty so the GitHub release lookup runs when CI does not inject a version
+
+---
+
 ## [0.2.1] - 2026-04-26
 
 ### Added
@@ -250,7 +269,8 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/nodebyte/bytesend/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nodebyte/bytesend/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nodebyte/bytesend/compare/v1.0.0-beta.1...v0.2.0
 [1.0.0-beta.1]: https://github.com/nodebyte/bytesend/releases/tag/v1.0.0-beta.1

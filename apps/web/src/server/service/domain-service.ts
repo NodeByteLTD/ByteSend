@@ -212,6 +212,26 @@ async function setDomainVerificationCheckedAt(
   );
 }
 
+async function setDkimReregisteredFlag(domainId: number) {
+  await getRedis().set(
+    getDomainVerificationKey("dkim-reregistered", domainId),
+    "1",
+    "EX",
+    86400, // 24 hours
+  );
+}
+
+export async function clearDkimReregisteredFlag(domainId: number) {
+  await getRedis().del(getDomainVerificationKey("dkim-reregistered", domainId));
+}
+
+async function getDkimReregisteredFlag(domainId: number): Promise<boolean> {
+  const val = await getRedis().get(
+    getDomainVerificationKey("dkim-reregistered", domainId),
+  );
+  return val === "1";
+}
+
 async function markDomainEverVerified(domainId: number) {
   await getRedis().set(
     getDomainVerificationKey("has-ever-verified", domainId),
@@ -521,7 +541,7 @@ export async function createDomain(
 }
 
 export async function getDomain(id: number, teamId: number) {
-  let domain = await db.domain.findUnique({
+  const domain = await db.domain.findUnique({
     where: {
       id,
       teamId,
@@ -539,7 +559,9 @@ export async function getDomain(id: number, teamId: number) {
     return refreshDomainVerification(domain);
   }
 
-  return withDnsRecords(domain);
+  // Include the persistent reregistered banner flag even when not actively verifying
+  const dkimReregistered = await getDkimReregisteredFlag(domain.id);
+  return { ...withDnsRecords(domain), dkimReregistered, dnsPrecheck: null };
 }
 
 export async function refreshDomainVerification(
@@ -592,15 +614,18 @@ export async function refreshDomainVerification(
   const checkedAt = new Date();
 
   // If DKIM is stuck (PENDING or NOT_STARTED) but the correct DNS record is
-  // found in DNS, the issue is likely SES has a stale negative cache.
-  // Auto re-register the DKIM signing attributes so SES initiates a fresh check.
+  // found in DNS with the exact expected key, the issue is likely SES has a
+  // stale negative cache. Auto re-register so SES initiates a fresh check.
+  // We intentionally do NOT trigger on "wrong_key" — that means the user still
+  // has an old record in DNS; re-registering again just moves the goalposts.
   let dkimReregistered = false;
   const dkimIsStuck =
-    dkimStatus !== DomainStatus.SUCCESS &&
-    (dkimDns === "found" || dkimDns === "wrong_key");
+    dkimStatus !== DomainStatus.SUCCESS && dkimDns === "found";
   const lastChecked = verificationState.lastCheckedAt;
+  // A null lastCheckedAt means the domain was just created; give SES time to
+  // pick up the initial record before triggering auto-reregistration.
   const stuckTooLong =
-    !lastChecked ||
+    lastChecked !== null &&
     Date.now() - lastChecked.getTime() > DKIM_STUCK_THRESHOLD_MS;
 
   if (dkimIsStuck && stuckTooLong) {
@@ -617,6 +642,7 @@ export async function refreshDomainVerification(
       });
       dkimStatus = DomainStatus.NOT_STARTED;
       dkimReregistered = true;
+      await setDkimReregisteredFlag(domain.id);
       logger.info(
         { domainId: domain.id, domain: domain.name },
         "[DomainService]: Auto re-registered DKIM signing — DNS pre-check found record but SES was stuck",
@@ -639,11 +665,11 @@ export async function refreshDomainVerification(
       status: verificationStatus,
       errorMessage: verificationError,
       dmarcAdded: Boolean(dmarcRecord),
-      isVerifying: shouldContinueVerifying(
-        verificationStatus,
-        dkimStatus,
-        spfDetails,
-      ),
+      // When DKIM keys were auto-regenerated the user must update their DNS
+      // record first — stop polling so the Verify button becomes available.
+      isVerifying: dkimReregistered
+        ? false
+        : shouldContinueVerifying(verificationStatus, dkimStatus, spfDetails),
     },
   });
 
@@ -751,16 +777,21 @@ export async function reregisterDomainDkim(id: number, teamId: number) {
     data: {
       publicKey: newPublicKey,
       dkimStatus: DomainStatus.NOT_STARTED,
-      isVerifying: true,
+      // The user must update their DNS record with the new key before
+      // verification can succeed — keep isVerifying false so the Verify
+      // button stays visible and accessible.
+      isVerifying: false,
     },
   });
+
+  await setDkimReregisteredFlag(id);
 
   logger.info(
     { domainId: id, domain: domain.name },
     "[DomainService]: DKIM manually re-registered",
   );
 
-  return withDnsRecords(updated);
+  return { ...withDnsRecords(updated), dkimReregistered: true, dnsPrecheck: null };
 }
 
 export async function updateDomain(

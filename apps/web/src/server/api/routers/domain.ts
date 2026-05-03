@@ -14,6 +14,7 @@ import {
   getDomains,
   updateDomain,
   reregisterDomainDkim,
+  clearDkimReregisteredFlag,
 } from "~/server/service/domain-service";
 import { sendEmail } from "~/server/service/email-service";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
@@ -44,6 +45,7 @@ export const domainRouter = createTRPCRouter({
     }),
 
   startVerification: domainProcedure.mutation(async ({ ctx, input }) => {
+    await clearDkimReregisteredFlag(input.id);
     await ctx.db.domain.update({
       where: { id: input.id },
       data: { isVerifying: true },

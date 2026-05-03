@@ -503,7 +503,7 @@ function VersionInfo() {
     fetch("/api/version")
       .then((r) => r.json())
       .then((data: { version: string }) => setVersion(data.version))
-      .catch(() => setVersion("v1.0.0-beta.1"));
+      .catch(() => setVersion("v0.2.1"));
   }, []);
 
   return (

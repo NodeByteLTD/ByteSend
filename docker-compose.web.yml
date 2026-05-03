@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.web
       args:
-        APP_VERSION: ${APP_VERSION:-unknown}
+        APP_VERSION: ${APP_VERSION:-}
         GIT_SHA: ${GIT_SHA:-unknown}
     ports:
       - "3040:3040"

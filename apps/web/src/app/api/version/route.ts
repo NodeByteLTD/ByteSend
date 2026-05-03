@@ -6,7 +6,12 @@ const FALLBACK_VERSION = "canary";
 
 // Injected at build time by CI (e.g. NEXT_PUBLIC_APP_VERSION=v0.2.0).
 // Highest priority — no network call needed.
-const BUILD_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? null;
+// Treat absent / sentinel values as unset so we fall through to the API lookup.
+const _buildVersion = process.env.NEXT_PUBLIC_APP_VERSION;
+const BUILD_VERSION =
+  _buildVersion && _buildVersion !== "unknown" && _buildVersion !== "canary"
+    ? _buildVersion
+    : null;
 
 export const revalidate = 3600; // re-validate at most once per hour
 
