@@ -299,7 +299,6 @@ const pricingFeatures: { label: string; values: (string | boolean)[] }[] = [
   { label: "Transactional emails", values: ["Included", "CA$0.03/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
   { label: "Marketing emails", values: [false, "CA$0.05/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
   { label: "Domains", values: ["3 + $1/extra", "5 + $1/extra", "10 + $1/extra", "100 + $1/extra", "500 + $1/extra", "Unlimited"] },
-  { label: "Owned teams", values: ["5", "10", "20", "50", "Unlimited", "Unlimited"] },
   { label: "Members per team", values: ["5", "30", "60", "Unlimited", "Unlimited", "Unlimited"] },
   { label: "Contacts", values: ["500", "2,000", "10,000", "1M", "10M", "Unlimited"] },
   { label: "Advanced analytics", values: [false, false, false, true, true, true] },

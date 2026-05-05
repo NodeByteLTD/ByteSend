@@ -65,14 +65,7 @@ export class TeamService {
         });
       }
     } else {
-      const { isLimitReached, limit } =
-        await LimitService.checkOwnedTeamsLimit(userId);
-      if (isLimitReached) {
-        throw new TRPCError({
-          message: `You can own a maximum of ${limit} team${limit === 1 ? "" : "s"} on your current plan. Upgrade to create more.`,
-          code: "FORBIDDEN",
-        });
-      }
+      // no additional checks needed — each team has its own plan
     }
 
     const nameConflict = await db.team.findFirst({ where: { name: { equals: name, mode: "insensitive" } } });

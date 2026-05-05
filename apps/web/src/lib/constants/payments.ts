@@ -2,7 +2,6 @@ export const PLAN_PERKS = {
   FREE: [
     "5,000 emails / month (hard cap)",
     "1,000 emails / day (hard cap)",
-    "5 owned teams · 5 members each",
     "Transactional emails included",
     "Marketing emails not available",
     "Up to 3 domains + $1/extra",
@@ -11,7 +10,6 @@ export const PLAN_PERKS = {
   HOBBY: [
     "15,000 emails / month included",
     "2,000 emails / day",
-    "10 owned teams · 30 members each",
     "Transactional CA$0.03/ea (overage)",
     "Marketing CA$0.05/ea (overage)",
     "Up to 5 domains + $1/extra",
@@ -20,7 +18,6 @@ export const PLAN_PERKS = {
   LITE: [
     "50,000 emails / month included",
     "5,000 emails / day",
-    "20 owned teams · 60 members each",
     "Transactional CA$0.02/ea (overage)",
     "Marketing CA$0.02/ea (overage)",
     "Up to 10 domains + $1/extra",
@@ -29,7 +26,6 @@ export const PLAN_PERKS = {
   BASIC: [
     "150,000 emails / month included",
     "Unlimited daily sending",
-    "50 owned teams · unlimited members",
     "Transactional CA$0.01/ea (overage)",
     "Marketing CA$0.01/ea (overage)",
     "Up to 100 domains + $1/extra",
@@ -39,7 +35,6 @@ export const PLAN_PERKS = {
   LIFETIME: [
     "One-time CA$60 payment",
     "Unlimited emails — no overage charges",
-    "Unlimited owned teams & members",
     "Marketing & transactional included",
     "Up to 500 domains + $1/extra",
     "Priority support",

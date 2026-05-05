@@ -471,7 +471,6 @@ export async function validateApiKeyDomainAccess(
 const RESERVED_DOMAINS = [
   "bytesend.cloud",
   "bytesend.com",
-  "usesend.com",
 ];
 
 export async function createDomain(

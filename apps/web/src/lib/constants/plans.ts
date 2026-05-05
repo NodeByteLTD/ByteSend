@@ -4,7 +4,6 @@ export enum LimitReason {
   DOMAIN = "DOMAIN",
   CONTACT_BOOK = "CONTACT_BOOK",
   TEAM_MEMBER = "TEAM_MEMBER",
-  OWNED_TEAMS = "OWNED_TEAMS",
   WEBHOOK = "WEBHOOK",
   EMAIL_BLOCKED = "EMAIL_BLOCKED",
   EMAIL_DAILY_LIMIT_REACHED = "EMAIL_DAILY_LIMIT_REACHED",
@@ -19,7 +18,6 @@ export const PLAN_LIMITS: Record<
     domains: number;
     contactBooks: number;
     teamMembers: number;
-    ownedTeams: number;
     webhooks: number;
     /** Whether marketing/campaign emails are available on this plan. */
     marketingEmailsIncluded: boolean;
@@ -31,7 +29,6 @@ export const PLAN_LIMITS: Record<
     domains: 3,
     contactBooks: 5,
     teamMembers: 5, // Hard cap
-    ownedTeams: 5,  // Hard cap
     webhooks: 3,
     marketingEmailsIncluded: false, // Marketing emails blocked on free plan
   },
@@ -41,7 +38,6 @@ export const PLAN_LIMITS: Record<
     domains: 5,
     contactBooks: 10,
     teamMembers: 30,
-    ownedTeams: 10,
     webhooks: 5,
     marketingEmailsIncluded: true,
   },
@@ -51,7 +47,6 @@ export const PLAN_LIMITS: Record<
     domains: 10,
     contactBooks: 25,
     teamMembers: 60,
-    ownedTeams: 20,
     webhooks: 10,
     marketingEmailsIncluded: true,
   },
@@ -61,7 +56,6 @@ export const PLAN_LIMITS: Record<
     domains: 100,
     contactBooks: 500,
     teamMembers: -1, // Unlimited
-    ownedTeams: 50,
     webhooks: 50,
     marketingEmailsIncluded: true,
   },
@@ -71,7 +65,6 @@ export const PLAN_LIMITS: Record<
     domains: 500,
     contactBooks: 1000,
     teamMembers: -1, // Unlimited
-    ownedTeams: -1,  // Unlimited
     webhooks: 100,
     marketingEmailsIncluded: true,
   },

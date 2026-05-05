@@ -28,7 +28,6 @@ const PLAN_OPTIONS: {
     perks: [
       "15,000 emails / month",
       "2,000 emails / day",
-      "10 owned teams · 30 members",
       "5 domains",
       "Usage-based billing",
     ],
@@ -40,7 +39,6 @@ const PLAN_OPTIONS: {
     perks: [
       "50,000 emails / month",
       "5,000 emails / day",
-      "20 owned teams · 60 members",
       "10 domains",
       "Priority support",
     ],
@@ -51,7 +49,6 @@ const PLAN_OPTIONS: {
     price: "CA$30 / mo",
     perks: [
       "150,000 emails / month included",
-      "50 owned teams · unlimited members",
       "Marketing & transactional CA$0.01/ea (overage)",
       "100 domains · advanced analytics",
     ],
@@ -64,7 +61,6 @@ const PLAN_OPTIONS: {
     perks: [
       "Unlimited emails — no overage charges",
       "No recurring charges",
-      "Unlimited owned teams & members",
       "500 domains · all future features",
     ],
   },
