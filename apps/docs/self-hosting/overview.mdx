@@ -19,13 +19,12 @@ Both methods require:
 - A server running Ubuntu 22.04 or later (or similar Debian-based distro)
 - A domain name pointing to your server's IP
 - An [AWS account](https://aws.amazon.com) with SES access (for email delivery)
-- (Optional) A [Stripe](https://stripe.com) account if you want billing/plan features
 
 ---
 
 ## Docker Deployment
 
-Docker is the fastest way to get ByteSend running. The compose file starts the web app, PostgreSQL, and Redis in one command.
+Docker is the fastest way to get ByteSend running. The `docker/prod/compose.yml` file in the repository starts the web app, PostgreSQL, Redis, MinIO (S3-compatible storage), and the SMTP relay together.
 
 ### 1. Install Docker
 
@@ -170,12 +169,29 @@ cp .env.example .env
 nano .env
 ```
 
-Use the same variable list from the Docker section above, but with local connection strings:
+Set local connection strings and fill in all required values:
 
 ```bash
 DATABASE_URL=postgresql://bytesend:changeme@127.0.0.1:5432/bytesend
 REDIS_URL=redis://127.0.0.1:6379
 NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=<run: openssl rand -base64 32>
+AWS_ACCESS_KEY=<your-access-key-id>
+AWS_SECRET_KEY=<your-secret-access-key>
+AWS_DEFAULT_REGION=eu-west-1
+FROM_EMAIL=noreply@your-domain.com
+```
+
+Then add OAuth credentials for any providers you want (see step 4 in the Docker section for setup links):
+
+```bash
+# At least one OAuth provider recommended (all optional)
+GITHUB_ID=
+GITHUB_SECRET=
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
 Create the symlink that Next.js expects:
@@ -241,9 +257,30 @@ sudo journalctl -u bytesend -f
 
 ---
 
-## Next Steps
+## Environment Variable Reference
 
-After the app is running:
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `REDIS_URL` | Yes | Redis connection string |
+| `NEXTAUTH_URL` | Yes | Public URL of the app |
+| `NEXTAUTH_SECRET` | Yes | Random session signing secret |
+| `AWS_ACCESS_KEY` | Yes | AWS access key ID |
+| `AWS_SECRET_KEY` | Yes | AWS secret access key |
+| `AWS_DEFAULT_REGION` | Yes | AWS region (e.g. `eu-west-1`) |
+| `FROM_EMAIL` | Yes | From address for account emails |
+| `GITHUB_ID` / `GITHUB_SECRET` | No | GitHub OAuth credentials |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | No | Discord OAuth credentials |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Google OAuth credentials |
+| `S3_COMPATIBLE_*` | No | S3-compatible storage (defaults to bundled MinIO) |
+| `SMTP_HOST` / `SMTP_USER` | No | External SMTP relay for account emails |
+| `ADMIN_EMAIL` | No | Grants admin panel access to this address |
+| `API_RATE_LIMIT` | No | API requests per second per key (default `1`) |
+| `AUTH_EMAIL_RATE_LIMIT` | No | Magic-link emails per minute (default `5`) |
+
+---
+
+## Next Steps
 
 | Topic | Guide |
 |---|---|

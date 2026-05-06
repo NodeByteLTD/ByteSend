@@ -18,10 +18,11 @@ echo "Git SHA: $GIT_SHA"
 # Build web app image
 echo ""
 echo "===== Building ByteSend Web App ====="
-docker build -f "$SCRIPT_DIR/Dockerfile.web" \
+docker build -f "$SCRIPT_DIR/Dockerfile" \
     --progress=plain \
     --build-arg APP_VERSION="$APP_VERSION" \
     --build-arg GIT_SHA="$GIT_SHA" \
+    --build-arg NEXT_PUBLIC_IS_CLOUD=false \
     -t "bytesend/web:latest" \
     -t "bytesend/web:$GIT_SHA" \
     -t "bytesend/web:$APP_VERSION" \

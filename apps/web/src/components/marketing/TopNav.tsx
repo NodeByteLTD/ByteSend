@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-
+import { env } from "~/env";
 import { TopNavClient } from "./TopNavClient";
 
-const isCloud = process.env.NEXT_PUBLIC_IS_CLOUD;
+const isCloud = env.NEXT_PUBLIC_IS_CLOUD;
 
 export function TopNav() {
   return (

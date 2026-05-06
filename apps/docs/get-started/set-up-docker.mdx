@@ -4,82 +4,104 @@ description: "A guide to deploying ByteSend using Docker and Docker Compose."
 icon: docker
 ---
 
-This guide walks through deploying ByteSend using the provided Docker Compose files. For a more complete self-hosting walkthrough including reverse proxy, TLS, and firewall configuration, see the [Self-Hosting Overview](https://docs.bytesend.cloud/self-hosting/overview).
+This guide covers the fastest path to a running ByteSend instance using Docker Compose. For a complete walkthrough including reverse proxy, TLS, and firewall configuration, see the [Self-Hosting Overview](https://docs.bytesend.cloud/self-hosting/overview).
 
 ## Prerequisites
 
 - [Docker Engine](https://docs.docker.com/engine/install/) 24+
 - [Docker Compose](https://docs.docker.com/compose/) v2 (included with Docker Desktop)
 - A domain name pointing to your server (for production)
+- AWS credentials with SES access — see [Create AWS Credentials](/get-started/create-aws-credentials)
 
 ---
 
-## Option 1: Full Stack with Docker Compose (Recommended)
-
-The `docker-compose.web.yml` file in the repository root starts the ByteSend web application, PostgreSQL, and Redis together.
-
-### 1. Clone the repository
+## 1. Clone the repository
 
 ```bash
 git clone https://github.com/NodeByteHosting/bytesend.git
 cd bytesend
 ```
 
-### 2. Configure environment variables
+---
+
+## 2. Configure environment variables
+
+The production compose file lives in `docker/prod/`. Copy the example and fill in your values:
 
 ```bash
-cp .env.example .env
-nano .env
+cp docker/prod/.env.example docker/prod/.env
+nano docker/prod/.env
 ```
 
-At minimum, set these variables:
+At minimum, set these:
 
 ```bash
-# Public URL of your deployment
-NEXTAUTH_URL=https://your-domain.com
+# ── Database (managed by compose) ─────────────────────────────────────────────
+POSTGRES_USER=bytesend
+POSTGRES_PASSWORD=<strong-password>
+POSTGRES_DB=bytesend
+DATABASE_URL=postgresql://bytesend:<strong-password>@postgres:5432/bytesend
 
-# Generate with: openssl rand -base64 32
-NEXTAUTH_SECRET=your-secret-here
-
-# Postgres — matches the compose service
-DATABASE_URL=postgresql://bytesend:changeme@postgres:5432/bytesend
-
-# Redis — matches the compose service
+# ── Redis (managed by compose) ────────────────────────────────────────────────
 REDIS_URL=redis://redis:6379
 
-# AWS SES credentials
-AWS_ACCESS_KEY=your-access-key-id
-AWS_SECRET_KEY=your-secret-access-key
+# ── Application ───────────────────────────────────────────────────────────────
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=<run: openssl rand -base64 32>
+
+# ── AWS SES ───────────────────────────────────────────────────────────────────
+AWS_ACCESS_KEY=<your-access-key-id>
+AWS_SECRET_KEY=<your-secret-access-key>
 AWS_DEFAULT_REGION=eu-west-1
+
+# ── From address ──────────────────────────────────────────────────────────────
+FROM_EMAIL=noreply@your-domain.com
 ```
 
-### 3. Start the stack
+### OAuth sign-in (optional but recommended)
 
-```bash
-docker compose -f docker-compose.web.yml up -d
-```
+Configure at least one provider. All three are supported:
 
-### 4. Run database migrations
-
-```bash
-docker compose -f docker-compose.web.yml exec web pnpm db:migrate-deploy
-```
-
-### 5. Access the app
-
-Open **http://localhost:3000** (or your domain if behind a reverse proxy).
+| Provider | Callback URL | Env vars |
+|---|---|---|
+| GitHub | `https://your-domain.com/api/auth/callback/github` | `GITHUB_ID`, `GITHUB_SECRET` |
+| Discord | `https://your-domain.com/api/auth/callback/discord` | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` |
+| Google | `https://your-domain.com/api/auth/callback/google` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 
 ---
 
-## Option 2: SMTP Server
-
-ByteSend includes a standalone SMTP relay server that forwards SMTP connections to the ByteSend API. It is deployed separately using `docker-compose.smtp.yml`.
+## 3. Start the stack
 
 ```bash
-docker compose -f docker-compose.smtp.yml up -d
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
 ```
 
-See the [SMTP Server guide](https://docs.bytesend.cloud/self-hosting/smtp-server) for full configuration details including TLS setup.
+This starts:
+
+| Container | Description |
+|---|---|
+| `web` | ByteSend Next.js application |
+| `postgres` | PostgreSQL 16 |
+| `redis` | Redis 7 |
+| `minio` | S3-compatible object storage (console on port 9001) |
+| `smtp` | ByteSend SMTP relay server |
+
+---
+
+## 4. Run database migrations
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env \
+  exec web pnpm db:migrate-deploy
+```
+
+---
+
+## 5. Access the app
+
+The app is available at **http://your-server-ip:3000** (or your domain if behind a reverse proxy).
+
+<Note>Do not expose port 3000 directly in production. Put nginx or Traefik in front and configure HTTPS. See [Reverse Proxy Setup](https://docs.bytesend.cloud/self-hosting/reverse-proxy).</Note>
 
 ---
 
@@ -88,26 +110,28 @@ See the [SMTP Server guide](https://docs.bytesend.cloud/self-hosting/smtp-server
 ### View logs
 
 ```bash
-docker compose -f docker-compose.web.yml logs -f web
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env logs -f web
 ```
 
 ### Stop the stack
 
 ```bash
-docker compose -f docker-compose.web.yml down
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env down
 ```
 
-### Stop and remove volumes (destroys database data)
+### Stop and remove volumes (destroys all data)
 
 ```bash
-docker compose -f docker-compose.web.yml down -v
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env down -v
 ```
 
-### Rebuild after a code change
+### Pull the latest image and restart
 
 ```bash
-docker compose -f docker-compose.web.yml up -d --build
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env pull
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
 ```
+
 
 ---
 

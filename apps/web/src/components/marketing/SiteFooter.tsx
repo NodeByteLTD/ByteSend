@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { env } from "~/env";
 
 function XIcon({ className }: { className?: string }) {
   return (
@@ -25,7 +26,7 @@ function BlueSkyIcon({ className }: { className?: string }) {
   );
 }
 
-const isCloud = process.env.NEXT_PUBLIC_IS_CLOUD;
+const isCloud = env.NEXT_PUBLIC_IS_CLOUD;
 
 export function SiteFooter() {
   return (

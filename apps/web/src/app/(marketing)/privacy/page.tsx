@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { env } from "~/env";
 
 export const metadata: Metadata = {
   title: "Privacy Policy – ByteSend",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  if (!process.env.NEXT_PUBLIC_IS_CLOUD) notFound();
+  if (!env.NEXT_PUBLIC_IS_CLOUD) notFound();
 
   return (
     <main className="min-h-screen bg-background text-foreground">

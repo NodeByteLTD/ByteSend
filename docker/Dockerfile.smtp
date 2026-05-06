@@ -1,10 +1,6 @@
 FROM node:20.19-alpine3.20 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-ENV SKIP_ENV_VALIDATION="true"
-ENV DOCKER_OUTPUT=1
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_IS_CLOUD="true"
 
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
@@ -15,12 +11,12 @@ RUN apk update
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY ./apps/web ./apps/web
+COPY ./apps/smtp-server ./apps/smtp-server
 COPY ./packages ./packages
 RUN pnpm add turbo@^2.5.2 -g
 
-# Prune monorepo for web app dependencies
-RUN pnpm turbo prune web --docker
+# Prune monorepo for smtp-server dependencies
+RUN pnpm turbo prune smtp-server --docker
 
 FROM base AS installer
 RUN apk add --no-cache libc6-compat
@@ -32,25 +28,21 @@ COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
-ARG APP_VERSION=unknown
-ARG GIT_SHA=unknown
-
-ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
-ENV NEXT_PUBLIC_GIT_SHA=$GIT_SHA
-
+# Build the SMTP server
 COPY --from=builder /app/out/full/ .
-
-RUN pnpm turbo run build --filter=web...
+RUN pnpm turbo run build --filter=smtp-server...
 
 FROM base AS runner
 WORKDIR /app
 
 COPY --from=installer /app .
-COPY ./docker/start.sh ./start.sh
-RUN chmod +x ./start.sh
 
-ENV SKIP_ENV_VALIDATION="false"
+# Expose SMTP ports
+# 25:   SMTP (unencrypted / MTA)
+# 587:  Submission with STARTTLS
+# 465:  SMTPS (implicit TLS)
+# 2587: Alternative submission port
+# 2465: Alternative SMTPS port
+EXPOSE 25 465 587 2465 2587
 
-EXPOSE 3000
-
-CMD ["sh", "start.sh"]
+CMD ["node", "apps/smtp-server/dist/server.js"]

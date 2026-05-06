@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@bytesend/ui/src/button";
+import { env } from "~/env";
 
 export const dynamic = "force-static";
 
@@ -24,6 +26,8 @@ await client.emails.send({
 /* ─────────────────────── Page ─────────────────────── */
 
 export default function Page() {
+  if (!env.NEXT_PUBLIC_IS_CLOUD) redirect("/login");
+
   return (
     <main className="min-h-screen text-foreground bg-background">
       <Hero />
