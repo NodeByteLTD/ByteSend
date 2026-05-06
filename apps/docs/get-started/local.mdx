@@ -4,220 +4,165 @@ description: "A guide on how to run ByteSend's codebase locally"
 icon: code
 ---
 
-## Introduction
-
-The ByteSend codebase is available on GitHub.
-
-Here is the codebase structure
+## Repository Structure
 
 ```
-apps
-├── docs
-├── marketing
-├── web
-packages
-├── eslint-config
-├── sdk
-├── tailwind-config
-├── typescript-config
-├── ui
+apps/
+  web/          # Main Next.js application (dashboard + API)
+  docs/         # This documentation site (Mintlify)
+  smtp-server/  # Standalone SMTP-to-API relay server
+
+packages/
+  lib/          # Shared utilities and Stripe plan definitions
+  sdk/          # TypeScript SDK for the ByteSend REST API
+  ui/           # Shared React component library
+  email-editor/ # Drag-and-drop email editor
+  eslint-config/
+  typescript-config/
 ```
 
-The `apps` directory contains the code for:
+## Prerequisites
 
-- `web`: Code for our dashboard and email infra
+- [Node.js](https://nodejs.org) 20 or later
+- [pnpm](https://pnpm.io) 9 or later (`corepack enable` installs it automatically)
+- [Docker](https://docs.docker.com/engine/install/) — used to run Postgres and Redis locally
+- An [AWS](https://aws.amazon.com) account with SES access (free tier works)
 
-- `marketing`: The code for the landing page of ByteSend
-
-- `docs`: The documentation that you are currently reading.
-
-The `packages` directory contains the code for:
-
-- `eslint-config` package contains shared ESLint configuration settings
-
-- `sdk` package contains TypeScript SDK for ByteSend REST API
-
-- `tailwind-config` This package contains a shared Tailwind CSS configuration.
-
-- `typescript-config` This package contains a shared typescript configuration
-
-- `ui` This package is a collection of reusable UI components like buttons, badges, etc
-
-## Running ByteSend locally
-
-To run ByteSend locally, you will need to setup the following:
-
-- [AWS](https://aws.amazon.com/) Free tier account will work.
-
-- [Cloudflare](https://www.cloudflare.com/) Free tier account will work.
-
-- [Docker](https://docs.docker.com/engine/install/) Recommended but not mandatory
-
-## Fork and Clone the repo
+## Fork and Clone the Repo
 
 <Steps>
   <Step title="Fork the repo">
-    Click on the fork button on [GitHub](https://github.com/NodeByteHosting/bytesend) to fork the repo
+    Click the **Fork** button on [GitHub](https://github.com/NodeByteHosting/bytesend) to fork the repo.
   </Step>
   <Step title="Clone the repo">
-  Once the repo is forked you can clone it on your local machine using:
-
-```bash
-git clone https://github.com/your-username/bytesend.git
-```
-
+    ```bash
+    git clone https://github.com/your-username/bytesend.git
+    cd bytesend
+    ```
   </Step>
 </Steps>
 
 ## Install Dependencies
 
 <Steps>
-<Step>
-```bash
-corepack enable
-```
-</Step>
-
-<Step>
-```bash
-pnpm install
-```
-</Step>
-</Steps>
-
-## Setup environment variables:
-
-<Steps>
-    <Step title="Copy the env.example file into .env">
+  <Step>
     ```bash
-     cp .env.example .env
-     ```
+    corepack enable
+    ```
   </Step>
-  <Step title="Nextauth secret">
-  Use the following command to generate a key and add it under ```NEXTAUTH_SECRET```
-
-```bash
-openssl rand -base64 32
-```
-
-  </Step>
-  <Step title="Create symlink for Next.js">
-  Create a symlink so that Next.js can access the root `.env` file:
-
-```bash
-ln -s ../../.env apps/web/.env
-```
-
-  </Step>
-  <Step title="Setup GitHub Oauth (optional)">
-  <Note>
-    You don't need this setup if you have `FROM_EMAIL` set in your environment
-    variables. for development email link will logged in the console.
-  </Note>
-
-Next, [create a new GitHub App](https://github.com/settings/applications/new). This will allow you to sign in to ByteSend with your GitHub account.
-
-Add the homepage as:
-
-```
-http://localhost:3000/login
-```
-
-and callback URL as:
-
-```
-http://localhost:3000/api/auth/callback/github
-```
-
-Once the app is added you can add the Client ID under `GITHUB_ID`and CLIENT SECRET under `GITHUB_SECRET`
-
-  </Step>
-  <Step title="Setup AWS credentials (Optional)">
-
-<Note>
-  You don't need this setup if you are using the local-sen-sns image. But email
-  will not be sent out.
-</Note>
-
-Next, we need to add in the [AWS credentials](https://docs.bytesend.cloud/get-started/create-aws-credentials). Follow the detailed guide to get the AWS credentials with accurate permissions and add them in:
-
-```
-AWS_ACCESS_KEY=<access-key-id>
-AWS_SECRET_KEY=<secret-access-key>
-```
-
+  <Step>
+    ```bash
+    pnpm install
+    ```
   </Step>
 </Steps>
 
-## Running ByteSend locally
-
-We are using a local Postgresql server and a local Redis server. But if you don't have docker you can also manually set these up.
-
-### Option 1: Using Docker Recommended
+## Set Up Environment Variables
 
 <Steps>
-<Step title="Start the dashboard">
-```bash
-pnpm d
-```
-</Step>
-<Step title="Dashboard and Landing page will start running">
-Dashboard will be started on
-```bash
-http://localhost:3000
-```
-Landing page will be started on
+  <Step title="Copy the example env file">
+    ```bash
+    cp .env.example .env
+    ```
+  </Step>
+  <Step title="Generate a NEXTAUTH_SECRET">
+    ```bash
+    openssl rand -base64 32
+    ```
+    Add the output as `NEXTAUTH_SECRET` in `.env`.
+  </Step>
+  <Step title="Create a symlink so Next.js can read .env">
+    ```bash
+    # Linux / macOS
+    ln -s ../../.env apps/web/.env
+    ```
+    ```powershell
+    # Windows (PowerShell — run as administrator)
+    New-Item -ItemType SymbolicLink -Path apps\web\.env -Target ..\..\env
+    ```
+  </Step>
+  <Step title="Set up GitHub OAuth (optional)">
+    <Note>
+      GitHub OAuth is optional for local development. If `FROM_EMAIL` is set, magic-link emails are logged to the console instead of being sent.
+    </Note>
 
-```bash
-http://localhost:3001
-```
+    [Create a new GitHub OAuth app](https://github.com/settings/applications/new) with:
+    - **Homepage URL:** `http://localhost:3000`
+    - **Callback URL:** `http://localhost:3000/api/auth/callback/github`
 
-</Step>
-<Step title="Once you login with GitHub you will be prompted with SES settings. You will need to run cloudflare tunnel to add the callback URL">
-Run the following command to get the URL. Here is the more detailed guide by [cloudflare](https://developers.cloudflare.com/pages/how-to/preview-with-cloudflare-tunnel/)
-```bash
-cloudflared tunnel --url http://localhost:3000
-```
+    Add the Client ID and Client Secret to `.env`:
 
-You can paste the URL provided by cloudflare in the Callback URL section
+    ```bash
+    GITHUB_ID=your-client-id
+    GITHUB_SECRET=your-client-secret
+    ```
+  </Step>
+  <Step title="Set up AWS credentials (optional)">
+    <Note>
+      AWS credentials are optional for local development. Without them, email sending is disabled but everything else works.
+    </Note>
 
-</Step>
+    Follow the [AWS credentials guide](https://docs.bytesend.cloud/get-started/create-aws-credentials) to create an IAM user with SES permissions, then add to `.env`:
+
+    ```bash
+    AWS_ACCESS_KEY=<access-key-id>
+    AWS_SECRET_KEY=<secret-access-key>
+    AWS_DEFAULT_REGION=eu-west-1
+    ```
+  </Step>
 </Steps>
 
-### Option 2: Using your own database or hosted database
+## Start the Development Server
 
 <Steps>
-<Step title="Set up your PostgreSQL and Redis database in Environment Variables">
+  <Step title="Start all services">
+    This command starts the Next.js app (port 3000) along with a local Postgres and Redis via Docker Compose:
+
+    ```bash
+    pnpm dev
+    ```
+  </Step>
+  <Step title="Open the app">
+    Visit **http://localhost:3000** in your browser.
+  </Step>
+  <Step title="Run database migrations (first run only)">
+    ```bash
+    pnpm db:migrate-dev
+    ```
+  </Step>
+</Steps>
+
+## Using a Custom Database
+
+If you prefer to use your own Postgres and Redis instead of the Docker-managed ones, set the connection strings in `.env`:
+
 ```bash
-DATABASE_URL=""
-REDIS_URL=""
+DATABASE_URL=postgresql://bytesend:password@127.0.0.1:5432/bytesend
+REDIS_URL=redis://127.0.0.1:6379
 ```
-</Step>
-<Step title="Migrate the database">
+
+Then run migrations:
+
 ```bash
 pnpm db:migrate-dev
 ```
-</Step>
-<Step title="Start the development server">
-```bash
-pnpm dev
-```
-</Step>
-<Step title="Once you login with GitHub you will be prompted with SES settings. You will need to run cloudflare tunnel to add the callback URL">
-Run the following command to get the URL. Here is the more detailed guide by [cloudflare](https://developers.cloudflare.com/pages/how-to/preview-with-cloudflare-tunnel/)
-```bash
-cloudflared tunnel --url http://localhost:3000
-```
 
-You can paste the URL provided by cloudflare in the Callback URL section
+## Useful Commands
 
-</Step>
-</Steps>
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start all apps in development mode |
+| `pnpm build` | Build all apps |
+| `pnpm db:migrate-dev` | Run Prisma migrations (creates migration files) |
+| `pnpm db:studio` | Open Prisma Studio GUI |
+| `pnpm test:web` | Run the default web test suite |
+| `pnpm test:web:all` | Run the full test suite (requires Docker) |
+| `pnpm dev:docs` | Start the docs site locally |
 
-## Run documentation
-
-To run the documentation run the following command:
+## Run the Documentation
 
 ```bash
 pnpm dev:docs
 ```
+
+This starts the Mintlify docs at **http://localhost:3001** (or the port Mintlify selects).

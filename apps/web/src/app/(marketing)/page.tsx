@@ -289,7 +289,7 @@ const pricingPlans: {
   { name: "Lite", price: "CA$10", period: "/mo", cta: "Start with Lite", href: APP_URL },
   { name: "Professional", price: "CA$30", period: "/mo", cta: "Go Professional", popular: true, href: APP_URL },
   { name: "Lifetime", price: "CA$60", period: "once", cta: "Buy Lifetime", badge: "Best value", href: APP_URL },
-  { name: "Self-Hosted", price: "Free", period: "open source", cta: "View docs", badge: "Coming soon", href: "https://docs.bytesend.cloud", selfHosted: true },
+  { name: "Self-Hosted", price: "Free", period: "open source", cta: "View docs", badge: "Recommended", href: "https://docs.bytesend.cloud", selfHosted: true },
 ];
 
 // Values align with pricingPlans order: [Free, Hobby, Lite, Pro, Lifetime, Self-Hosted]

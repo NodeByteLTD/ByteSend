@@ -1,6 +1,4 @@
 export { ByteSend } from "./src/bytesend";
-export { ByteSend as UseSend } from "./src/bytesend"; // deprecated alias
-export { ByteSend as Unsend } from "./src/bytesend"; // deprecated alias
 export { Campaigns } from "./src/campaign";
 export { ContactBooks } from "./src/contactBook";
 export {

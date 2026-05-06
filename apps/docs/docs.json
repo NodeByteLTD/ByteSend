@@ -32,7 +32,9 @@
             "pages": [
               "introduction",
               "get-started/smtp",
-              "get-started/nodejs"
+              "get-started/nodejs",
+              "get-started/local",
+              "get-started/set-up-docker"
             ]
           }
         ]

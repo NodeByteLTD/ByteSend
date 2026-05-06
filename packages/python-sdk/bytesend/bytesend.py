@@ -38,7 +38,7 @@ class ByteSend:
     ----------
     key:
         API key issued by ByteSend. If not provided, the client attempts to
-        read ``BYTESEND_API_KEY``, ``USESEND_API_KEY``, or ``UNSEND_API_KEY``
+        read ``BYTESEND_API_KEY``
         from the environment.
     url:
         Optional base URL for the API (useful for testing).
@@ -52,11 +52,11 @@ class ByteSend:
         raise_on_error: bool = True,
         session: Optional[requests.Session] = None,
     ) -> None:
-        self.key = key or os.getenv("BYTESEND_API_KEY") or os.getenv("USESEND_API_KEY") or os.getenv("UNSEND_API_KEY")
+        self.key = key or os.getenv("BYTESEND_API_KEY")
         if not self.key:
             raise ValueError("Missing API key. Pass it to ByteSend('bs_123')")
 
-        base = os.getenv("BYTESEND_BASE_URL") or os.getenv("USESEND_BASE_URL") or os.getenv("UNSEND_BASE_URL") or DEFAULT_BASE_URL
+        base = os.getenv("BYTESEND_BASE_URL") or DEFAULT_BASE_URL
         if url:
             base = url
         self.url = f"{base}/api/v1"

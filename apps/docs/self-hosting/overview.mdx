@@ -1,16 +1,255 @@
 ---
-title: Self hosting ByteSend
-description: "An end-to-end guide on how to self-host ByteSend."
+title: Self-Hosting ByteSend
+description: "An end-to-end guide on how to self-host ByteSend using Docker or a manual bare-metal install."
 ---
 
-<Warning>
-  Self-hosting support is a work in progress. Some steps may be incomplete or change before the official release.
-</Warning>
+ByteSend is fully self-hostable. This guide covers two deployment paths:
+
+- **[Docker (recommended)](#docker-deployment)** — spin up the entire stack with a single `docker compose` command
+- **[Manual / bare-metal](#manual-deployment)** — install directly on a Linux server using Node.js and pnpm
+
+If you have questions, join [#self-host](https://discord.gg/nodebyte) on Discord.
+
+---
 
 ## Prerequisites
 
-- A [GitHub](https://github.com) account
-- An [AWS](https://aws.amazon.com) account
+Both methods require:
 
-If you have any questions join [#self-host](https://discord.gg/xqkqzVRC4S) on discord.
+- A server running Ubuntu 22.04 or later (or similar Debian-based distro)
+- A domain name pointing to your server's IP
+- An [AWS account](https://aws.amazon.com) with SES access (for email delivery)
+- (Optional) A [Stripe](https://stripe.com) account if you want billing/plan features
+
+---
+
+## Docker Deployment
+
+Docker is the fastest way to get ByteSend running. The compose file starts the web app, PostgreSQL, and Redis in one command.
+
+### 1. Install Docker
+
+```bash
+# Install Docker Engine
+curl -fsSL https://get.docker.com | sh
+
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### 2. Clone the repository
+
+```bash
+git clone https://github.com/NodeByteHosting/bytesend.git
+cd bytesend
+```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+At minimum, set the following variables:
+
+```bash
+# Application
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=<run: openssl rand -base64 32>
+
+# Database (managed by compose — change password)
+DATABASE_URL=postgresql://bytesend:changeme@postgres:5432/bytesend
+
+# Redis (managed by compose)
+REDIS_URL=redis://redis:6379
+
+# AWS SES
+AWS_ACCESS_KEY=<your-access-key-id>
+AWS_SECRET_KEY=<your-secret-access-key>
+AWS_DEFAULT_REGION=eu-west-1
+
+# GitHub OAuth (optional — enables social sign-in)
+GITHUB_ID=
+GITHUB_SECRET=
+
+# Stripe (optional — enables billing)
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Release tracking (optional)
+GITLAB_URL=
+GITLAB_REPO_ID=
+GITLAB_RELEASE_TOKEN=
+GITHUB_RELEASE_TOKEN=
+```
+
+### 4. Start the stack
+
+```bash
+docker compose -f docker-compose.web.yml up -d
+```
+
+This starts three containers:
+
+| Container | Description |
+|---|---|
+| `web` | ByteSend Next.js application (port 3000) |
+| `postgres` | PostgreSQL 16 database |
+| `redis` | Redis 7 |
+
+### 5. Run database migrations
+
+```bash
+docker compose -f docker-compose.web.yml exec web pnpm db:migrate-deploy
+```
+
+### 6. Verify
+
+```bash
+docker compose -f docker-compose.web.yml ps
+docker compose -f docker-compose.web.yml logs -f web
+```
+
+The app is now accessible at **http://your-server-ip:3000**.
+
+<Note>Port 3000 should not be exposed directly in production. Set up a reverse proxy (nginx or Traefik) in front of it and configure HTTPS. See [Reverse Proxy Setup](./reverse-proxy) for the SMTP server guide — the same nginx patterns apply.</Note>
+
+---
+
+## Manual Deployment
+
+If you prefer not to use Docker, you can install ByteSend directly on the host.
+
+### 1. Install Node.js and pnpm
+
+```bash
+# Install Node.js 20 via nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+nvm use 20
+
+# Enable pnpm via corepack
+corepack enable
+```
+
+### 2. Install PostgreSQL 16
+
+```bash
+sudo apt install -y postgresql postgresql-contrib
+
+# Create a database and user
+sudo -u postgres psql <<'SQL'
+CREATE USER bytesend WITH PASSWORD 'changeme';
+CREATE DATABASE bytesend OWNER bytesend;
+SQL
+```
+
+### 3. Install Redis 7
+
+```bash
+sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+### 4. Clone and install
+
+```bash
+git clone https://github.com/NodeByteHosting/bytesend.git
+cd bytesend
+pnpm install
+```
+
+### 5. Configure environment variables
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Use the same variable list from the Docker section above, but with local connection strings:
+
+```bash
+DATABASE_URL=postgresql://bytesend:changeme@127.0.0.1:5432/bytesend
+REDIS_URL=redis://127.0.0.1:6379
+NEXTAUTH_URL=https://your-domain.com
+```
+
+Create the symlink that Next.js expects:
+
+```bash
+ln -s ../../.env apps/web/.env
+```
+
+### 6. Build the application
+
+```bash
+pnpm build:web
+```
+
+### 7. Run database migrations
+
+```bash
+pnpm db:migrate-deploy
+```
+
+### 8. Start the application
+
+```bash
+pnpm --filter=web start
+```
+
+The app will start on port 3000.
+
+### Running as a systemd service
+
+To keep ByteSend running after reboots, create a systemd unit:
+
+```bash
+sudo tee /etc/systemd/system/bytesend.service > /dev/null <<EOF
+[Unit]
+Description=ByteSend Web Application
+After=network.target postgresql.service redis.service
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=/home/$USER/bytesend
+ExecStart=/usr/bin/pnpm --filter=web start
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=/home/$USER/bytesend/.env
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable bytesend
+sudo systemctl start bytesend
+```
+
+Check the status:
+
+```bash
+sudo systemctl status bytesend
+sudo journalctl -u bytesend -f
+```
+
+---
+
+## Next Steps
+
+After the app is running:
+
+| Topic | Guide |
+|---|---|
+| SMTP relay server | [ByteSend SMTP Server](./smtp-server) |
+| TLS certificates | [Certificate Setup](./certificates) |
+| Firewall (UFW) | [Firewall Setup](./firewall) |
+| Reverse proxy | [Nginx / Traefik](./reverse-proxy) |
+| Security hardening | [Security](./security) |
 

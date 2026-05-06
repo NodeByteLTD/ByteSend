@@ -1,69 +1,133 @@
 ---
-title: Docker setup for ByteSend
-description: The following guide will walk you through setting up ByteSend using Docker. You can choose between a production setup using Docker Compose or a standalone container.
+title: Docker Setup
+description: "A guide to deploying ByteSend using Docker and Docker Compose."
+icon: docker
 ---
+
+This guide walks through deploying ByteSend using the provided Docker Compose files. For a more complete self-hosting walkthrough including reverse proxy, TLS, and firewall configuration, see the [Self-Hosting Overview](https://docs.bytesend.cloud/self-hosting/overview).
 
 ## Prerequisites
 
-Before you begin, ensure that you have the following installed:
+- [Docker Engine](https://docs.docker.com/engine/install/) 24+
+- [Docker Compose](https://docs.docker.com/compose/) v2 (included with Docker Desktop)
+- A domain name pointing to your server (for production)
 
-- Docker
-- Docker Compose (if using the Docker Compose setup)
+---
 
-## Option 1: Production Docker Compose Setup
+## Option 1: Full Stack with Docker Compose (Recommended)
 
-This setup includes PostgreSQL, Redis and the ByteSend application.
+The `docker-compose.web.yml` file in the repository root starts the ByteSend web application, PostgreSQL, and Redis together.
 
-1. Download the Docker Compose file from the ByteSend repository: [compose.yml](https://github.com/NodeByteHosting/bytesend/blob/main/docker/prod/compose.yml)
-2. Navigate to the directory containing the `compose.yml` file.
-3. Create a `.env` file in the same directory. Copy the contents of `.env.selfhost.example`
-4. Run the following command to start the containers:
+### 1. Clone the repository
 
-```
-docker-compose --env-file ./.env up -d
-```
-
-This will start the PostgreSQL database, Redis and the ByteSend application containers.
-
-5. Access the ByteSend application by visiting `http://localhost:3000` in your web browser.
-
-## Option 2: Standalone Docker Container
-
-If you prefer to host the ByteSend application on your container provider of choice, you can use the pre-built Docker image from DockerHub or GitHub's Package Registry. Note that you will need to provide your own database and SMTP host.
-
-1. Pull the ByteSend Docker image:
-
-```
-docker pull bytesend/bytesend
+```bash
+git clone https://github.com/NodeByteHosting/bytesend.git
+cd bytesend
 ```
 
-Or, if using GitHub's Package Registry:
+### 2. Configure environment variables
 
-```
-docker pull ghcr.io/bytesend/bytesend
-```
-
-2. Run the Docker container, providing the necessary environment variables for your database and SMTP host:
-
-```
-docker run -d \
-  -p 3000:3000 \
-  -e NEXTAUTH_URL="<your-nextauth-url>"
-  -e NEXTAUTH_SECRET="<your-nextauth-secret>"
-  -e DATABASE_URL="<your-next-private-database-url>"
-  -e REDIS_URL="<your-next-private-redis-url>"
-  -e AWS_ACCESS_KEY="<your-next-private-aws-access-key-id>"
-  -e AWS_SECRET_KEY="<your-next-private-aws-secret-access-key>"
-  -e AWS_DEFAULT_REGION="<your-next-private-aws-region>"
-  -e GITHUB_ID="<your-next-private-github-id>"
-  -e GITHUB_SECRET="<your-next-private-github-secret>"
-  bytesend/bytesend
+```bash
+cp .env.example .env
+nano .env
 ```
 
-Replace the placeholders with your actual database and aws details.
+At minimum, set these variables:
 
-1. Access the ByteSend application by visiting the URL you provided in the `NEXTAUTH_URL` environment variable in your web browser.
+```bash
+# Public URL of your deployment
+NEXTAUTH_URL=https://your-domain.com
 
-## Success
+# Generate with: openssl rand -base64 32
+NEXTAUTH_SECRET=your-secret-here
 
-You have now successfully set up ByteSend using Docker. You can start sending emails efficiently. If you encounter any issues or have further questions, please refer to the official ByteSend documentation or seek assistance from the community.
+# Postgres — matches the compose service
+DATABASE_URL=postgresql://bytesend:changeme@postgres:5432/bytesend
+
+# Redis — matches the compose service
+REDIS_URL=redis://redis:6379
+
+# AWS SES credentials
+AWS_ACCESS_KEY=your-access-key-id
+AWS_SECRET_KEY=your-secret-access-key
+AWS_DEFAULT_REGION=eu-west-1
+```
+
+### 3. Start the stack
+
+```bash
+docker compose -f docker-compose.web.yml up -d
+```
+
+### 4. Run database migrations
+
+```bash
+docker compose -f docker-compose.web.yml exec web pnpm db:migrate-deploy
+```
+
+### 5. Access the app
+
+Open **http://localhost:3000** (or your domain if behind a reverse proxy).
+
+---
+
+## Option 2: SMTP Server
+
+ByteSend includes a standalone SMTP relay server that forwards SMTP connections to the ByteSend API. It is deployed separately using `docker-compose.smtp.yml`.
+
+```bash
+docker compose -f docker-compose.smtp.yml up -d
+```
+
+See the [SMTP Server guide](https://docs.bytesend.cloud/self-hosting/smtp-server) for full configuration details including TLS setup.
+
+---
+
+## Managing the Stack
+
+### View logs
+
+```bash
+docker compose -f docker-compose.web.yml logs -f web
+```
+
+### Stop the stack
+
+```bash
+docker compose -f docker-compose.web.yml down
+```
+
+### Stop and remove volumes (destroys database data)
+
+```bash
+docker compose -f docker-compose.web.yml down -v
+```
+
+### Rebuild after a code change
+
+```bash
+docker compose -f docker-compose.web.yml up -d --build
+```
+
+---
+
+## Environment Variable Reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXTAUTH_URL` | Yes | Public URL of the app |
+| `NEXTAUTH_SECRET` | Yes | Random secret for session signing |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `REDIS_URL` | Yes | Redis connection string |
+| `AWS_ACCESS_KEY` | Yes | AWS access key ID |
+| `AWS_SECRET_KEY` | Yes | AWS secret access key |
+| `AWS_DEFAULT_REGION` | Yes | AWS region (e.g. `eu-west-1`) |
+| `GITHUB_ID` | No | GitHub OAuth app client ID |
+| `GITHUB_SECRET` | No | GitHub OAuth app client secret |
+| `STRIPE_SECRET_KEY` | No | Stripe secret key (billing) |
+| `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook signing secret |
+| `GITLAB_URL` | No | GitLab URL for release tracking |
+| `GITLAB_REPO_ID` | No | GitLab repository ID |
+| `GITLAB_RELEASE_TOKEN` | No | GitLab API token for releases |
+| `GITHUB_RELEASE_TOKEN` | No | GitHub API token for releases |
+

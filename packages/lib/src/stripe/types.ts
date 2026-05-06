@@ -11,7 +11,6 @@ export interface PlanLimits {
   maxDomains: number;
   maxContactBooks: number;
   maxTeamMembers: number;
-  maxOwnedTeams: number;
   maxWebhooks: number;
   contactsLimit: number;
   campaignsLimit: number;
