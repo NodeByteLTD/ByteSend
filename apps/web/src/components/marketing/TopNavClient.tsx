@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@bytesend/ui/src/button";
 
-export function TopNavClient() {
+export function TopNavClient({ isCloud }: { isCloud?: boolean }) {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
   const ctaHref = session ? "/dashboard" : "/login";
@@ -36,9 +36,9 @@ export function TopNavClient() {
       {open && (
         <div className="sm:hidden fixed top-[53px] inset-x-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl">
           <div className="mx-auto max-w-5xl px-6 py-4 flex flex-col gap-1 text-sm">
-            <Link href="/#features" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>
-            <Link href="/#pricing" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>
-            <Link href="/changelog" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Changelog</Link>
+            {isCloud && <Link href="/#features" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>}
+            {isCloud && <Link href="/#pricing" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>}
+            {isCloud && <Link href="/changelog" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Changelog</Link>}
             <a href="https://discord.gg/xqkqzVRC4S" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Discord</a>
             <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Docs</a>
             <Button className="w-full mt-2 rounded-lg" asChild>

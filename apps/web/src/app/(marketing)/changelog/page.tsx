@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 // Force server-render on every request so the page isn't baked at build time
 // (env vars like GITLAB_URL are only available at runtime, not during `next build`).
@@ -223,6 +224,8 @@ function ReleaseBody({ body }: { body: string }) {
 ───────────────────────────────────────────────────────────── */
 
 export default async function ChangelogPage() {
+  if (!process.env.NEXT_PUBLIC_IS_CLOUD) notFound();
+
   const releases = await getReleases();
 
   return (

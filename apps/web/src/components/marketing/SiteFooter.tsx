@@ -25,6 +25,8 @@ function BlueSkyIcon({ className }: { className?: string }) {
   );
 }
 
+const isCloud = process.env.NEXT_PUBLIC_IS_CLOUD;
+
 export function SiteFooter() {
   return (
     <footer className="bg-background border-t border-border/30">
@@ -38,10 +40,10 @@ export function SiteFooter() {
             </Link>
             <nav className="flex items-center gap-4 text-[13px] text-muted-foreground">
               <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Docs</a>
-              <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <a href="https://status.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>
+              {isCloud && <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>}
+              {isCloud && <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>}
+              {isCloud && <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>}
+              {isCloud && <a href="https://status.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>}
             </nav>
           </div>
 
