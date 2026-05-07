@@ -1,0 +1,58 @@
+---
+title: SMTP support
+description: "A guide to integrate ByteSend with SMTP"
+icon: envelope  
+---
+
+## Prerequisites 
+
+You will need an API key and a verified domain to get the most out of this guide:
+
+- [API Key](https://bytesend.cloud/dev-settings/api-keys)
+- [Verified Domain](https://bytesend.cloud/domains)
+
+## SMTP credentials
+
+To set up your SMTP integration, you'll need to provide the following credentials:
+
+- **Host:** ```smtp.bytesend.cloud```
+- **Port:** ```465```, ```587```, ```2465```, or ```2587```
+- **Username:** ```bytesend```
+- **Password:** ```YOUR-API-KEY```
+
+## Example with Nodemailer
+
+Following example with Nodemailer shows how you can send mails with SMTP support from ByteSend and Nodemailer.
+
+```javascript
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.bytesend.cloud",
+  port: 465,
+  secure: false,
+  auth: {
+    user: "bytesend",
+    pass: "bs_your_api_key",
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+const mailOptions = {
+  to: "sender@example.com",
+  from: "hello@example.com",
+  subject: "Testing SMTP",
+  html: "<strong>THIS IS USING SMTP,</strong><p>ByteSend is the best email sending platform<p><p>check out <a href='https://bytesend.cloud'>bytesend.cloud</a>",
+  text: "hello,\n\nByteSend is the best email sending platform",
+};
+
+transporter.sendMail(mailOptions, (error, info) => {
+  if (error) {
+    console.error("Error sending email:", error);
+  } else {
+    console.log("Email sent successfully:", info.response);
+  }
+});
+```

@@ -1,0 +1,49 @@
+FROM node:20.19-alpine3.20 AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+
+FROM base AS builder
+RUN apk add --no-cache libc6-compat
+RUN apk update
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY ./apps/smtp-server ./apps/smtp-server
+COPY ./packages ./packages
+RUN pnpm add turbo@^2.5.2 -g
+
+# Prune monorepo for smtp-server dependencies
+RUN pnpm turbo prune smtp-server --docker
+
+FROM base AS installer
+RUN apk add --no-cache libc6-compat
+RUN apk update
+WORKDIR /app
+
+COPY .gitignore .gitignore
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Build the SMTP server
+COPY --from=builder /app/out/full/ .
+RUN pnpm turbo run build --filter=smtp-server...
+
+FROM base AS runner
+WORKDIR /app
+
+COPY --from=installer /app .
+
+# Expose SMTP ports
+# 25: SMTP (unencrypted)
+# 587: Submission (STARTTLS)
+# 465: SMTPS (implicit SSL/TLS)
+# 2587: Alternative submission port
+# 2465: Alternative SMTPS port
+EXPOSE 25 465 587 2465 2587
+
+CMD ["node", "apps/smtp-server/dist/server.js"]
+

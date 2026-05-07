@@ -1,0 +1,133 @@
+name: bytesend-prod
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: bytesend-db-prod
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: bytesend-redis-prod
+    restart: always
+    volumes:
+      - cache:/data
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+
+  # Optional: built-in S3-compatible object storage.
+  # Remove this service and set S3_COMPATIBLE_* vars to point at your own
+  # S3 bucket (AWS, Cloudflare R2, Backblaze B2, etc.) instead.
+  minio:
+    image: minio/minio
+    container_name: bytesend-storage-prod
+    restart: always
+    ports:
+      - "9001:9001"   # MinIO console UI
+    volumes:
+      - storage:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-bytesend}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?err}
+    entrypoint: sh
+    command: -c 'mkdir -p /data/bytesend && minio server /data --console-address ":9001" --address ":9002"'
+
+  web:
+    image: bytesend/web:latest
+    container_name: bytesend-web
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+
+      # ── Required ────────────────────────────────────────────────────────────
+      - DATABASE_URL=${DATABASE_URL:?err}
+      - REDIS_URL=${REDIS_URL:?err}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:?err}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?err}
+
+      # AWS SES (required for email delivery)
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY:?err}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY:?err}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:?err}
+
+      # ── OAuth — at least one provider required for sign-in ──────────────────
+      - GITHUB_ID=${GITHUB_ID:-}
+      - GITHUB_SECRET=${GITHUB_SECRET:-}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+
+      # ── Email ────────────────────────────────────────────────────────────────
+      - FROM_EMAIL=${FROM_EMAIL:-}
+      # Override to use an external SMTP relay for transactional account emails
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_USER=${SMTP_USER:-}
+
+      # ── S3-compatible storage (images, attachments) ─────────────────────────
+      # Defaults point at the bundled MinIO service above.
+      # Replace with your own bucket URLs to remove the minio service.
+      - S3_COMPATIBLE_ACCESS_KEY=${S3_COMPATIBLE_ACCESS_KEY:-${MINIO_ROOT_USER:-bytesend}}
+      - S3_COMPATIBLE_SECRET_KEY=${S3_COMPATIBLE_SECRET_KEY:-${MINIO_ROOT_PASSWORD:-}}
+      - S3_COMPATIBLE_API_URL=${S3_COMPATIBLE_API_URL:-http://minio:9002}
+      - S3_COMPATIBLE_PUBLIC_URL=${S3_COMPATIBLE_PUBLIC_URL:-http://localhost:9002/bytesend}
+      - S3_COMPATIBLE_BUCKET=${S3_COMPATIBLE_BUCKET:-bytesend}
+
+      # ── Rate limiting ────────────────────────────────────────────────────────
+      - API_RATE_LIMIT=${API_RATE_LIMIT:-1}
+      - AUTH_EMAIL_RATE_LIMIT=${AUTH_EMAIL_RATE_LIMIT:-5}
+
+      # ── Admin ────────────────────────────────────────────────────────────────
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+
+      # ── Optional / cloud-only ────────────────────────────────────────────────
+      # Leave NEXT_PUBLIC_IS_CLOUD unset (or false) for self-hosted deployments.
+      # Only set to true on the bytesend.cloud managed instance.
+      - NEXT_PUBLIC_IS_CLOUD=false
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  smtp:
+    image: bytesend/smtp:latest
+    container_name: bytesend-smtp
+    restart: always
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "2465:2465"
+      - "2587:2587"
+    environment:
+      - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-http://web:3000}
+      - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
+      # TLS mode: 'none' (default, use behind a reverse proxy)
+      #           'manual' (server handles TLS; uncomment cert vars below)
+      - SMTP_TLS_MODE=${SMTP_TLS_MODE:-none}
+      # - SMTP_TLS_CERT_PATH=/certs/fullchain.pem
+      # - SMTP_TLS_KEY_PATH=/certs/privkey.pem
+    # volumes:
+    #   - /etc/letsencrypt/live/smtp.example.com:/certs:ro
+    depends_on:
+      - web
+
+volumes:
+  database:
+  cache:
+  storage:
+

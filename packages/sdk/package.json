@@ -1,0 +1,36 @@
+{
+  "name": "bytesend-js",
+  "version": "0.1.1",
+  "description": "Official JavaScript SDK for ByteSend, the email sending service built for developers.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NodeByteHosting/bytesend-cloud"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --max-warnings 0",
+    "build": "tsup",
+    "publish-sdk": "pnpm run build && npm publish --access public --no-git-checks",
+    "openapi-typegen": "openapi-typescript ../../apps/docs/api-reference/openapi.json -o types/schema.d.ts"
+  },
+  "keywords": [],
+  "author": "NodeByte LTD",
+  "homepage": "https://docs.bytesend.cloud",
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "@types/react": "^19.1.2",
+    "@bytesend/eslint-config": "workspace:*",
+    "@bytesend/lib": "workspace:*",
+    "@bytesend/typescript-config": "workspace:*",
+    "openapi-typescript": "^7.6.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@react-email/render": "^1.0.6",
+    "react": "^19.1.0"
+  }
+}

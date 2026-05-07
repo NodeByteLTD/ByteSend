@@ -1,0 +1,157 @@
+---
+title: Docker Setup
+description: "A guide to deploying ByteSend using Docker and Docker Compose."
+icon: docker
+---
+
+This guide covers the fastest path to a running ByteSend instance using Docker Compose. For a complete walkthrough including reverse proxy, TLS, and firewall configuration, see the [Self-Hosting Overview](https://docs.bytesend.cloud/self-hosting/overview).
+
+## Prerequisites
+
+- [Docker Engine](https://docs.docker.com/engine/install/) 24+
+- [Docker Compose](https://docs.docker.com/compose/) v2 (included with Docker Desktop)
+- A domain name pointing to your server (for production)
+- AWS credentials with SES access — see [Create AWS Credentials](/get-started/create-aws-credentials)
+
+---
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/NodeByteHosting/bytesend.git
+cd bytesend
+```
+
+---
+
+## 2. Configure environment variables
+
+The production compose file lives in `docker/prod/`. Copy the example and fill in your values:
+
+```bash
+cp docker/prod/.env.example docker/prod/.env
+nano docker/prod/.env
+```
+
+At minimum, set these:
+
+```bash
+# ── Database (managed by compose) ─────────────────────────────────────────────
+POSTGRES_USER=bytesend
+POSTGRES_PASSWORD=<strong-password>
+POSTGRES_DB=bytesend
+DATABASE_URL=postgresql://bytesend:<strong-password>@postgres:5432/bytesend
+
+# ── Redis (managed by compose) ────────────────────────────────────────────────
+REDIS_URL=redis://redis:6379
+
+# ── Application ───────────────────────────────────────────────────────────────
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=<run: openssl rand -base64 32>
+
+# ── AWS SES ───────────────────────────────────────────────────────────────────
+AWS_ACCESS_KEY=<your-access-key-id>
+AWS_SECRET_KEY=<your-secret-access-key>
+AWS_DEFAULT_REGION=eu-west-1
+
+# ── From address ──────────────────────────────────────────────────────────────
+FROM_EMAIL=noreply@your-domain.com
+```
+
+### OAuth sign-in (optional but recommended)
+
+Configure at least one provider. All three are supported:
+
+| Provider | Callback URL | Env vars |
+|---|---|---|
+| GitHub | `https://your-domain.com/api/auth/callback/github` | `GITHUB_ID`, `GITHUB_SECRET` |
+| Discord | `https://your-domain.com/api/auth/callback/discord` | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` |
+| Google | `https://your-domain.com/api/auth/callback/google` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+
+---
+
+## 3. Start the stack
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
+```
+
+This starts:
+
+| Container | Description |
+|---|---|
+| `web` | ByteSend Next.js application |
+| `postgres` | PostgreSQL 16 |
+| `redis` | Redis 7 |
+| `minio` | S3-compatible object storage (console on port 9001) |
+| `smtp` | ByteSend SMTP relay server |
+
+---
+
+## 4. Run database migrations
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env \
+  exec web pnpm db:migrate-deploy
+```
+
+---
+
+## 5. Access the app
+
+The app is available at **http://your-server-ip:3000** (or your domain if behind a reverse proxy).
+
+<Note>Do not expose port 3000 directly in production. Put nginx or Traefik in front and configure HTTPS. See [Reverse Proxy Setup](https://docs.bytesend.cloud/self-hosting/reverse-proxy).</Note>
+
+---
+
+## Managing the Stack
+
+### View logs
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env logs -f web
+```
+
+### Stop the stack
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env down
+```
+
+### Stop and remove volumes (destroys all data)
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env down -v
+```
+
+### Pull the latest image and restart
+
+```bash
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env pull
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
+```
+
+
+---
+
+## Environment Variable Reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXTAUTH_URL` | Yes | Public URL of the app |
+| `NEXTAUTH_SECRET` | Yes | Random secret for session signing |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `REDIS_URL` | Yes | Redis connection string |
+| `AWS_ACCESS_KEY` | Yes | AWS access key ID |
+| `AWS_SECRET_KEY` | Yes | AWS secret access key |
+| `AWS_DEFAULT_REGION` | Yes | AWS region (e.g. `eu-west-1`) |
+| `GITHUB_ID` | No | GitHub OAuth app client ID |
+| `GITHUB_SECRET` | No | GitHub OAuth app client secret |
+| `STRIPE_SECRET_KEY` | No | Stripe secret key (billing) |
+| `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook signing secret |
+| `GITLAB_URL` | No | GitLab URL for release tracking |
+| `GITLAB_REPO_ID` | No | GitLab repository ID |
+| `GITLAB_RELEASE_TOKEN` | No | GitLab API token for releases |
+| `GITHUB_RELEASE_TOKEN` | No | GitHub API token for releases |
+

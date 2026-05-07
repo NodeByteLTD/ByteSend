@@ -1,0 +1,291 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { env } from "~/env";
+
+// Force server-render on every request so the page isn't baked at build time
+// (env vars like GITLAB_URL are only available at runtime, not during `next build`).
+// The individual fetch() calls below still use next: { revalidate: 3600 } for
+// data-level caching, so we don't hammer the API on every request.
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Changelog – ByteSend",
+  description: "New features, improvements, and fixes shipping in every ByteSend release.",
+  alternates: { canonical: "https://bytesend.cloud/changelog" },
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Types
+───────────────────────────────────────────────────────────── */
+
+type Release = {
+  tag: string;
+  name: string;
+  date: string;
+  body: string;
+  url: string;
+};
+
+/* ─────────────────────────────────────────────────────────────
+   Data fetching — GitLab (custom instance) → GitHub (private)
+───────────────────────────────────────────────────────────── */
+
+const GITHUB_REPO = "NodeByteLTD/ByteSend";
+
+async function fetchFromGitLab(): Promise<Release[] | null> {
+  const base = process.env.GITLAB_URL;
+  const repoId = process.env.GITLAB_REPO_ID;
+  if (!base || !repoId) return null;
+
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (process.env.GITLAB_RELEASE_TOKEN) {
+    headers["PRIVATE-TOKEN"] = process.env.GITLAB_RELEASE_TOKEN;
+  }
+
+  try {
+    const res = await fetch(
+      `${base}/api/v4/projects/${encodeURIComponent(repoId)}/releases?per_page=20&order_by=released_at&sort=desc`,
+      { headers, next: { revalidate: 3600 } },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      tag_name: string;
+      name: string;
+      released_at: string;
+      description: string;
+      _links?: { self?: string };
+    }[];
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return data.map((r) => ({
+      tag: r.tag_name,
+      name: r.name || r.tag_name,
+      date: new Date(r.released_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      body: r.description ?? "",
+      url: r._links?.self ?? "",
+    }));
+  } catch (err) {
+    console.error("[changelog] GitLab fetch failed:", err);
+    return null;
+  }
+}
+
+async function fetchFromGitHub(): Promise<Release[] | null> {
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  if (process.env.GITHUB_RELEASE_TOKEN) {
+    headers["Authorization"] = `Bearer ${process.env.GITHUB_RELEASE_TOKEN}`;
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases?per_page=20`,
+      { headers, next: { revalidate: 3600 } },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      tag_name: string;
+      name: string;
+      published_at: string;
+      body: string;
+      html_url: string;
+    }[];
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return data.map((r) => ({
+      tag: r.tag_name,
+      name: r.name || r.tag_name,
+      date: new Date(r.published_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      body: r.body ?? "",
+      url: r.html_url,
+    }));
+  } catch (err) {
+    console.error("[changelog] GitHub fetch failed:", err);
+    return null;
+  }
+}
+
+async function getReleases(): Promise<Release[]> {
+  return (await fetchFromGitLab()) ?? (await fetchFromGitHub()) ?? [];
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Inline markdown parser — **bold**, `code`, *italic*
+───────────────────────────────────────────────────────────── */
+
+function parseInline(text: string): React.ReactNode {
+  const INLINE = /(\*\*(.+?)\*\*|`([^`]+)`|\*([^*]+)\*)/g;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let n = 0;
+  let m: RegExpExecArray | null;
+
+  while ((m = INLINE.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[2] !== undefined) {
+      parts.push(<strong key={n++} className="font-semibold text-foreground">{m[2]}</strong>);
+    } else if (m[3] !== undefined) {
+      parts.push(<code key={n++} className="font-mono text-[12px] bg-muted px-1 py-0.5 rounded">{m[3]}</code>);
+    } else if (m[4] !== undefined) {
+      parts.push(<em key={n++}>{m[4]}</em>);
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length === 1 ? parts[0] : <>{parts}</>;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Markdown body renderer — ## ### #### headings, bullets, blank
+───────────────────────────────────────────────────────────── */
+
+type BulletItem = { text: string; indent: number };
+
+function ReleaseBody({ body }: { body: string }) {
+  if (!body.trim()) return null;
+
+  const lines = body.split("\n");
+  const nodes: React.ReactNode[] = [];
+  let listBuffer: BulletItem[] = [];
+  let key = 0;
+
+  function flushList() {
+    if (listBuffer.length === 0) return;
+    nodes.push(
+      <ul key={key++} className="space-y-2 mb-4">
+        {listBuffer.map((item, i) => (
+          <li
+            key={i}
+            className="flex gap-3 text-sm text-foreground/80 leading-relaxed"
+            style={{ paddingLeft: item.indent > 0 ? `${item.indent * 16}px` : undefined }}
+          >
+            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-border shrink-0" />
+            <span>{parseInline(item.text)}</span>
+          </li>
+        ))}
+      </ul>,
+    );
+    listBuffer = [];
+  }
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    const trimmed = line.trimStart();
+    const indent = Math.floor((line.length - trimmed.length) / 2);
+
+    if (trimmed.startsWith("#### ")) {
+      flushList();
+      nodes.push(
+        <h5 key={key++} className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 mt-5 mb-1.5 first:mt-0">
+          {parseInline(trimmed.slice(5))}
+        </h5>,
+      );
+    } else if (trimmed.startsWith("### ")) {
+      flushList();
+      nodes.push(
+        <h4 key={key++} className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mt-6 mb-2 first:mt-0">
+          {parseInline(trimmed.slice(4))}
+        </h4>,
+      );
+    } else if (trimmed.startsWith("## ")) {
+      flushList();
+      nodes.push(
+        <h3 key={key++} className="text-sm font-semibold text-foreground mt-6 mb-2 first:mt-0">
+          {parseInline(trimmed.slice(3))}
+        </h3>,
+      );
+    } else if (/^[-*] /.test(trimmed)) {
+      listBuffer.push({ text: trimmed.slice(2).trim(), indent });
+    } else if (trimmed === "") {
+      flushList();
+    } else {
+      flushList();
+      nodes.push(
+        <p key={key++} className="text-sm text-muted-foreground leading-relaxed mb-2">
+          {parseInline(trimmed)}
+        </p>,
+      );
+    }
+  }
+  flushList();
+
+  return <div className="mt-4">{nodes}</div>;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Page
+───────────────────────────────────────────────────────────── */
+
+export default async function ChangelogPage() {
+  if (!env.NEXT_PUBLIC_IS_CLOUD) notFound();
+
+  const releases = await getReleases();
+
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      {/* Header */}
+      <div className="border-b border-border/30">
+        <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground mb-6">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Release notes
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Changelog</h1>
+          <p className="mt-4 text-base text-muted-foreground max-w-xl leading-relaxed">
+            New features, improvements, and fixes shipping in every ByteSend release.
+          </p>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        {releases.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No releases found.</p>
+        ) : (
+          <div className="relative">
+            {/* Vertical line */}
+            <div className="absolute left-0 top-2 bottom-0 w-px bg-border/40 hidden sm:block" />
+
+            <div className="space-y-16">
+              {releases.map((release, idx) => (
+                <div key={release.tag} id={release.tag} className="sm:pl-8 relative scroll-mt-20">
+                  {/* Timeline dot */}
+                  <div className="hidden sm:block absolute -left-[4.5px] top-2 h-2.5 w-2.5 rounded-full border-2 border-primary bg-background" />
+
+                  {/* Release header */}
+                  <div className="flex flex-wrap items-center gap-3 mb-1">
+                    <a href={`#${release.tag}`} className="group flex items-center gap-2">
+                      <h2 className="text-xl font-bold tracking-tight font-mono group-hover:text-primary transition-colors">
+                        {release.name}
+                      </h2>
+                      <span className="opacity-0 group-hover:opacity-50 text-muted-foreground text-sm transition-opacity">#</span>
+                    </a>
+                    {idx === 0 && (
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+                        Latest
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{release.date}</p>
+
+                  <ReleaseBody body={release.body} />
+
+                  {/* Divider */}
+                  <div className="mt-12 border-b border-border/20 sm:hidden" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

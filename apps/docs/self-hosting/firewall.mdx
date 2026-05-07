@@ -1,0 +1,156 @@
+---
+title: Firewall Setup (UFW)
+description: "Configure UFW to allow SMTP traffic and protect the ByteSend SMTP Server."
+---
+
+UFW (Uncomplicated Firewall) is the standard host-level firewall on Ubuntu/Debian. This page walks through opening the correct SMTP ports while keeping everything else locked down.
+
+<Warning>**Docker bypasses UFW by default.** Docker modifies `iptables` directly, so ports published via `-p` or `ports:` in `docker-compose.yml` are reachable even if UFW has no rule for them. See [Docker + UFW](#docker--ufw) below before proceeding.</Warning>
+
+---
+
+## Basic UFW Setup
+
+### 1. Allow SSH first
+
+Always allow SSH before enabling UFW, or you will lock yourself out:
+
+```bash
+sudo ufw allow OpenSSH
+# or by port number:
+sudo ufw allow 22/tcp
+```
+
+### 2. Allow SMTP ports
+
+Open the ports your clients need. At minimum allow 587; add the others as required:
+
+```bash
+# Port 25 — MTA / inter-server (often blocked by cloud providers)
+sudo ufw allow 25/tcp
+
+# Port 465 — Implicit TLS (SMTPS)
+sudo ufw allow 465/tcp
+
+# Port 587 — Submission with STARTTLS (most common)
+sudo ufw allow 587/tcp
+
+# Alternate ports used by ByteSend SMTP (optional)
+sudo ufw allow 2465/tcp
+sudo ufw allow 2587/tcp
+```
+
+### 3. Enable UFW
+
+```bash
+sudo ufw enable
+```
+
+### 4. Verify the rules
+
+```bash
+sudo ufw status verbose
+```
+
+Expected output (abbreviated):
+
+```
+Status: active
+
+To                         Action      From
+--                         ------      ----
+OpenSSH                    ALLOW IN    Anywhere
+25/tcp                     ALLOW IN    Anywhere
+465/tcp                    ALLOW IN    Anywhere
+587/tcp                    ALLOW IN    Anywhere
+2465/tcp                   ALLOW IN    Anywhere
+2587/tcp                   ALLOW IN    Anywhere
+```
+
+---
+
+## Restrict by IP (Optional)
+
+If only your own application servers send email through the SMTP server, restrict access to their IPs:
+
+```bash
+# Replace 203.0.113.10 with your application server's IP
+sudo ufw allow from 203.0.113.10 to any port 587 proto tcp
+sudo ufw allow from 203.0.113.10 to any port 465 proto tcp
+
+# Remove the open rule if you previously added one
+sudo ufw delete allow 587/tcp
+sudo ufw delete allow 465/tcp
+```
+
+---
+
+## Rate Limiting on Port 25
+
+Port 25 is a common target for abuse. UFW's built-in rate limit blocks IPs that make more than 6 connections in 30 seconds:
+
+```bash
+sudo ufw limit 25/tcp
+```
+
+For more granular rate limiting (e.g., per-minute thresholds), use `fail2ban` or configure limits at the application level.
+
+---
+
+## Docker + UFW
+
+By default, Docker publishes ports by writing directly to `iptables`, which **bypasses UFW rules entirely**. A port mapped in `docker-compose.yml` will be publicly reachable even if UFW has no rule for it.
+
+There are two practical solutions:
+
+### Option 1: Bind to localhost and use a reverse proxy
+
+Instead of binding to `0.0.0.0` (all interfaces), bind each port to `127.0.0.1` in `docker-compose.yml`. UFW then controls public access at the proxy level:
+
+```yaml
+ports:
+  - "127.0.0.1:25:25"
+  - "127.0.0.1:587:587"
+  - "127.0.0.1:465:465"
+  - "127.0.0.1:2465:2465"
+  - "127.0.0.1:2587:2587"
+```
+
+Your reverse proxy (nginx, Traefik) sits in front and is the only process binding to public interfaces.
+
+### Option 2: Use `ufw-docker`
+
+[`ufw-docker`](https://github.com/chaifeng/ufw-docker) is a tool that patches Docker's iptables integration so UFW rules are respected:
+
+```bash
+# Install ufw-docker
+sudo wget -O /usr/local/bin/ufw-docker \
+  https://github.com/chaifeng/ufw-docker/raw/master/ufw-docker
+sudo chmod +x /usr/local/bin/ufw-docker
+
+# Apply the fix (modifies /etc/ufw/after.rules)
+sudo ufw-docker install
+sudo systemctl restart ufw
+
+# Allow specific ports on the smtp container
+sudo ufw-docker allow smtp 587/tcp
+sudo ufw-docker allow smtp 465/tcp
+sudo ufw-docker allow smtp 25/tcp
+```
+
+---
+
+## Cloud Provider Security Groups
+
+If your server is on a cloud provider (AWS EC2, DigitalOcean Droplet, Hetzner, etc.), the provider's firewall (security group / firewall rules) is a separate layer **outside** the VM. Both must allow the traffic:
+
+| Provider | Where to configure |
+|---|---|
+| AWS EC2 | Security Group → Inbound Rules |
+| DigitalOcean | Networking → Firewalls |
+| Hetzner | Firewall → Inbound Rules |
+| Vultr | Firewall Groups |
+
+Add inbound TCP rules for ports 25, 465, 587, 2465, and 2587 (or whichever subset you need) in addition to the UFW rules on the host.
+
+<Note>Port 25 is commonly blocked by default on cloud providers to prevent spam. You may need to submit a request to unblock it (e.g., [AWS contact form](https://aws.amazon.com/forms/ec2-email-limit-rdns-request), DigitalOcean support ticket).</Note>

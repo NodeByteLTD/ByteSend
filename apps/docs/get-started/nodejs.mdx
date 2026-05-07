@@ -1,0 +1,97 @@
+---
+title: NodeJS
+description: "Send your mail using ByteSend in NodeJS"
+icon: node-js
+---
+
+## Prerequisites
+
+- [ByteSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- [Verified domain](https://bytesend.cloud/domains)
+
+## Using SDK
+
+<Steps>
+  <Step title="Install SDK">
+    <CodeGroup>
+      ```bash npm
+      npm install bytesend-js
+      ```
+
+      ```bash yarn
+      yarn add bytesend-js
+      ```
+
+      ```bash pnpm
+      pnpm add bytesend-js
+      ```
+
+      ```bash bun
+      bun add bytesend-js
+      ```
+    </CodeGroup>
+
+  </Step>
+  <Step title="Initialize SDK">
+    Get the API key from the [ByteSend dashboard](https://bytesend.cloud/dev-settings/api-keys) and initialize the SDK
+
+    ```javascript
+    import { ByteSend } from "bytesend-js";
+
+    const bytesend = new ByteSend("bs_12345");
+    ```
+
+    If you are running a self-hosted version of ByteSend, pass the base URL as the
+    second argument:
+
+    ```javascript
+    const bytesend = new ByteSend("bs_12345", "https://your-bytesend-instance.com");
+    ```
+
+  </Step>
+  <Step title="Send Email">
+    ```javascript
+    bytesend.emails.send({
+      to: "hello@acme.com",
+      from: "hello@company.com",
+      subject: "ByteSend email",
+      html: "<p>ByteSend is the best way to send emails</p>",
+      text: "ByteSend is the best way to send emails",
+      headers: {
+        "X-Campaign": "welcome",
+      },
+    });
+    ```
+
+    > Custom headers are forwarded as-is. ByteSend only manages the `X-ByteSend-Email-ID` and `References` headers.
+  </Step>
+</Steps>
+
+## Adding contacts programatically
+
+<Steps>
+  <Step title="Get the contact book id">
+    Get the contact book id from the [ByteSend dashboard](https://bytesend.cloud/contacts/). Copy the contact book id
+  </Step>
+  <Step title="Add contacts">
+
+    ```javascript
+    bytesend.contacts
+      .create("clzeydgeygff", {
+        email: "hey@bobdole.com",
+        firstName: "Bob",
+        lastName: "Dole",
+      })
+    ```
+
+  </Step>
+
+  <Step title="Update contact">
+    ```javascript
+    bytesend.contacts.update("clzeydgeygff", contactId, {
+      firstName: "Bob",
+      lastName: "Dole",
+    });
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,111 @@
+# ByteSend Python SDK
+
+A minimal Python SDK for the [ByteSend](https://bytesend.cloud) API, mirroring the structure of the JavaScript SDK.
+
+## Installation
+
+Install via pip or Poetry:
+
+```
+pip install bytesend
+# or
+poetry add bytesend
+```
+
+## Usage
+
+```python
+from bytesend import ByteSend, types
+
+# By default: raises ByteSendHTTPError on non-2xx.
+client = ByteSend("bs_123")
+
+# 1) TypedDict payload (autocomplete in IDEs). Use dict to pass 'from'.
+payload: types.EmailCreate = {
+    "to": "test@example.com",
+    "from": "no-reply@example.com",
+    "subject": "Hello",
+    "html": "<strong>Hi!</strong>",
+}
+resp, _ = client.emails.send(payload=payload)
+
+# 2) Or pass a plain dict (supports 'from')
+resp, _ = client.emails.send(payload={
+    "to": "test@example.com",
+    "from": "no-reply@example.com",
+    "subject": "Hello",
+    "html": "<strong>Hi!</strong>",
+})
+
+# Idempotent retries: same payload + same key returns the original response
+resp, _ = client.emails.send(
+    payload=payload,
+    options={"idempotency_key": "signup-123"},
+)
+
+# Works for batch requests as well
+resp, _ = client.emails.batch(
+    payload=[payload],
+    options={"idempotency_key": "bulk-welcome-1"},
+)
+# If the same key is reused with a different payload, the API responds with HTTP 409.
+
+# 3) Campaigns
+campaign_payload: types.CampaignCreate = {
+    "name": "Welcome Series",
+    "subject": "Welcome to our service!",
+    "html": "<p>Thanks for joining us!</p>",
+    "from": "welcome@example.com",
+    "contactBookId": "cb_1234567890",
+}
+campaign_resp, _ = client.campaigns.create(payload=campaign_payload)
+
+# Schedule a campaign
+schedule_payload: types.CampaignSchedule = {
+    "scheduledAt": "2024-12-01T10:00:00Z",
+}
+schedule_resp, _ = client.campaigns.schedule(
+    campaign_id=campaign_resp["id"],
+    payload=schedule_payload
+)
+
+# Pause/resume campaigns
+client.campaigns.pause(campaign_id="campaign_123")
+client.campaigns.resume(campaign_id="campaign_123")
+
+# Toggle behavior if desired:
+# - raise_on_error=False: return (None, error_dict) instead of raising
+# No model parsing occurs; methods return plain dicts following the typed shapes.
+client = ByteSend("bs_123", raise_on_error=False)
+raw, err = client.emails.get(email_id="email_123")
+if err:
+    print("error:", err)
+else:
+    print("ok:", raw)
+```
+
+## Webhook Local Example
+
+For a runnable webhook verification demo project, see:
+
+- `example/webhook-test-project/README.md`
+
+## Development
+
+This package is managed with Poetry. Models are maintained in-repo under
+`bytesend/types.py` (readable names). Update this file as the API evolves.
+
+It is published as `bytesend` on PyPI.
+
+## Available Resources
+
+- **Emails**: `client.emails.send()`, `client.emails.get()`
+- **ContactBooks**: `client.contact_books.list()`, `client.contact_books.create()`, `client.contact_books.get()`, `client.contact_books.update()`
+- **Contacts**: `client.contacts.create()`, `client.contacts.list()`, `client.contacts.get()`, `client.contacts.bulk_create()`, `client.contacts.bulk_delete()`
+- **Domains**: `client.domains.create()`, `client.domains.get()`, `client.domains.verify()`
+- **Campaigns**: `client.campaigns.create()`, `client.campaigns.get()`, `client.campaigns.schedule()`, `client.campaigns.pause()`, `client.campaigns.resume()`
+
+Notes
+
+- Human-friendly models are available under `bytesend.types` (e.g., `EmailCreate`, `CampaignCreate`, `Contact`, `APIError`).
+- Endpoint methods accept TypedDict payloads or plain dicts via the `payload=` keyword.

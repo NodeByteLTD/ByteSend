@@ -1,0 +1,43 @@
+export const PLAN_PERKS = {
+  FREE: [
+    "5,000 emails / month (hard cap)",
+    "1,000 emails / day (hard cap)",
+    "Transactional emails included",
+    "Marketing emails not available",
+    "Up to 3 domains + $1/extra",
+    "Community support",
+  ],
+  HOBBY: [
+    "15,000 emails / month included",
+    "2,000 emails / day",
+    "Transactional CA$0.03/ea (overage)",
+    "Marketing CA$0.05/ea (overage)",
+    "Up to 5 domains + $1/extra",
+    "Community support",
+  ],
+  LITE: [
+    "50,000 emails / month included",
+    "5,000 emails / day",
+    "Transactional CA$0.02/ea (overage)",
+    "Marketing CA$0.02/ea (overage)",
+    "Up to 10 domains + $1/extra",
+    "Priority support",
+  ],
+  BASIC: [
+    "150,000 emails / month included",
+    "Unlimited daily sending",
+    "Transactional CA$0.01/ea (overage)",
+    "Marketing CA$0.01/ea (overage)",
+    "Up to 100 domains + $1/extra",
+    "Priority support",
+    "Advanced analytics",
+  ],
+  LIFETIME: [
+    "One-time CA$60 payment",
+    "Unlimited emails — no overage charges",
+    "Marketing & transactional included",
+    "Up to 500 domains + $1/extra",
+    "Priority support",
+    "Advanced analytics",
+  ],
+};

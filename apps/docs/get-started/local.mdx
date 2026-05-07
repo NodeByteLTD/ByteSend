@@ -1,0 +1,168 @@
+---
+title: Local Development
+description: "A guide on how to run ByteSend's codebase locally"
+icon: code
+---
+
+## Repository Structure
+
+```
+apps/
+  web/          # Main Next.js application (dashboard + API)
+  docs/         # This documentation site (Mintlify)
+  smtp-server/  # Standalone SMTP-to-API relay server
+
+packages/
+  lib/          # Shared utilities and Stripe plan definitions
+  sdk/          # TypeScript SDK for the ByteSend REST API
+  ui/           # Shared React component library
+  email-editor/ # Drag-and-drop email editor
+  eslint-config/
+  typescript-config/
+```
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org) 20 or later
+- [pnpm](https://pnpm.io) 9 or later (`corepack enable` installs it automatically)
+- [Docker](https://docs.docker.com/engine/install/) — used to run Postgres and Redis locally
+- An [AWS](https://aws.amazon.com) account with SES access (free tier works)
+
+## Fork and Clone the Repo
+
+<Steps>
+  <Step title="Fork the repo">
+    Click the **Fork** button on [GitHub](https://github.com/NodeByteHosting/bytesend) to fork the repo.
+  </Step>
+  <Step title="Clone the repo">
+    ```bash
+    git clone https://github.com/your-username/bytesend.git
+    cd bytesend
+    ```
+  </Step>
+</Steps>
+
+## Install Dependencies
+
+<Steps>
+  <Step>
+    ```bash
+    corepack enable
+    ```
+  </Step>
+  <Step>
+    ```bash
+    pnpm install
+    ```
+  </Step>
+</Steps>
+
+## Set Up Environment Variables
+
+<Steps>
+  <Step title="Copy the example env file">
+    ```bash
+    cp .env.example .env
+    ```
+  </Step>
+  <Step title="Generate a NEXTAUTH_SECRET">
+    ```bash
+    openssl rand -base64 32
+    ```
+    Add the output as `NEXTAUTH_SECRET` in `.env`.
+  </Step>
+  <Step title="Create a symlink so Next.js can read .env">
+    ```bash
+    # Linux / macOS
+    ln -s ../../.env apps/web/.env
+    ```
+    ```powershell
+    # Windows (PowerShell — run as administrator)
+    New-Item -ItemType SymbolicLink -Path apps\web\.env -Target ..\..\env
+    ```
+  </Step>
+  <Step title="Set up GitHub OAuth (optional)">
+    <Note>
+      GitHub OAuth is optional for local development. If `FROM_EMAIL` is set, magic-link emails are logged to the console instead of being sent.
+    </Note>
+
+    [Create a new GitHub OAuth app](https://github.com/settings/applications/new) with:
+    - **Homepage URL:** `http://localhost:3000`
+    - **Callback URL:** `http://localhost:3000/api/auth/callback/github`
+
+    Add the Client ID and Client Secret to `.env`:
+
+    ```bash
+    GITHUB_ID=your-client-id
+    GITHUB_SECRET=your-client-secret
+    ```
+  </Step>
+  <Step title="Set up AWS credentials (optional)">
+    <Note>
+      AWS credentials are optional for local development. Without them, email sending is disabled but everything else works.
+    </Note>
+
+    Follow the [AWS credentials guide](https://docs.bytesend.cloud/get-started/create-aws-credentials) to create an IAM user with SES permissions, then add to `.env`:
+
+    ```bash
+    AWS_ACCESS_KEY=<access-key-id>
+    AWS_SECRET_KEY=<secret-access-key>
+    AWS_DEFAULT_REGION=eu-west-1
+    ```
+  </Step>
+</Steps>
+
+## Start the Development Server
+
+<Steps>
+  <Step title="Start all services">
+    This command starts the Next.js app (port 3000) along with a local Postgres and Redis via Docker Compose:
+
+    ```bash
+    pnpm dev
+    ```
+  </Step>
+  <Step title="Open the app">
+    Visit **http://localhost:3000** in your browser.
+  </Step>
+  <Step title="Run database migrations (first run only)">
+    ```bash
+    pnpm db:migrate-dev
+    ```
+  </Step>
+</Steps>
+
+## Using a Custom Database
+
+If you prefer to use your own Postgres and Redis instead of the Docker-managed ones, set the connection strings in `.env`:
+
+```bash
+DATABASE_URL=postgresql://bytesend:password@127.0.0.1:5432/bytesend
+REDIS_URL=redis://127.0.0.1:6379
+```
+
+Then run migrations:
+
+```bash
+pnpm db:migrate-dev
+```
+
+## Useful Commands
+
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start all apps in development mode |
+| `pnpm build` | Build all apps |
+| `pnpm db:migrate-dev` | Run Prisma migrations (creates migration files) |
+| `pnpm db:studio` | Open Prisma Studio GUI |
+| `pnpm test:web` | Run the default web test suite |
+| `pnpm test:web:all` | Run the full test suite (requires Docker) |
+| `pnpm dev:docs` | Start the docs site locally |
+
+## Run the Documentation
+
+```bash
+pnpm dev:docs
+```
+
+This starts the Mintlify docs at **http://localhost:3001** (or the port Mintlify selects).

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "**/.env.*local"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build",
+        "db:generate"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "DATABASE_URL",
+        "NEXTAUTH_URL",
+        "GITHUB_ID",
+        "GITHUB_SECRET",
+        "AWS_SECRET_KEY",
+        "AWS_ACCESS_KEY",
+        "NEXTAUTH_SECRET",
+        "NODE_ENV",
+        "VERCEL_URL",
+        "VERCEL",
+        "SKIP_ENV_VALIDATION",
+        "PORT",
+        "BYTESEND_API_KEY",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "NEXT_PUBLIC_IS_CLOUD",
+        "S3_COMPATIBLE_ACCESS_KEY",
+        "S3_COMPATIBLE_SECRET_KEY",
+        "S3_COMPATIBLE_API_URL",
+        "S3_COMPATIBLE_PUBLIC_URL"
+      ]
+    },
+    "lint": {
+      "dependsOn": [
+        "^lint"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": [
+        "db:generate"
+      ]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    }
+  }
+}
