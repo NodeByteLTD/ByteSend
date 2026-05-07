@@ -1,6 +1,6 @@
 ![ByteSend](./apps/web/public/nameplate.png)
 
-**Open-source email infrastructure.** REST API, SMTP relay, campaigns, contact management, and real-time webhooks self-hostable or managed on [bytesend.cloud](https://bytesend.cloud).
+**Open-source email infrastructure that works.** REST API, SMTP relay, campaigns, contact management, and real-time webhooks self-hostable or managed on [bytesend.cloud](https://bytesend.cloud).
 
 [Dashboard](https://bytesend.cloud) · [Docs](https://docs.bytesend.cloud) · [API Reference](https://docs.bytesend.cloud/api-reference/introduction) · [Discord](https://discord.gg/xqkqzVRC4S)
 
