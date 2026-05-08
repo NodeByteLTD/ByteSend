@@ -54,6 +54,7 @@ export default function AddDomain() {
   const { openModal } = useUpgradeModalStore((s) => s.action);
 
   const addDomainMutation = api.domain.createDomain.useMutation();
+  const purchaseDomainsAddonMutation = api.billing.purchaseAddonDomainSlots.useMutation();
 
   const domainForm = useForm<z.infer<typeof domainSchema>>({
     resolver: zodResolver(domainSchema),
@@ -70,6 +71,14 @@ export default function AddDomain() {
     regionQuery.data?.length === 1 ? regionQuery.data[0] : undefined;
 
   const showRegionSelect = (regionQuery.data?.length ?? 0) > 1;
+
+  // Remaining slots (limit - current count)
+  const remaining = limitsQuery.data
+    ? limitsQuery.data.limit === -1
+      ? -1
+      : limitsQuery.data.limit - limitsQuery.data.currentCount
+    : 0;
+  const isAtLimit = limitsQuery.data?.isLimitReached ?? false;
 
   async function onDomainAdd(values: z.infer<typeof domainSchema>) {
     const domain = tldts.getDomain(values.domain);
@@ -88,8 +97,8 @@ export default function AddDomain() {
       return;
     }
 
-    if (limitsQuery.data?.isLimitReached) {
-      openModal(limitsQuery.data.reason);
+    if (isAtLimit) {
+      openModal(limitsQuery.data?.reason);
       return;
     }
 
@@ -112,11 +121,6 @@ export default function AddDomain() {
   }
 
   function onOpenChange(_open: boolean) {
-    if (_open && limitsQuery.data?.isLimitReached) {
-      openModal(limitsQuery.data.reason);
-      return;
-    }
-
     setOpen(_open);
   }
 
@@ -126,91 +130,132 @@ export default function AddDomain() {
       onOpenChange={(_open) => (_open !== open ? onOpenChange(_open) : null)}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-          <Plus className="h-4 w-4" />
-          Add domain
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+            <Plus className="h-4 w-4" />
+            Add domain
+          </Button>
+          {/* Show usage counter next to button */}
+          {limitsQuery.data && limitsQuery.data.limit !== -1 && (
+            <span className="text-xs text-muted-foreground">
+              {limitsQuery.data.currentCount} / {limitsQuery.data.limit}
+            </span>
+          )}
+        </div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a domain</DialogTitle>
+          {limitsQuery.data && limitsQuery.data.limit !== -1 && (
+            <div className="text-sm text-muted-foreground pt-1">
+              Using {limitsQuery.data.currentCount} of {limitsQuery.data.limit} domains
+            </div>
+          )}
         </DialogHeader>
-        <div className="py-2">
-          <Form {...domainForm}>
-            <form
-              onSubmit={domainForm.handleSubmit(onDomainAdd)}
-              className="space-y-6"
-            >
-              <FormField
-                control={domainForm.control}
-                name="domain"
-                render={({ field, formState }) => (
-                  <FormItem>
-                    <FormLabel>Domain</FormLabel>
-                    <FormControl>
-                      <Input placeholder="subdomain.example.com" {...field} />
-                    </FormControl>
-                    {formState.errors.domain ? (
-                      <FormMessage />
-                    ) : (
-                      <FormDescription>
-                        Use subdomains to separate transactional and marketing
-                        emails.{" "}
-                      </FormDescription>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-              {showRegionSelect && (
+        <div className="py-2 space-y-6">
+          {!isAtLimit && (
+            <Form {...domainForm}>
+              <form
+                onSubmit={domainForm.handleSubmit(onDomainAdd)}
+                className="space-y-6"
+              >
                 <FormField
                   control={domainForm.control}
-                  name="region"
+                  name="domain"
                   render={({ field, formState }) => (
                     <FormItem>
-                      <FormLabel>Region</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={regionQuery.isLoading}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select region" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {regionQuery.data?.map((region) => (
-                            <SelectItem value={region} key={region}>
-                              {region}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {formState.errors.region ? (
+                      <FormLabel>Domain</FormLabel>
+                      <FormControl>
+                        <Input placeholder="subdomain.example.com" {...field} />
+                      </FormControl>
+                      {formState.errors.domain ? (
                         <FormMessage />
                       ) : (
                         <FormDescription>
-                          Select the region from where the email is sent{" "}
+                          Use subdomains to separate transactional and marketing emails.
                         </FormDescription>
                       )}
                     </FormItem>
                   )}
                 />
-              )}
 
-              <div className="flex justify-end pt-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="w-30"
-                  disabled={addDomainMutation.isPending || limitsQuery.isLoading}
-                >
-                  {addDomainMutation.isPending ? "Adding…" : "Add domain"}
-                </Button>
-              </div>
-            </form>
-          </Form>
+                {showRegionSelect && (
+                  <FormField
+                    control={domainForm.control}
+                    name="region"
+                    render={({ field, formState }) => (
+                      <FormItem>
+                        <FormLabel>Region</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={regionQuery.isLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select region" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {regionQuery.data?.map((region) => (
+                              <SelectItem value={region} key={region}>
+                                {region}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {formState.errors.region ? (
+                          <FormMessage />
+                        ) : (
+                          <FormDescription>
+                            Select the region from where the email is sent.
+                          </FormDescription>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={addDomainMutation.isPending || limitsQuery.isLoading}
+                  >
+                    {addDomainMutation.isPending ? "Adding…" : "Add domain"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
+
+          <div className="pt-2 border-t border-border/40">
+            {isAtLimit && (
+              <p className="text-sm text-muted-foreground mb-3">
+                You've reached your domain limit of {limitsQuery.data?.limit}. Purchase an extra slot to add more.
+              </p>
+            )}
+            {!isAtLimit && (
+              <p className="text-sm text-muted-foreground mb-3">
+                Need more domains? Purchase extra slots — CA$1/mo each.
+              </p>
+            )}
+            <Button
+              onClick={async () => {
+                try {
+                  const url = await purchaseDomainsAddonMutation.mutateAsync({ quantity: 1 });
+                  window.location.href = url;
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to open checkout");
+                }
+              }}
+              disabled={purchaseDomainsAddonMutation.isPending}
+              className="w-full"
+              variant="outline"
+            >
+              {purchaseDomainsAddonMutation.isPending ? "Opening checkout…" : "Buy 1 extra domain slot (CA$1/mo)"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -7,6 +7,8 @@ import {
 import { logger } from "../logger/log";
 import { createWorkerHandler, TeamJob } from "../queue/bullmq-context";
 import { addOrUpdateContact, ContactInput } from "./contact-service";
+import { LimitService } from "./limit-service";
+import { ByteSendApiError } from "../public-api/api-error";
 
 type ContactJobData = {
   contactBookId: string;
@@ -68,6 +70,17 @@ class ContactQueueService {
     contacts: ContactInput[],
     teamId?: number,
   ) {
+    // Check contact limit before queuing
+    if (teamId) {
+      const limitCheck = await LimitService.checkContactsLimit(teamId);
+      if (limitCheck.isLimitReached) {
+        throw new ByteSendApiError({
+          code: "FORBIDDEN",
+          message: `Contact limit reached. You have ${limitCheck.currentCount}/${limitCheck.limit} contacts. Upgrade to add more contacts.`,
+        });
+      }
+    }
+
     const jobs = contacts.map((contact) => ({
       name: `add-contact-${contact.email}`,
       data: {

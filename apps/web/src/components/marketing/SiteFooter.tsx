@@ -42,8 +42,7 @@ export function SiteFooter() {
             <nav className="flex items-center gap-4 text-[13px] text-muted-foreground">
               <a href="https://docs.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Docs</a>
               {isCloud && <Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link>}
-              {isCloud && <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>}
-              {isCloud && <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>}
+              {isCloud && <Link href="/legal" className="hover:text-foreground transition-colors">Legal</Link>}
               {isCloud && <a href="https://status.bytesend.cloud" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>}
             </nav>
           </div>
@@ -63,7 +62,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-border/20 text-center text-xs text-muted-foreground/50">
-          © {new Date().getFullYear()} NodeByte LTD
+          © {new Date().getFullYear()} NodeByte LTD · Registered in England and Wales
         </div>
       </div>
     </footer>

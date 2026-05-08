@@ -23,6 +23,7 @@ import {
   ChevronsUpDown,
   Check,
   PlusIcon,
+  LockIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -74,6 +75,8 @@ import {
 } from "@bytesend/ui/src/dropdown-menu";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { env } from "~/env";
+import { useUpgradeModalStore } from "~/store/upgradeModalStore";
+import { LimitReason } from "~/lib/constants/plans";
 
 // General items
 const generalItems = [
@@ -141,6 +144,9 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const showFeedback = isCloud();
   const { currentTeam, teams, setCurrentTeam } = useTeam();
+  const openUpgradeModal = useUpgradeModalStore((s) => s.action.openModal);
+
+  const isMarketingLocked = isCloud() && currentTeam?.plan === "FREE";
 
   const pathname = usePathname();
 
@@ -264,24 +270,42 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>
             <span>Marketing</span>
+            {isMarketingLocked && (
+              <span className="ml-1.5 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                Paid
+              </span>
+            )}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {marketingItems.map((item) => {
-                const isActive = pathname?.startsWith(item.url);
+                const isActive = !isMarketingLocked && pathname?.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={isActive}
-                      className="text-sidebar-foreground"
-                    >
-                      <Link href={item.url}>
+                    {isMarketingLocked ? (
+                      <SidebarMenuButton
+                        tooltip={`${item.title} — upgrade to access`}
+                        isActive={false}
+                        className="text-muted-foreground opacity-60"
+                        onClick={() => openUpgradeModal(LimitReason.MARKETING_NOT_AVAILABLE)}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                        <LockIcon className="ml-auto size-3 shrink-0" />
+                      </SidebarMenuButton>
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive}
+                        className="text-sidebar-foreground"
+                      >
+                        <Link href={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    )}
                   </SidebarMenuItem>
                 );
               })}

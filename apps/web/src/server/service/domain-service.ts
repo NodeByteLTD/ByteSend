@@ -520,19 +520,36 @@ export async function createDomain(
     dkimSelector,
   );
 
-  const domain = await db.domain.create({
-    data: {
-      name,
-      publicKey,
-      teamId,
-      subdomain,
-      region,
-      sesTenantId,
-      dkimSelector,
-      dkimStatus: DomainStatus.NOT_STARTED,
-      spfDetails: DomainStatus.NOT_STARTED,
-    },
-  });
+  let domain: Domain;
+  try {
+    domain = await db.domain.create({
+      data: {
+        name,
+        publicKey,
+        teamId,
+        subdomain,
+        region,
+        sesTenantId,
+        dkimSelector,
+        dkimStatus: DomainStatus.NOT_STARTED,
+        spfDetails: DomainStatus.NOT_STARTED,
+      },
+    });
+  } catch (error) {
+    // Domain name has a global unique constraint — give a clear message
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as NodeJS.ErrnoException).code === "P2002"
+    ) {
+      throw new ByteSendApiError({
+        code: "CONFLICT",
+        message:
+          "This domain is already registered in another workspace. Each domain can only be connected to one account.",
+      });
+    }
+    throw error;
+  }
 
   await emitDomainEvent(domain, "domain.created");
 

@@ -231,7 +231,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
         <PopoverContent
           align="start"
           side="top"
-          className="light border-gray-200 px-2 py-2 w-[32rem]"
+          className="border-border/60 px-2 py-2 w-[32rem]"
           sideOffset={10}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
@@ -241,7 +241,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="flex items-center border border-transparent focus-within:border-border gap-2 px-1 py-0.5 rounded-md">
-                    <ExpandIcon className="text-slate-700 h-4 w-4" />
+                    <ExpandIcon className="text-muted-foreground h-4 w-4" />
                     <Input
                       value={widthState}
                       onChange={(e) => updateWidth(e.target.value)}
@@ -278,7 +278,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="flex items-center border border-transparent focus-within:border-border gap-2 px-1 py-0.5 rounded-md">
-                    <ScanIcon className="text-slate-700 h-4 w-4" />
+                    <ScanIcon className="text-muted-foreground h-4 w-4" />
                     <Input
                       value={borderRadius}
                       onChange={(e) =>
@@ -295,7 +295,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="flex items-center border border-transparent focus-within:border-border gap-2 px-1 py-0.5 rounded-md">
-                    <BorderWidth className="text-slate-700 h-4 w-4" />
+                    <BorderWidth className="text-muted-foreground h-4 w-4" />
                     <Input
                       value={borderWidth}
                       onChange={(e) =>
@@ -348,7 +348,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
                     </Tooltip>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="light border-gray-200 px-4 py-2">
+                <PopoverContent className="border-border/60 px-4 py-2">
                   <LinkEditorPanel
                     initialUrl={src}
                     onSetLink={(u) => {
@@ -377,7 +377,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
                   </TooltipTrigger>
                   <TooltipContent>Alt text</TooltipContent>
                 </Tooltip>
-                <PopoverContent className="light border-gray-200 px-4 py-2">
+                <PopoverContent className="border-border/60 px-4 py-2">
                   <TextEditorPanel
                     initialText={alt}
                     onSetInitialText={(t) => {
@@ -407,7 +407,7 @@ export function ResizableImageTemplate(props: NodeViewProps) {
 
                   <TooltipContent>Link</TooltipContent>
                 </Tooltip>
-                <PopoverContent className="light border-gray-200 px-4 py-2">
+                <PopoverContent className="border-border/60 px-4 py-2">
                   <LinkEditorPanel
                     initialUrl={externalLink}
                     onSetLink={(u) => {

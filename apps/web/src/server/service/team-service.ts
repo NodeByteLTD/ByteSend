@@ -66,7 +66,23 @@ export class TeamService {
         });
       }
     } else {
-      // no additional checks needed — each team has its own plan
+      // Cloud: a user may only be ADMIN of one FREE/inactive team at a time.
+      // This prevents the abuse pattern of creating new teams to reset free limits.
+      // Once all existing admin teams are on a paid plan, creating another team is allowed.
+      const existingAdminTeams = await db.teamUser.findMany({
+        where: { userId, role: "ADMIN" },
+        include: { team: { select: { plan: true, isActive: true } } },
+      });
+      const hasUnpaidAdminTeam = existingAdminTeams.some(
+        (tu) => !tu.team.isActive || tu.team.plan === "FREE",
+      );
+      if (hasUnpaidAdminTeam) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "You already have a team on the Free plan. Upgrade your existing team to a paid plan before creating an additional team.",
+        });
+      }
     }
 
     const nameConflict = await db.team.findFirst({ where: { name: { equals: name, mode: "insensitive" } } });
@@ -172,11 +188,11 @@ export class TeamService {
       });
     }
 
-    const { isLimitReached } = await LimitService.checkTeamMemberLimit(teamId);
+    const { isLimitReached, limit, currentCount } = await LimitService.checkTeamMemberLimit(teamId);
     if (isLimitReached) {
       throw new ByteSendApiError({
         code: "FORBIDDEN",
-        message: "Team invite limit reached",
+        message: `Team member limit reached. You have ${currentCount}/${limit} members. Upgrade to add more members.`,
       });
     }
 

@@ -11,6 +11,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.4] - 2026-05-08
+
+### Added
+
+#### Billing
+- **Stripe webhook automation** — `pnpm stripe:seed` now registers the Stripe webhook endpoint automatically. For non-development environments it lists existing webhook endpoints, creates the endpoint if not found (or updates its enabled events if it already exists), and saves the endpoint ID and `whsec_*` secret to the `AppSetting` table. Development environments skip registration and print a `stripe listen` hint instead
+- **`getWebhookSecret()`** — new export in `stripe-config.ts` that resolves the webhook secret from the `AppSetting` table; used as a fallback in the Stripe webhook route when `STRIPE_WEBHOOK_SECRET` env var is not set
+- **`stripe.webhook` config keys** — `DB_CONFIG_KEYS` in `packages/lib` now includes `stripe.webhook.endpoint_id` and `stripe.webhook.secret` so the seed script and webhook route share a single source of truth for key names
+
+#### Schema
+- **`extraDomainSlots` column** — added `extraDomainSlots Int @default(0)` to the `Team` model for tracking purchased additional domain slots
+- **`extraMemberSlots` column** — added `extraMemberSlots Int @default(0)` to the `Team` model for tracking purchased additional team member slots
+
+#### Legal Pages (Cloud)
+- **Cookie Policy** — new `/cookie-policy` page covering UK PECR-compliant cookie usage; contact: `legal@nodebyte.co.uk`
+- **DMCA Policy** — new `/dmca` page with designated DMCA agent and takedown procedure; primary contact: `dmca@nodebyte.co.uk`
+- **Acceptable Use Policy** — new `/acceptable-use` page defining prohibited use for the email platform; contact: `legal@nodebyte.co.uk`
+- **Data Processing Agreement** — new `/dpa` page (UK GDPR Art. 28) documenting sub-processors (NodeByte Hosting UK, Amazon SES EU/US, Upstash Redis EU); contact: `legal@nodebyte.co.uk`
+- **`/legal` hub** — new central legal index page listing all six policy documents (Terms, Privacy, Cookie Policy, AUP, DMCA, DPA) as navigable cards with contact email references
+
+#### Plan Enforcement — Marketing Features
+- **`LimitReason.MARKETING_NOT_AVAILABLE`** — new enum value added to `LimitReason` in `lib/constants/plans.ts` for use across server guards and the upgrade modal
+- **`LimitService.checkMarketingAccess(teamId)`** — new static method returning `false` for Free plan teams in cloud mode; bypassed for self-hosted and admin/founder teams
+- **Campaign API guard** — `createCampaign` and `duplicateCampaign` tRPC mutations now call `checkMarketingAccess` upfront and throw `FORBIDDEN` for Free plan teams
+- **Campaign service guard** — `createCampaignFromApi` and `scheduleCampaign` in `campaign-service.ts` now call `checkMarketingAccess` and throw `ByteSendApiError(FORBIDDEN)` for Free plan teams
+
+#### Plan Enforcement — Resource Limits
+- **Limit methods return usage counters** — All `LimitService.check*Limit()` methods now return `{ isLimitReached, limit, currentCount, reason? }` to enable UI display of usage ratios
+- **Domain limit enforcement** — `domain.createDomain` now enforces the domain limit (base + extraDomainSlots) at the API level and returns descriptive error with currentCount
+- **Team member limit enforcement** — `team.createTeamInvite` enforces the team member limit (base + extraMemberSlots) and includes currentCount in error message
+- **Contact limit enforcement** — `ContactQueueService.addBulkContactJobs` checks the contact limit before queueing imports; includes currentCount in error
+- **Webhook limit enforcement** — `WebhookService.createWebhook` already enforced limits (reconfirmed)
+- **Contact book limit enforcement** — `contactBookService.createContactBook` already enforced limits (reconfirmed)
+
+#### Plan Enforcement — Purchase Add-ons
+- **`purchaseAddonMemberSlots` mutation** — new tRPC mutation (alongside existing `purchaseAddonDomainSlots`) allows teams to buy additional team member slots at CA$5/slot/month
+- **Separate addon price IDs** — `PRICE_KEYS.addon` now includes both `domainMonthly` and `memberMonthly` for distinct pricing; `createAddonCheckoutSession` accepts `addonType` parameter to select the correct price
+- **Webhook addon tracking** — Stripe webhook processing now distinguishes between `EXTRA_DOMAIN` and `EXTRA_MEMBER` addon prices and updates `team.extraDomainSlots` and `team.extraMemberSlots` independently
+
+#### Email Metering & Overage Billing
+- **Email meter event reporting** — `EmailQueueService` now reports successful emails to Stripe `billing.meterEventAdjustments` after each send, tracked separately by type (marketing vs transactional). Failures are logged but non-fatal so email delivery is never blocked by metering issues
+- **Overage usage tracking** — Marketing and transactional emails beyond the plan's included monthly limit are now reported to Stripe for metered billing (overage charges)
+
+#### Dashboard — Usage Indicators
+- **Domain usage counter + purchase flow** — "Add domain" now shows "X / Y" usage and includes an in-dialog add-on checkout CTA. When below limit, the add form is shown; when at limit, the add form is hidden and the purchase CTA + limit message are shown
+- **Team member usage counter + purchase flow** — "Invite Member" now shows "X / Y" usage and includes an in-dialog add-on checkout CTA. When below limit, invite form is shown; when at limit, the invite form is hidden and the purchase CTA + limit message are shown
+- **Upgrade/purchase flow wiring** — Domain/member add-on CTAs open Stripe checkout sessions with proper success/cancel URLs and metadata for webhook handling
+
+### Changed
+
+#### Development Setup
+- **Database migration required** — run `pnpm prisma migrate dev` to add the `extraMemberSlots` column to the Team table and create the new member addon price in Stripe via `pnpm stripe:seed`
+
+#### Marketing Site
+- **Pricing plans updated** — landing page pricing section (`page.tsx` and `PricingTiers.tsx`) now shows the correct three plans: **Free** (CA$0, 12,500 emails/mo), **Hobby** (CA$5/mo, 25,000 emails/mo), and **Lite** (CA$10/mo, 50,000 emails/mo, recommended). Removed the old Professional and Lifetime cards
+- **Comparison table corrected** — free tier row updated from `5,000/mo` to `12,500/mo`; "Lifetime plan" row replaced with "Custom plans" (✓ for ByteSend, — for all competitors) to reflect the current offering
+- **CTA copy corrected** — "5,000 emails per month" updated to "12,500 emails per month" in the bottom CTA section
+- **Footer simplified** — site footer reverted to minimal single-row layout (`© ByteSend · Docs · Changelog · Legal · Status`) with "Legal" linking to the new `/legal` hub instead of individual policy links
+- **Legal contact emails** — all `hey@nodebyte.co.uk` references in `privacy/page.tsx` and `terms/page.tsx` replaced with `legal@nodebyte.co.uk`
+
+#### Dashboard — Marketing Feature Gating (UI)
+- **Sidebar Marketing section locked on Free plan** — `AppSidebar` now checks `currentTeam.plan` and, for Free plan teams in cloud mode, renders the Contacts and Campaigns items as non-navigable buttons with a lock icon and dimmed opacity. Clicking either item opens the upgrade modal. The "Marketing" section label gains a "Paid" badge
+- **Campaigns page upgrade gate** — `/campaigns` renders a centred lock screen (icon + copy + "Upgrade plan" button) instead of the campaign list when the current team is on the Free plan
+- **Contacts page upgrade gate** — `/contacts` renders the same lock screen pattern for Free plan teams
+- **Upgrade modal message** — `UpgradeModal` messages Record now includes `MARKETING_NOT_AVAILABLE`: "Marketing features (Contacts & Campaigns) are not available on the Free plan."
+
+#### Dashboard — Editor Surfaces
+- **Template/Campaign/Double opt-in editor layouts unified** — all three editor pages now share the same sticky top bar, metadata strips, and canvas structure for consistent behavior
+- **Top-bar clipping resolved across all editor pages** — removed negative vertical wrapper offsets that were causing the back/status row to clip under the dashboard header
+- **Editor canvas attached to metadata strip** — removed the visual gap so the editor appears connected to the variables/required strip rather than floating as a separate block
+- **Editor width expanded to full available content area** — editor canvas now spans the dashboard content width instead of constrained widths/max-width wrappers
+- **Theme-aware editor shell** — editor wrapper, toolbar, popovers, slash command menu, and inline controls now use design tokens (`bg-background`, `bg-popover`, `border-border`, `text-foreground`) for light/dark consistency
+- **Toolbar feature expansion** — added paragraph/heading controls, task list, text alignment (left/center/right), blockquote, code block, horizontal rule, unlink, and undo/redo actions in addition to existing inline formatting and list controls
+
+### Fixed
+
+#### Database
+- **Migration history drift resolved** — `_prisma_migrations` table contained ~50 stale records from old migrations that no longer existed locally. Truncated the table and replaced the entire history with a single baseline migration (`20260507000000_init`) generated from the current schema. Local `prisma/migrations/` folder now has exactly one migration; DB records match
+
+---
+
 ## [0.2.3] - 2026-05-07
 
 ### Added

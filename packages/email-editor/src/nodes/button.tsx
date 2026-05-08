@@ -45,8 +45,6 @@ export function ButtonComponent(props: NodeViewProps) {
 
   const [editUrlOpen, setEditUrlOpen] = useState(false);
 
-  console.log(props);
-
   return (
     <NodeViewWrapper
       className={`react-component ${
@@ -134,7 +132,7 @@ export function ButtonComponent(props: NodeViewProps) {
         <PopoverContent
           align="start"
           side="top"
-          className="space-y-2 w-[28rem] light border-gray-200 py-1 px-1"
+          className="space-y-2 w-[28rem] border-border/60 py-1 px-1"
           sideOffset={10}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
@@ -219,7 +217,7 @@ export function ButtonComponent(props: NodeViewProps) {
                       <ColorPickerPopup
                         trigger={
                           <div className="flex flex-col items-center justify-center gap-[1px]">
-                            <span className="font-bolder font-mono text-xs text-slate-700">
+                            <span className="font-bolder font-mono text-xs text-muted-foreground">
                               A
                             </span>
                             <div
@@ -246,7 +244,7 @@ export function ButtonComponent(props: NodeViewProps) {
                   <Tooltip>
                     <TooltipTrigger>
                       <div className="flex items-center border border-transparent hover:border-border focus-within:border-border gap-1 px-1 py-0.5 rounded-md">
-                        <ScanIcon className="text-slate-700 h-4 w-4" />
+                        <ScanIcon className="text-muted-foreground h-4 w-4" />
                         <Input
                           value={_radius}
                           onChange={(e) =>
@@ -263,7 +261,7 @@ export function ButtonComponent(props: NodeViewProps) {
                   <Tooltip>
                     <TooltipTrigger>
                       <div className="flex items-center border border-transparent hover:border-border focus-within:border-border gap-1 px-1 py-0.5 rounded-md">
-                        <BorderWidth className="text-slate-700 h-4 w-4" />
+                        <BorderWidth className="text-muted-foreground h-4 w-4" />
                         <Input
                           value={borderWidth}
                           onChange={(e) =>
@@ -312,7 +310,7 @@ export function ButtonComponent(props: NodeViewProps) {
                     <LinkIcon className="h-4 w-4 ml-2" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="light border-gray-200 px-4 py-2">
+                <PopoverContent className="border-border/60 px-4 py-2">
                   <LinkEditorPanel
                     initialUrl={url}
                     onSetLink={(u) => {

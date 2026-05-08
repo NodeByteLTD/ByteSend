@@ -11,6 +11,8 @@ import { logger } from "../logger/log";
 import { createWorkerHandler, TeamJob } from "../queue/bullmq-context";
 import { LimitService } from "./limit-service";
 import { sanitizeCustomHeaders } from "~/server/utils/email-headers";
+import { getStripe } from "../billing/payments";
+import { METER_EVENT_NAMES } from "@bytesend/lib";
 // Notifications about limits are handled inside LimitService.
 
 // SES error names that are transient and should be retried
@@ -482,6 +484,41 @@ async function executeEmail(job: QueueEmailJob) {
       where: { id: email.id },
       data: { sesEmailId: messageId, text, attachments: null, headers: null },
     });
+
+    // Report email sent to Stripe for metered billing (overage charges)
+    // Only report for cloud deployments with paying customers
+    if (env.NEXT_PUBLIC_IS_CLOUD) {
+      try {
+        const team = await db.team.findUnique({
+          where: { id: email.teamId },
+          select: { stripeCustomerId: true },
+        });
+
+        if (team?.stripeCustomerId) {
+          const stripe = getStripe();
+          const emailType = email.campaignId ? "MARKETING" : "TRANSACTIONAL";
+          const meterEventName =
+            emailType === "MARKETING" ? METER_EVENT_NAMES.marketing : METER_EVENT_NAMES.transactional;
+
+          await stripe.billing.meterEventAdjustments.create({
+            customer: team.stripeCustomerId,
+            meter_event_name: meterEventName,
+            quantity: 1,
+          });
+
+          logger.info(
+            { emailId: email.id, emailType, customer: team.stripeCustomerId },
+            "[EmailQueueService]: Meter event reported to Stripe"
+          );
+        }
+      } catch (meterError) {
+        logger.error(
+          { emailId: email.id, err: meterError },
+          "[EmailQueueService]: Failed to report meter event to Stripe — non-fatal, continuing"
+        );
+        // Don't throw — metering failure shouldn't fail the email sending
+      }
+    }
   } catch (error: any) {
     if (isSesTransientError(error)) {
       logger.warn(

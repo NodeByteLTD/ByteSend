@@ -12,8 +12,9 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     name: "ByteSend Free",
     description:
       "Perfect for getting started with ByteSend. " +
-      "5,000 emails/month and 1,000 emails/day included (hard cap). " +
-      "Transactional emails only — marketing emails not available.",
+      "12,500 emails/month and 5,000 emails/day included (hard cap). " +
+      "Transactional emails only — marketing emails not available. " +
+      "Extra domains available at CA$1/domain/month.",
   },
 
   HOBBY: {
@@ -21,8 +22,10 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     name: "ByteSend Hobby",
     description:
       "For hobbyists and side projects. " +
-      "15,000 emails/month included. " +
-      "Overage billed at CA$0.05/marketing email and CA$0.03/transactional email.",
+      "25,000 emails/month included. " +
+      "Transactional and marketing emails included. " +
+      "Overage billed at CA$0.05/marketing email and CA$0.03/transactional email. " +
+      "Extra domains available at CA$1/domain/month.",
     priceMonthly: 500, // CA$5/month
   },
 
@@ -32,7 +35,9 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     description:
       "For small teams and growing projects. " +
       "50,000 emails/month included. " +
-      "Overage billed at CA$0.02/email (marketing and transactional).",
+      "Transactional and marketing emails included. " +
+      "Overage billed at CA$0.02/email (marketing and transactional). " +
+      "Extra domains available at CA$1/domain/month.",
     priceMonthly: 1000, // CA$10/month in cents
   },
 

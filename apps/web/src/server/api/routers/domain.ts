@@ -19,6 +19,8 @@ import {
 import { sendEmail } from "~/server/service/email-service";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
 import { env } from "~/env";
+import { LimitService } from "~/server/service/limit-service";
+import { TRPCError } from "@trpc/server";
 
 function isAdminOrFounder(email: string | null | undefined) {
   const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean);
@@ -34,6 +36,15 @@ export const domainRouter = createTRPCRouter({
   createDomain: teamProcedure
     .input(z.object({ name: z.string(), region: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // Check domain limit server-side
+      const limitCheck = await LimitService.checkDomainLimit(ctx.team.id);
+      if (limitCheck.isLimitReached) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `Domain limit reached. You have ${limitCheck.currentCount}/${limitCheck.limit} domains. Upgrade or purchase additional domain slots.`,
+        });
+      }
+
       const allowReserved = isAdminOrFounder(ctx.session.user.email);
       return createDomain(
         ctx.team.id,

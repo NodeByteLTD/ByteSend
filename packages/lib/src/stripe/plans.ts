@@ -15,13 +15,13 @@ export const PLANS: Record<PlanType, PricingTier> = {
     monthlyPrice: 0,
     // No usageMetering — FREE plan is a hard cap on everything. No overage billing.
     limits: {
-      monthlyEmailLimit: 5_000,
-      dailyEmailLimit: 1_000,
-      maxDomains: 3,
+      monthlyEmailLimit: 12_500,
+      dailyEmailLimit: 5_000,
+      maxDomains: 2,
       maxContactBooks: 5,
       maxTeamMembers: 5,
       maxWebhooks: 3,
-      contactsLimit: 500,
+      contactsLimit: 100,
       campaignsLimit: 0, // Marketing emails not available on free plan
       prioritySupport: false,
       customBranding: false,
@@ -29,7 +29,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "basic",
       concurrentConnections: 1,
       marketingEmailsIncluded: false,
-      extraMemberRateCents: 0, // Hard cap — no overage
+      extraMemberRateCents: 0, // Hard cap — upgrade required
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -42,17 +42,17 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 500, // CA$5/month in cents
     usageMetering: {
-      marketing: 0.05,    // CA$0.05 per marketing email (overage after 15,000 included)
-      transactional: 0.03, // CA$0.03 per transactional email (overage after 15,000 included)
+      marketing: 0.05,    // CA$0.05 per marketing email (overage after 25,000 included)
+      transactional: 0.03, // CA$0.03 per transactional email (overage after 25,000 included)
     },
     limits: {
-      monthlyEmailLimit: 15_000,
-      dailyEmailLimit: 2_000,
-      maxDomains: 5,
+      monthlyEmailLimit: 25_000,
+      dailyEmailLimit: 12_500,
+      maxDomains: 4,
       maxContactBooks: 10,
-      maxTeamMembers: 30,
+      maxTeamMembers: 10,
       maxWebhooks: 5,
-      contactsLimit: 2_000,
+      contactsLimit: 200,
       campaignsLimit: 30,
       prioritySupport: false,
       customBranding: false,
@@ -60,7 +60,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "basic",
       concurrentConnections: 2,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 25, // CA$0.25/member overage
+      extraMemberRateCents: 0, // Hard cap — upgrade required
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -78,12 +78,12 @@ export const PLANS: Record<PlanType, PricingTier> = {
     },
     limits: {
       monthlyEmailLimit: 50_000,
-      dailyEmailLimit: 5_000,
-      maxDomains: 10,
+      dailyEmailLimit: 25_000,
+      maxDomains: 6,
       maxContactBooks: 25,
-      maxTeamMembers: 60,
+      maxTeamMembers: 15,
       maxWebhooks: 10,
-      contactsLimit: 10_000,
+      contactsLimit: 300,
       campaignsLimit: 100,
       prioritySupport: true,
       customBranding: false,
@@ -91,7 +91,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "full",
       concurrentConnections: 5,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 25, // CA$0.25/member overage
+      extraMemberRateCents: 0, // Hard cap — upgrade required
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },

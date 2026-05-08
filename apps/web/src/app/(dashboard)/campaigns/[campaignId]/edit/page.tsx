@@ -43,6 +43,8 @@ import {
 } from "@bytesend/ui/src/accordion";
 import ScheduleCampaign from "../../schedule-campaign";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const sendSchema = z.object({
   confirmation: z.string(),
@@ -79,7 +81,7 @@ export default function EditCampaignPage({
   if (error) {
     return (
       <div className="flex justify-center items-center h-full">
-        <p className="text-red-500">Failed to load campaign</p>
+        <p className="text-red">Failed to load campaign</p>
       </div>
     );
   }
@@ -173,14 +175,18 @@ function CampaignEditor({
     : "Select the contact book for related variable";
 
   return (
-    <div className="p-4 container mx-auto ">
-      <div className="mx-auto">
-        <div className="mb-4 flex justify-between items-center w-full max-w-175 mx-auto">
+    <div className="-mx-4 md:-mx-6 h-full min-h-full flex flex-col">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 h-12 shrink-0 border-b border-border/60 bg-background/95 backdrop-blur">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/campaigns" className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
           <Input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className=" border-0 focus:ring-0 focus:outline-none px-0.5 w-full sm:w-75"
+            className="border-0 focus:ring-0 focus:outline-none bg-transparent h-auto p-0 font-medium text-sm min-w-0"
             disabled={isApiCampaign}
             readOnly={isApiCampaign}
             onBlur={() => {
@@ -204,79 +210,78 @@ function CampaignEditor({
               );
             }}
           />
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              {isSaving ? (
-                <div className="h-2 w-2 bg-yellow rounded-full" />
-              ) : (
-                <div className="h-2 w-2 bg-green rounded-full" />
-              )}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            {isSaving ? (
+              <div className="h-2 w-2 bg-yellow rounded-full" />
+            ) : (
+              <div className="h-2 w-2 bg-green rounded-full" />
+            )}
+            <span className="text-xs hidden sm:block">
               {formatDistanceToNow(campaign.updatedAt) === "less than a minute"
                 ? "just now"
                 : `${formatDistanceToNow(campaign.updatedAt)} ago`}
-            </div>
-
-            <ScheduleCampaign
-              campaign={campaign}
-              onScheduled={() => {
-                router.push(`/campaigns/${campaign.id}`);
-              }}
-            />
+            </span>
           </div>
+          <ScheduleCampaign
+            campaign={campaign}
+            onScheduled={() => {
+              router.push(`/campaigns/${campaign.id}`);
+            }}
+          />
         </div>
+      </div>
 
-        <Accordion type="single" collapsible>
-          <AccordionItem value="item-1">
-            <div className="flex flex-col border border-border/60 rounded-xl mt-8 mb-8 p-4 w-full max-w-175 mx-auto z-50">
-              <div className="flex items-center gap-4">
-                <label className="block text-sm w-20 text-muted-foreground">
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => {
-                    setSubject(e.target.value);
-                  }}
-                  onBlur={() => {
-                    if (isApiCampaign) {
-                      return;
-                    }
-                    if (subject === campaign.subject || !subject) {
-                      return;
-                    }
-                    updateCampaignMutation.mutate(
-                      {
-                        campaignId: campaign.id,
-                        subject,
+      {/* Settings strip (accordion for extra fields) */}
+      <Accordion type="single" collapsible>
+        <AccordionItem value="item-1" className="border-0">
+          <div className="border-b border-border/60 bg-muted/20 px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-4">
+              <label className="text-xs text-muted-foreground w-16 shrink-0">Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                }}
+                onBlur={() => {
+                  if (isApiCampaign) {
+                    return;
+                  }
+                  if (subject === campaign.subject || !subject) {
+                    return;
+                  }
+                  updateCampaignMutation.mutate(
+                    {
+                      campaignId: campaign.id,
+                      subject,
+                    },
+                    {
+                      onError: (e) => {
+                        toast.error(`${e.message}. Reverting changes.`);
+                        setSubject(campaign.subject);
                       },
-                      {
-                        onError: (e) => {
-                          toast.error(`${e.message}. Reverting changes.`);
-                          setSubject(campaign.subject);
-                        },
-                      },
-                    );
-                  }}
-                  className="mt-1 py-1 text-sm block w-full outline-none border-b border-transparent  focus:border-border bg-transparent"
-                  disabled={isApiCampaign}
-                  readOnly={isApiCampaign}
-                />
-                <AccordionTrigger className="py-0"></AccordionTrigger>
-              </div>
-
-              <AccordionContent className=" flex flex-col gap-4">
-                <div className=" flex items-center gap-4 mt-4">
-                  <label className="text-sm w-20 text-muted-foreground">
-                    From
-                  </label>
+                    },
+                  );
+                }}
+                className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5"
+                disabled={isApiCampaign}
+                readOnly={isApiCampaign}
+              />
+              <AccordionTrigger className="py-0 shrink-0" />
+            </div>
+            <AccordionContent className="pb-0">
+              <div className="flex flex-col gap-3 pt-3">
+                <div className="flex items-center gap-4">
+                  <label className="text-xs text-muted-foreground w-16 shrink-0">From</label>
                   <input
                     type="text"
                     value={from}
                     onChange={(e) => {
                       setFrom(e.target.value);
                     }}
-                    className="mt-1 py-1 w-full text-sm outline-none border-b border-transparent  focus:border-border bg-transparent"
+                    className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5"
                     placeholder="Friendly name<hello@example.com>"
                     onBlur={() => {
                       if (isApiCampaign) {
@@ -303,16 +308,14 @@ function CampaignEditor({
                   />
                 </div>
                 <div className="flex items-center gap-4">
-                  <label className="block text-sm w-20 text-muted-foreground">
-                    Reply To
-                  </label>
+                  <label className="text-xs text-muted-foreground w-16 shrink-0">Reply To</label>
                   <input
                     type="text"
                     value={replyTo}
                     onChange={(e) => {
                       setReplyTo(e.target.value);
                     }}
-                    className="mt-1 py-1 text-sm block w-full outline-none border-b border-transparent bg-transparent focus:border-border"
+                    className="text-sm flex-1 outline-none border-b border-transparent bg-transparent focus:border-border py-0.5"
                     placeholder="hello@example.com"
                     onBlur={() => {
                       if (isApiCampaign) {
@@ -338,11 +341,8 @@ function CampaignEditor({
                     readOnly={isApiCampaign}
                   />
                 </div>
-
                 <div className="flex items-center gap-4">
-                  <label className="block text-sm w-20 text-muted-foreground">
-                    Preview
-                  </label>
+                  <label className="text-xs text-muted-foreground w-16 shrink-0">Preview</label>
                   <input
                     type="text"
                     value={previewText ?? undefined}
@@ -372,17 +372,15 @@ function CampaignEditor({
                         },
                       );
                     }}
-                    className="mt-1 py-1 text-sm block w-full outline-none border-b border-transparent bg-transparent  focus:border-border"
+                    className="text-sm flex-1 outline-none border-b border-transparent bg-transparent focus:border-border py-0.5"
                     disabled={isApiCampaign}
                     readOnly={isApiCampaign}
                   />
                 </div>
-                <div className=" flex items-center gap-2">
-                  <label className="block text-sm w-20 text-muted-foreground">
-                    To
-                  </label>
+                <div className="flex items-center gap-4">
+                  <label className="text-xs text-muted-foreground w-16 shrink-0">To</label>
                   {contactBooksQuery.isLoading ? (
-                    <Spinner className="w-6 h-6" />
+                    <Spinner className="w-4 h-4" />
                   ) : (
                     <Select
                       value={contactBookId ?? ""}
@@ -425,66 +423,56 @@ function CampaignEditor({
                     </Select>
                   )}
                 </div>
-              </AccordionContent>
-            </div>
-          </AccordionItem>
-        </Accordion>
+              </div>
+            </AccordionContent>
+          </div>
+        </AccordionItem>
+      </Accordion>
 
-        {isApiCampaign ? (
-          <p className="text-sm text-center text-muted-foreground">
-            Email created from API. Campaign content can only be updated via
-            API.
+      {isApiCampaign ? (
+        <div className="flex-1 flex items-center justify-center py-16">
+          <p className="text-sm text-muted-foreground">
+            Email created from API. Campaign content can only be updated via API.
           </p>
-        ) : (
-          <>
-            {/* Variables tip strip */}
-            <div className="w-full max-w-175 mx-auto mb-3 px-4 sm:px-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground/70">Variables:</span>
-                {editorVariables.slice(0, 5).map((v) => (
-                  <code
-                    key={v}
-                    className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border/60 text-[11px]"
-                  >{`{{${v}}}`}</code>
-                ))}
-                {editorVariables.length > 5 && (
-                  <span className="text-muted-foreground/60">+{editorVariables.length - 5} more</span>
-                )}
-                <span className="text-border/80">·</span>
-                <span>
-                  Required: <code className="font-mono bg-muted px-1 py-0.5 rounded border border-border/60 text-[11px]">{'{{bytesend_unsubscribe_url}}'}</code>
-                </span>
-              </div>
+        </div>
+      ) : (
+        <>
+          {/* Variables strip */}
+          <div className="border-b border-border/60 bg-background px-4 sm:px-6 py-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground/60">Variables:</span>
+              {editorVariables.slice(0, 6).map((v) => (
+                <code key={v} className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border/60 text-[11px]">{`{{${v}}}`}</code>
+              ))}
+              {editorVariables.length > 6 && (
+                <span className="text-muted-foreground/60">+{editorVariables.length - 6} more</span>
+              )}
+              <span className="text-border/60">·</span>
+              <span className="hidden sm:inline">Required: <code className="font-mono bg-muted px-1 py-0.5 rounded border border-border/60 text-[11px]">{"{{bytesend_unsubscribe_url}}"}</code></span>
             </div>
+          </div>
 
-            {/* Editor canvas — white background is intentional (email clients render on white) */}
-            <div className="w-full max-w-175 mx-auto rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
-              <div className="px-4 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">Email canvas</span>
-                <span className="text-[11px] text-muted-foreground/50">White background matches how email clients render</span>
-              </div>
-              <div className="p-6 sm:p-10">
-                <div className="w-full max-w-150 mx-auto">
-                  <Editor
-                    key={`campaign-editor-${contactBookId ?? "none"}-${editorVariables.join(",")}`}
-                    initialContent={json}
-                    onUpdate={(content) => {
-                      setJson(content.getJSON());
-                      setIsSaving(true);
-                      deboucedUpdateCampaign();
-                    }}
-                    variables={editorVariables}
-                    variableSuggestionsHelperText={variableSuggestionsHelperText}
-                    uploadImage={
-                      campaign.imageUploadSupported ? handleFileChange : undefined
-                    }
-                  />
-                </div>
-              </div>
+          {/* Email canvas */}
+          <div className="flex-1 bg-muted/10 px-0 pt-0 pb-6">
+            <div className="w-full">
+              <Editor
+                key={`campaign-editor-${contactBookId ?? "none"}-${editorVariables.join(",")}`}
+                initialContent={json}
+                onUpdate={(content) => {
+                  setJson(content.getJSON());
+                  setIsSaving(true);
+                  deboucedUpdateCampaign();
+                }}
+                variables={editorVariables}
+                variableSuggestionsHelperText={variableSuggestionsHelperText}
+                uploadImage={
+                  campaign.imageUploadSupported ? handleFileChange : undefined
+                }
+              />
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

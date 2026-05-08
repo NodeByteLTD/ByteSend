@@ -17,6 +17,7 @@ import {
   getDocumentUploadUrl,
   isStorageConfigured,
 } from "~/server/service/storage-service";
+import { LimitService } from "~/server/service/limit-service";
 
 const statuses = Object.values(CampaignStatus) as [CampaignStatus];
 
@@ -98,6 +99,14 @@ export const campaignRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx: { db, team }, input }) => {
+      const allowed = await LimitService.checkMarketingAccess(team.id);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+        });
+      }
+
       const domain = await validateDomainFromEmail(input.from, team.id);
 
       const campaign = await db.campaign.create({
@@ -239,6 +248,14 @@ export const campaignRouter = createTRPCRouter({
 
   duplicateCampaign: campaignProcedure.mutation(
     async ({ ctx: { db, team, campaign } }) => {
+      const allowed = await LimitService.checkMarketingAccess(team.id);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+        });
+      }
+
       const newCampaign = await db.campaign.create({
         data: {
           name: `${campaign.name} (Copy)`,

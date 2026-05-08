@@ -14,6 +14,8 @@ export const limitsRouter = createTRPCRouter({
       switch (input.type) {
         case LimitReason.CONTACT_BOOK:
           return LimitService.checkContactBookLimit(ctx.team.id);
+        case LimitReason.CONTACTS:
+          return LimitService.checkContactsLimit(ctx.team.id);
         case LimitReason.DOMAIN:
           return LimitService.checkDomainLimit(ctx.team.id);
         case LimitReason.TEAM_MEMBER:

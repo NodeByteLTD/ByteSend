@@ -12,7 +12,7 @@ import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { LimitReason } from "~/lib/constants/plans";
 import { UpgradeButton } from "./UpgradeButton";
 
-type PaidPlan = "HOBBY" | "LITE" | "BASIC" | "LIFETIME";
+type PaidPlan = "HOBBY" | "LITE";
 
 const PLAN_OPTIONS: {
   plan: PaidPlan;
@@ -26,10 +26,11 @@ const PLAN_OPTIONS: {
     name: "Hobby",
     price: "CA$5 / mo",
     perks: [
-      "15,000 emails / month",
-      "2,000 emails / day",
-      "5 domains",
-      "Usage-based billing",
+      "25,000 emails / month",
+      "12,500 emails / day",
+      "4 domains + $1/extra",
+      "10 team members",
+      "Marketing CA$0.05/ea (overage)",
     ],
   },
   {
@@ -38,31 +39,13 @@ const PLAN_OPTIONS: {
     price: "CA$10 / mo",
     perks: [
       "50,000 emails / month",
-      "5,000 emails / day",
-      "10 domains",
+      "25,000 emails / day",
+      "6 domains + $1/extra",
+      "15 team members",
+      "Marketing CA$0.02/ea (overage)",
       "Priority support",
     ],
-  },
-  {
-    plan: "BASIC",
-    name: "Professional",
-    price: "CA$30 / mo",
-    perks: [
-      "150,000 emails / month included",
-      "Marketing & transactional CA$0.01/ea (overage)",
-      "100 domains · advanced analytics",
-    ],
     highlight: true,
-  },
-  {
-    plan: "LIFETIME",
-    name: "Lifetime",
-    price: "CA$60 one-time",
-    perks: [
-      "Unlimited emails — no overage charges",
-      "No recurring charges",
-      "500 domains · all future features",
-    ],
   },
 ];
 
@@ -95,6 +78,8 @@ export const UpgradeModal = () => {
                   "You've reached the daily email limit on your current plan.",
                 [LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED]:
                   "You've reached the monthly email limit on your current plan.",
+                [LimitReason.MARKETING_NOT_AVAILABLE]:
+                  "Marketing features (Contacts & Campaigns) are not available on the Free plan.",
               };
               return reason
                 ? `${messages[reason] ?? ""} Upgrade to unlock more.`

@@ -12,6 +12,8 @@ import { ContactQueueService } from "./contact-queue-service";
 import { WebhookService } from "./webhook-service";
 import { logger } from "../logger/log";
 import { sendDoubleOptInConfirmationEmail } from "./double-opt-in-service";
+import { LimitService } from "./limit-service";
+import { ByteSendApiError } from "../public-api/api-error";
 
 export type ContactInput = {
   email: string;
@@ -55,6 +57,19 @@ export async function addOrUpdateContact(
       properties: true,
     },
   });
+
+  // Enforce contacts limit only when adding a brand-new contact
+  if (!existingContact) {
+    const resolvedTeamId = teamId ?? contactBook.teamId;
+    const { isLimitReached, reason } =
+      await LimitService.checkContactsLimit(resolvedTeamId);
+    if (isLimitReached) {
+      throw new ByteSendApiError({
+        code: "FORBIDDEN",
+        message: reason ?? "Contact limit reached. Upgrade your plan to add more contacts.",
+      });
+    }
+  }
 
   // Determine subscribed value for update
   // Only allow Yes→No transitions (allow unsubscribe, prevent re-subscribe)

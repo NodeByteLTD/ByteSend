@@ -56,27 +56,27 @@ export const VariableList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="z-50 h-auto min-w-[128px] rounded-md border border-gray-200 bg-white p-1 shadow-md transition-all">
+    <div className="z-50 h-auto min-w-[128px] rounded-md border border-border/60 bg-popover p-1 shadow-md transition-all">
       {props?.items?.length ? (
         props?.items?.map((item: string, index: number) => (
           <button
             key={index}
             onClick={() => selectItem(index)}
             className={cn(
-              "flex w-full space-x-2 rounded-md px-2 py-1 text-left text-sm text-gray-900 hover:bg-gray-100",
-              index === selectedIndex ? "bg-gray-200" : "bg-white",
+              "flex w-full space-x-2 rounded-md px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted",
+              index === selectedIndex ? "bg-muted" : "bg-popover",
             )}
           >
             {item}
           </button>
         ))
       ) : (
-        <button className="flex w-full space-x-2 rounded-md bg-white px-2 py-1 text-left text-sm text-gray-900 hover:bg-gray-100">
+        <button className="flex w-full space-x-2 rounded-md bg-popover px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted">
           No result
         </button>
       )}
       {props.helperText ? (
-        <div className="px-2 pt-1 text-[11px] text-gray-400">
+        <div className="px-2 pt-1 text-[11px] text-muted-foreground/70">
           {props.helperText}
         </div>
       ) : null}
@@ -193,7 +193,7 @@ export function VariableComponent(props: NodeViewProps) {
           <button
             className={cn(
               "inline-flex items-center justify-center rounded-md text-sm gap-1 ring-offset-white transition-colors",
-              "px-2 border border-gray-300 shadow-sm  cursor-pointer text-foreground/80",
+              "px-2 border border-border/60 shadow-sm  cursor-pointer text-foreground/80",
             )}
             onClick={(e) => {
               e.preventDefault();
@@ -210,7 +210,7 @@ export function VariableComponent(props: NodeViewProps) {
         <PopoverContent
           align="start"
           side="top"
-          className="space-y-2 light border-gray-200"
+          className="space-y-2 border-border/60"
           sideOffset={10}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}

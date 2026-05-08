@@ -1,4 +1,4 @@
-﻿-- CreateEnum
+-- CreateEnum
 CREATE TYPE "Plan" AS ENUM ('FREE', 'LITE', 'HOBBY', 'BASIC', 'LIFETIME');
 
 -- CreateEnum
@@ -132,6 +132,8 @@ CREATE TABLE "Team" (
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "dailyEmailLimit" INTEGER NOT NULL DEFAULT 10000,
     "isBlocked" BOOLEAN NOT NULL DEFAULT false,
+    "extraDomainSlots" INTEGER NOT NULL DEFAULT 0,
+    "smtpUsername" TEXT,
 
     CONSTRAINT "Team_pkey" PRIMARY KEY ("id")
 );
@@ -579,4 +581,3 @@ ALTER TABLE "WebhookCall" ADD CONSTRAINT "WebhookCall_webhookId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "WebhookCall" ADD CONSTRAINT "WebhookCall_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

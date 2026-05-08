@@ -24,6 +24,7 @@ import {
   validateApiKeyDomainAccess,
   validateDomainFromEmail,
 } from "./domain-service";
+import { LimitService } from "./limit-service";
 
 const CAMPAIGN_UNSUB_PLACEHOLDER_TOKENS = [
   "{{bytesend_unsubscribe_url}}",
@@ -297,6 +298,14 @@ export async function createCampaignFromApi({
   bcc?: string | string[];
   batchSize?: number;
 }) {
+  const marketingAllowed = await LimitService.checkMarketingAccess(teamId);
+  if (!marketingAllowed) {
+    throw new ByteSendApiError({
+      code: "FORBIDDEN",
+      message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+    });
+  }
+
   if (!content && !html) {
     throw new ByteSendApiError({
       code: "BAD_REQUEST",
@@ -507,6 +516,14 @@ export async function scheduleCampaign({
     throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
+    });
+  }
+
+  const marketingAllowed = await LimitService.checkMarketingAccess(teamId);
+  if (!marketingAllowed) {
+    throw new ByteSendApiError({
+      code: "FORBIDDEN",
+      message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
     });
   }
 

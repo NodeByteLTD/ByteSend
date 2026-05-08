@@ -121,155 +121,149 @@ function DoubleOptInEditor({
   const debouncedUpdateContent = useDebouncedCallback(updateContent, 1000);
 
   return (
-    <div className="p-4 container mx-auto">
-      <div className="mx-auto">
-        <div className="mb-4 flex justify-between items-center w-full sm:w-175 mx-auto">
-          <div className="flex items-center gap-3">
-            <Link href={`/contacts/${contactBook.id}`}>
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <div>
-              <div className="text-sm text-muted-foreground">
-                Double opt-in email
-              </div>
-              <div className="text-base font-medium">{contactBook.name}</div>
-            </div>
+    <div className="-mx-4 md:-mx-6 h-full min-h-full flex flex-col">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 h-12 shrink-0 border-b border-border/60 bg-background/95 backdrop-blur">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href={`/contacts/${contactBook.id}`} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="min-w-0">
+            <div className="text-[11px] text-muted-foreground leading-none mb-0.5">Double opt-in email</div>
+            <div className="text-sm font-medium truncate">{contactBook.name}</div>
           </div>
-
-          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
-            {isSaving ? (
-              <div className="h-2 w-2 bg-yellow rounded-full" />
-            ) : (
-              <div className="h-2 w-2 bg-green rounded-full" />
-            )}
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+          {isSaving ? (
+            <div className="h-2 w-2 bg-yellow rounded-full" />
+          ) : (
+            <div className="h-2 w-2 bg-green rounded-full" />
+          )}
+          <span className="text-xs hidden sm:block">
             {formatDistanceToNow(contactBook.updatedAt) === "less than a minute"
               ? "just now"
               : `${formatDistanceToNow(contactBook.updatedAt)} ago`}
-          </div>
+          </span>
         </div>
+      </div>
 
-        <div className="flex flex-col mt-4 mb-4 p-4 w-full sm:w-175 mx-auto z-50 border border-border/60 rounded-xl">
-          <div className="flex items-center gap-4">
-            <label className="block text-sm w-20 text-muted-foreground">
-              Subject
-            </label>
-            <Input
-              type="text"
-              value={subject}
-              onChange={(e) => {
-                setSubject(e.target.value);
-              }}
-              onBlur={() => {
-                const normalizedSubject =
-                  subject.trim() || DEFAULT_DOUBLE_OPT_IN_SUBJECT;
-                const currentSubject =
-                  contactBook.doubleOptInSubject ??
-                  DEFAULT_DOUBLE_OPT_IN_SUBJECT;
+      {/* Settings strip */}
+      <div className="border-b border-border/60 bg-muted/20 px-4 sm:px-6 pt-4 pb-3 space-y-3">
+        <div className="flex items-center gap-4">
+          <label className="text-xs text-muted-foreground w-16 shrink-0">Subject</label>
+          <Input
+            type="text"
+            value={subject}
+            onChange={(e) => {
+              setSubject(e.target.value);
+            }}
+            onBlur={() => {
+              const normalizedSubject =
+                subject.trim() || DEFAULT_DOUBLE_OPT_IN_SUBJECT;
+              const currentSubject =
+                contactBook.doubleOptInSubject ??
+                DEFAULT_DOUBLE_OPT_IN_SUBJECT;
 
-                if (normalizedSubject === currentSubject) {
-                  return;
-                }
+              if (normalizedSubject === currentSubject) {
+                return;
+              }
 
-                setIsSaving(true);
-                updateContactBook.mutate(
-                  {
-                    contactBookId: contactBook.id,
-                    doubleOptInSubject: normalizedSubject,
+              setIsSaving(true);
+              updateContactBook.mutate(
+                {
+                  contactBookId: contactBook.id,
+                  doubleOptInSubject: normalizedSubject,
+                },
+                {
+                  onError: (error) => {
+                    toast.error(error.message);
+                    setIsSaving(false);
+                    setSubject(
+                      contactBook.doubleOptInSubject ??
+                        DEFAULT_DOUBLE_OPT_IN_SUBJECT,
+                    );
                   },
-                  {
-                    onError: (error) => {
-                      toast.error(error.message);
-                      setIsSaving(false);
-                      setSubject(
-                        contactBook.doubleOptInSubject ??
-                          DEFAULT_DOUBLE_OPT_IN_SUBJECT,
-                      );
-                    },
-                  },
-                );
-              }}
-              className="mt-1 py-1 text-sm block w-full outline-none border-b border-transparent focus:border-border bg-transparent"
-            />
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <label className="block text-sm w-20 text-muted-foreground">
-              From
-            </label>
-            <Input
-              type="text"
-              value={from}
-              onChange={(e) => {
-                setFrom(e.target.value);
-              }}
-              onBlur={() => {
-                const normalizedFrom = from.trim();
-                const currentFrom = contactBook.doubleOptInFrom ?? "";
-
-                if (normalizedFrom === currentFrom) {
-                  return;
-                }
-
-                setIsSaving(true);
-                updateContactBook.mutate(
-                  {
-                    contactBookId: contactBook.id,
-                    doubleOptInFrom: normalizedFrom || null,
-                  },
-                  {
-                    onError: (error) => {
-                      toast.error(error.message);
-                      setIsSaving(false);
-                      setFrom(contactBook.doubleOptInFrom ?? "");
-                    },
-                  },
-                );
-              }}
-              placeholder="Friendly name<hello@example.com>"
-              className="mt-1 py-1 text-sm block w-full outline-none border-b border-transparent focus:border-border bg-transparent"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Use the variable <code>{"{{doubleOptInUrl}}"}</code> for the
-            confirmation link.
-          </p>
+                },
+              );
+            }}
+            className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5 h-auto"
+          />
         </div>
+        <div className="flex items-center gap-4">
+          <label className="text-xs text-muted-foreground w-16 shrink-0">From</label>
+          <Input
+            type="text"
+            value={from}
+            onChange={(e) => {
+              setFrom(e.target.value);
+            }}
+            onBlur={() => {
+              const normalizedFrom = from.trim();
+              const currentFrom = contactBook.doubleOptInFrom ?? "";
 
-        {/* Editor canvas — white background is intentional (email clients render on white) */}
-        <div className="w-full sm:w-175 mx-auto rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
-          <div className="px-4 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Email canvas</span>
-            <span className="text-[11px] text-muted-foreground/50">White background matches how email clients render</span>
-          </div>
-          <div className="p-4 sm:p-8">
-            <div className="w-full sm:w-150 mx-auto">
-            <Editor
-              initialContent={json}
-              onUpdate={(content) => {
-                const nextContent = content.getJSON();
-                const serializedContent = JSON.stringify(nextContent);
+              if (normalizedFrom === currentFrom) {
+                return;
+              }
 
-                setJson(nextContent);
+              setIsSaving(true);
+              updateContactBook.mutate(
+                {
+                  contactBookId: contactBook.id,
+                  doubleOptInFrom: normalizedFrom || null,
+                },
+                {
+                  onError: (error) => {
+                    toast.error(error.message);
+                    setIsSaving(false);
+                    setFrom(contactBook.doubleOptInFrom ?? "");
+                  },
+                },
+              );
+            }}
+            placeholder="Friendly name<hello@example.com>"
+            className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5 h-auto"
+          />
+        </div>
+      </div>
 
-                if (!hasDoubleOptInUrlPlaceholder(serializedContent)) {
-                  debouncedUpdateContent.cancel();
-                  setIsSaving(false);
+      {/* Hints strip */}
+      <div className="border-b border-border/60 bg-background px-4 sm:px-6 py-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>Required: <code className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border/60 text-[11px]">{"{{doubleOptInUrl}}"}</code></span>
+          <span className="text-border/60">·</span>
+          <span>Type <code className="font-mono bg-muted px-1 py-0.5 rounded border border-border/60 text-[11px]">/</code> in editor for blocks</span>
+        </div>
+      </div>
 
-                  if (!hasShownMissingPlaceholderToast.current) {
-                    toast.error(DOUBLE_OPT_IN_URL_REQUIRED_MESSAGE);
-                    hasShownMissingPlaceholderToast.current = true;
-                  }
+      {/* Email canvas */}
+      <div className="flex-1 bg-muted/10 px-0 pt-0 pb-6">
+        <div className="w-full">
+          <Editor
+            initialContent={json}
+            onUpdate={(content) => {
+              const nextContent = content.getJSON();
+              const serializedContent = JSON.stringify(nextContent);
 
-                  return;
+              setJson(nextContent);
+
+              if (!hasDoubleOptInUrlPlaceholder(serializedContent)) {
+                debouncedUpdateContent.cancel();
+                setIsSaving(false);
+
+                if (!hasShownMissingPlaceholderToast.current) {
+                  toast.error(DOUBLE_OPT_IN_URL_REQUIRED_MESSAGE);
+                  hasShownMissingPlaceholderToast.current = true;
                 }
 
-                hasShownMissingPlaceholderToast.current = false;
-                setIsSaving(true);
-                debouncedUpdateContent(serializedContent);
-              }}
-              variables={DOUBLE_OPT_IN_EDITOR_VARIABLES}
-            />
-            </div>
-          </div>
+                return;
+              }
+
+              hasShownMissingPlaceholderToast.current = false;
+              setIsSaving(true);
+              debouncedUpdateContent(serializedContent);
+            }}
+            variables={DOUBLE_OPT_IN_EDITOR_VARIABLES}
+          />
         </div>
       </div>
     </div>

@@ -25,7 +25,7 @@ export function ColorPicker(props: ColorPickerProps) {
   };
 
   return (
-    <div className="min-w-[260px] rounded-xl shadow border border-gray-200 bg-white p-4">
+    <div className="min-w-[260px] rounded-xl shadow border border-border/60 bg-card p-4">
       <HexAlphaColorPicker
         color={color}
         onChange={handleColorChange}
@@ -35,7 +35,7 @@ export function ColorPicker(props: ColorPickerProps) {
         alpha={true}
         color={color}
         onChange={handleColorChange}
-        className="mt-4 bg-transparent text-black w-full min-w-0 rounded-lg border px-2 py-1.5 text-sm uppercase focus-visible:border-gray-400 focus-visible:outline-none"
+        className="mt-4 bg-transparent text-foreground w-full min-w-0 rounded-lg border border-border px-2 py-1.5 text-sm uppercase focus-visible:border-foreground/40 focus-visible:outline-none"
         prefixed
       />
     </div>

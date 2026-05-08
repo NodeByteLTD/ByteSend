@@ -160,6 +160,7 @@ export async function syncPlansToStripe(
             currency: "cad",
             billingScheme: "per_unit",
             recurring: null,
+            nickname: `${config.name} — Lifetime access (one-time)`,
             metadata: { type: "one-time", plan },
           });
           priceIds.oneTime = price.id;
@@ -172,6 +173,7 @@ export async function syncPlansToStripe(
             currency: "cad",
             billingScheme: "per_unit",
             recurring: { interval: "month", usageType: "licensed" },
+            nickname: `${config.name} — Monthly subscription`,
             metadata: { type: "monthly", plan },
           });
           priceIds.monthly = monthlyPrice.id;
@@ -190,6 +192,7 @@ export async function syncPlansToStripe(
             unitAmountDecimal: marketingCents,
             currency: "cad",
             meterId: marketingMeter.id,
+            nickname: `Marketing email overage (CA$${planData.usageMetering.marketing}/email)`,
             metadata: { type: "marketing-usage", plan },
           });
           priceIds.marketingUsage = marketingPrice.id;
@@ -202,6 +205,7 @@ export async function syncPlansToStripe(
             unitAmountDecimal: transactionalCents,
             currency: "cad",
             meterId: transactionalMeter.id,
+            nickname: `Transactional email overage (CA$${planData.usageMetering.transactional}/email)`,
             metadata: { type: "transactional-usage", plan },
           });
           priceIds.transactionalUsage = transactionalPrice.id;
@@ -258,6 +262,7 @@ interface CreatePriceParams {
     usageType: "metered" | "licensed";
     aggregateUsage?: "sum" | "max" | "last_during_period";
   } | null;
+  nickname?: string;
   metadata: Record<string, string>;
 }
 
@@ -272,6 +277,7 @@ async function createOrUpdatePrice(
     currency,
     billingScheme,
     recurring,
+    nickname,
     metadata,
   } = params;
 
@@ -290,6 +296,7 @@ async function createOrUpdatePrice(
     currency,
     billing_scheme: billingScheme,
     metadata,
+    ...(nickname ? { nickname } : {}),
   };
 
   if (recurring) {
@@ -316,6 +323,7 @@ interface CreateMeterPriceParams {
   unitAmountDecimal: string;
   currency: string;
   meterId: string;
+  nickname?: string;
   metadata: Record<string, string>;
 }
 
@@ -323,7 +331,7 @@ async function createOrUpdateMeterPrice(
   stripe: Stripe,
   params: CreateMeterPriceParams
 ): Promise<Stripe.Price> {
-  const { productId, unitAmountDecimal, currency, meterId, metadata } = params;
+  const { productId, unitAmountDecimal, currency, meterId, nickname, metadata } = params;
 
   // Search for existing price with matching metadata
   const existingPrices = await stripe.prices.search({
@@ -346,8 +354,71 @@ async function createOrUpdateMeterPrice(
       usage_type: "metered",
       meter: meterId,
     },
+    ...(nickname ? { nickname } : {}),
     metadata,
   });
+}
+
+/**
+ * Stable key names used when persisting Stripe IDs to the AppSetting table.
+ * Format: stripe.{type}.{plan|addon}.{price_type}
+ */
+export const DB_CONFIG_KEYS = {
+  price: {
+    hobby:    { monthly: "stripe.price.hobby.monthly", marketingUsage: "stripe.price.hobby.marketing_usage", transactionalUsage: "stripe.price.hobby.transactional_usage" },
+    lite:     { monthly: "stripe.price.lite.monthly",  marketingUsage: "stripe.price.lite.marketing_usage",  transactionalUsage: "stripe.price.lite.transactional_usage"  },
+    basic:    { monthly: "stripe.price.basic.monthly", marketingUsage: "stripe.price.basic.marketing_usage", transactionalUsage: "stripe.price.basic.transactional_usage" },
+    lifetime: { oneTime: "stripe.price.lifetime.one_time" },
+    addon:    { domainMonthly: "stripe.price.addon.domain_monthly" },
+  },
+  product: {
+    free: "stripe.product.free", hobby: "stripe.product.hobby", lite: "stripe.product.lite",
+    basic: "stripe.product.basic", lifetime: "stripe.product.lifetime",
+    addonDomain: "stripe.product.addon.domain",
+  },
+  meter: {
+    marketing:    "stripe.meter.marketing",
+    transactional: "stripe.meter.transactional",
+    extraMember:  "stripe.meter.extra_member",
+  },
+  webhook: {
+    endpointId: "stripe.webhook.endpoint_id",
+    secret:     "stripe.webhook.secret",
+  },
+} as const;
+
+/**
+ * Convert a SyncResult into flat key→value pairs suitable for AppSetting upserts.
+ */
+export function generateDbConfig(
+  result: SyncResult,
+  addonDomainProductId?: string,
+  addonDomainPriceId?: string,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  for (const p of result.products) {
+    const planKey = p.plan.toLowerCase() as keyof typeof DB_CONFIG_KEYS.product;
+    const productDbKey = DB_CONFIG_KEYS.product[planKey];
+    if (productDbKey) out[productDbKey] = p.productId;
+
+    const priceKeys = DB_CONFIG_KEYS.price[planKey as keyof typeof DB_CONFIG_KEYS.price];
+    if (!priceKeys) continue;
+    const r = priceKeys as Record<string, string>;
+    if (p.priceIds.monthly && r.monthly)               out[r.monthly] = p.priceIds.monthly;
+    if (p.priceIds.marketingUsage && r.marketingUsage) out[r.marketingUsage] = p.priceIds.marketingUsage;
+    if (p.priceIds.transactionalUsage && r.transactionalUsage) out[r.transactionalUsage] = p.priceIds.transactionalUsage;
+    if (p.priceIds.oneTime && r.oneTime)               out[r.oneTime] = p.priceIds.oneTime;
+  }
+
+  if (addonDomainProductId) out[DB_CONFIG_KEYS.product.addonDomain] = addonDomainProductId;
+  if (addonDomainPriceId)   out[DB_CONFIG_KEYS.price.addon.domainMonthly] = addonDomainPriceId;
+
+  if (result.meters.marketing)    out[DB_CONFIG_KEYS.meter.marketing]    = result.meters.marketing;
+  if (result.meters.transactional) out[DB_CONFIG_KEYS.meter.transactional] = result.meters.transactional;
+  if (result.meters.extraMember)  out[DB_CONFIG_KEYS.meter.extraMember]  = result.meters.extraMember;
+
+  return out;
 }
 
 /**

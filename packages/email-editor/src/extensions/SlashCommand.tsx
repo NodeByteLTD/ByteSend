@@ -362,7 +362,7 @@ const CommandList = ({
   }, [selectedIndex]);
 
   return items.length > 0 ? (
-    <div className="z-50 w-52 rounded-md border border-gray-200 bg-white shadow-md transition-all">
+    <div className="z-50 w-52 rounded-md border border-border/60 bg-popover shadow-md transition-all">
       <div
         id="slash-command"
         ref={commandListContainer}
@@ -372,9 +372,9 @@ const CommandList = ({
           return (
             <button
               className={cn(
-                "flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm text-gray-900 hover:bg-gray-100 hover:text-gray-900",
+                "flex w-full items-center space-x-2 rounded-md px-2 py-1 text-left text-sm text-popover-foreground hover:bg-muted hover:text-popover-foreground",
                 index === selectedIndex
-                  ? "bg-gray-100 text-gray-900"
+                  ? "bg-muted text-popover-foreground"
                   : "bg-transparent"
               )}
               key={index}

@@ -36,26 +36,26 @@ export class LimitService {
   static async checkDomainLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;
+    currentCount: number;
     reason?: LimitReason;
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
-      return { isLimitReached: false, limit: -1 };
-    }
-
-    // Admin/founder teams have no limits
-    if (await LimitService.isAdminOrFounderTeam(teamId)) {
-      return { isLimitReached: false, limit: -1 };
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
     }
 
     const team = await TeamService.getTeamCached(teamId);
     const currentCount = await db.domain.count({ where: { teamId } });
 
-    const limit = PLAN_LIMITS[getActivePlan(team)].domains;
+    const baseDomainLimit = PLAN_LIMITS[getActivePlan(team)].domains;
+    // Extra domain slots purchasable as add-on (not available on FREE — hard cap)
+    const extraSlots = getActivePlan(team) !== "FREE" ? (team.extraDomainSlots ?? 0) : 0;
+    const limit = baseDomainLimit === -1 ? -1 : baseDomainLimit + extraSlots;
     if (isLimitExceeded(currentCount, limit)) {
       return {
         isLimitReached: true,
         limit,
+        currentCount,
         reason: LimitReason.DOMAIN,
       };
     }
@@ -63,7 +63,37 @@ export class LimitService {
     return {
       isLimitReached: false,
       limit,
+      currentCount,
     };
+  }
+
+  static async checkContactsLimit(teamId: number): Promise<{
+    isLimitReached: boolean;
+    limit: number;
+    currentCount: number;
+    reason?: LimitReason;
+  }> {
+    // Limits only apply in cloud mode
+    if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
+    }
+
+    const team = await TeamService.getTeamCached(teamId);
+    const currentCount = await db.contact.count({
+      where: { contactBook: { teamId } },
+    });
+
+    const limit = PLAN_LIMITS[getActivePlan(team)].contacts;
+    if (isLimitExceeded(currentCount, limit)) {
+      return {
+        isLimitReached: true,
+        limit,
+        currentCount,
+        reason: LimitReason.CONTACTS,
+      };
+    }
+
+    return { isLimitReached: false, limit, currentCount };
   }
 
   static async checkContactBookLimit(teamId: number): Promise<{
@@ -73,12 +103,7 @@ export class LimitService {
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
-      return { isLimitReached: false, limit: -1 };
-    }
-
-    // Admin/founder teams have no limits
-    if (await LimitService.isAdminOrFounderTeam(teamId)) {
-      return { isLimitReached: false, limit: -1 };
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
     }
 
     const team = await TeamService.getTeamCached(teamId);
@@ -102,26 +127,25 @@ export class LimitService {
   static async checkTeamMemberLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;
+    currentCount: number;
     reason?: LimitReason;
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
-      return { isLimitReached: false, limit: -1 };
-    }
-
-    // Admin/founder teams have no limits
-    if (await LimitService.isAdminOrFounderTeam(teamId)) {
-      return { isLimitReached: false, limit: -1 };
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
     }
 
     const team = await TeamService.getTeamCached(teamId);
     const currentCount = await db.teamUser.count({ where: { teamId } });
 
-    const limit = PLAN_LIMITS[getActivePlan(team)].teamMembers;
+    const baseMemberLimit = PLAN_LIMITS[getActivePlan(team)].teamMembers;
+    const extraSlots = team.extraMemberSlots ?? 0;
+    const limit = baseMemberLimit === -1 ? -1 : baseMemberLimit + extraSlots;
     if (isLimitExceeded(currentCount, limit)) {
       return {
         isLimitReached: true,
         limit,
+        currentCount,
         reason: LimitReason.TEAM_MEMBER,
       };
     }
@@ -129,22 +153,19 @@ export class LimitService {
     return {
       isLimitReached: false,
       limit,
+      currentCount,
     };
   }
 
   static async checkWebhookLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;
+    currentCount: number;
     reason?: LimitReason;
   }> {
     // Limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
-      return { isLimitReached: false, limit: -1 };
-    }
-
-    // Admin/founder teams have no limits
-    if (await LimitService.isAdminOrFounderTeam(teamId)) {
-      return { isLimitReached: false, limit: -1 };
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
     }
 
     const team = await TeamService.getTeamCached(teamId);
@@ -157,6 +178,7 @@ export class LimitService {
       return {
         isLimitReached: true,
         limit,
+        currentCount,
         reason: LimitReason.WEBHOOK,
       };
     }
@@ -164,6 +186,7 @@ export class LimitService {
     return {
       isLimitReached: false,
       limit,
+      currentCount,
     };
   }
 
@@ -333,6 +356,18 @@ export class LimitService {
       limit: dailyLimit,
       available: dailyLimit - dailyUsage,
     };
+  }
+
+  /**
+   * Returns true if the team's active plan includes marketing/campaign emails.
+   * No side effects — safe to call at request time without triggering notifications.
+   * Admin/founder teams and self-hosted instances are always allowed.
+   */
+  static async checkMarketingAccess(teamId: number): Promise<boolean> {
+    if (!env.NEXT_PUBLIC_IS_CLOUD) return true;
+    if (await LimitService.isAdminOrFounderTeam(teamId)) return true;
+    const team = await TeamService.getTeamCached(teamId);
+    return PLAN_LIMITS[getActivePlan(team)].marketingEmailsIncluded;
   }
 
 }

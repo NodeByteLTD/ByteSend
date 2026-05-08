@@ -10,6 +10,7 @@ import {
 import StarterKit from "@tiptap/starter-kit";
 import React, { useRef } from "react";
 import { TextMenu } from "./menus/TextMenu";
+import { EditorToolbar } from "./menus/EditorToolbar";
 import { cn } from "@bytesend/ui/lib/utils";
 
 import { extensions } from "./extensions";
@@ -111,10 +112,13 @@ export const Editor: React.FC<EditorProps> = ({
 
   return (
     <div
-      className="bg-white rounded-md text-black p-4 sm:p-8 bytesend-editor light"
+      className="rounded-b-xl rounded-t-none bytesend-editor border border-border border-t-0 shadow-md overflow-hidden"
       ref={menuContainerRef}
     >
-      <EditorContent editor={editor} className="min-h-[50vh]" />
+      {editor ? <EditorToolbar editor={editor} /> : null}
+      <div className="bg-background text-foreground">
+        <EditorContent editor={editor} className="min-h-[50vh] outline-none p-4 sm:p-8" />
+      </div>
       {editor ? <TextMenu editor={editor} /> : null}
       {editor ? <LinkMenu editor={editor} appendTo={menuContainerRef} /> : null}
     </div>

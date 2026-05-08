@@ -202,7 +202,7 @@
 }
 
 .ProseMirror-selectednode {
-  @apply bg-slate-50;
+  background-color: color-mix(in srgb, var(--color-muted) 50%, transparent);
 }
 
 /* Chrome, Safari and Opera */
@@ -237,7 +237,7 @@
 
 .prosemirror-dropcursor-block {
   height: 1px !important;
-  background-color: #555 !important;
+  background-color: hsl(var(--border)) !important;
 }
 
 .bytesend-editor .footer {

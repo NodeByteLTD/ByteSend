@@ -113,7 +113,7 @@ function Hero() {
 
 function TrustStrip() {
   const stats = [
-    { value: "5,000", label: "Free emails/month" },
+    { value: "12,500", label: "Free emails/month" },
     { value: "96.6%", label: "Uptime SLA" },
     { value: "<2s", label: "Avg. delivery" },
     { value: "24/7", label: "Monitoring" },
@@ -284,36 +284,29 @@ const pricingPlans: {
   period: string;
   cta: string;
   popular?: boolean;
-  badge?: string;
   href?: string;
-  selfHosted?: boolean;
 }[] = [
-  { name: "Free", price: "CA$0", period: "forever", cta: "Get started free", href: APP_URL },
-  { name: "Hobby", price: "CA$5", period: "/mo", cta: "Start with Hobby", href: APP_URL },
-  { name: "Lite", price: "CA$10", period: "/mo", cta: "Start with Lite", href: APP_URL },
-  { name: "Professional", price: "CA$30", period: "/mo", cta: "Go Professional", popular: true, href: APP_URL },
-  { name: "Lifetime", price: "CA$60", period: "once", cta: "Buy Lifetime", badge: "Best value", href: APP_URL },
-  { name: "Self-Hosted", price: "Free", period: "open source", cta: "View docs", badge: "Recommended", href: "https://docs.bytesend.cloud", selfHosted: true },
+  { name: "Free",  price: "CA$0",  period: "forever", cta: "Get started free", href: APP_URL },
+  { name: "Hobby", price: "CA$5",  period: "/mo",     cta: "Start with Hobby", href: APP_URL },
+  { name: "Lite",  price: "CA$10", period: "/mo",     cta: "Start with Lite",  href: APP_URL, popular: true },
 ];
 
-// Values align with pricingPlans order: [Free, Hobby, Lite, Pro, Lifetime, Self-Hosted]
+// Values align with pricingPlans order: [Free, Hobby, Lite]
 const pricingFeatures: { label: string; values: (string | boolean)[] }[] = [
-  { label: "Monthly emails included", values: ["5,000", "15,000", "50,000", "150,000", "Unlimited", "Unlimited"] },
-  { label: "Daily email limit", values: ["1,000", "2,000", "5,000", "Unlimited", "Unlimited", "Unlimited"] },
-  { label: "Transactional emails", values: ["Included", "CA$0.03/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
-  { label: "Marketing emails", values: [false, "CA$0.05/ea†", "CA$0.02/ea†", "CA$0.01/ea†", "Included", "Included"] },
-  { label: "Domains", values: ["3 + $1/extra", "5 + $1/extra", "10 + $1/extra", "100 + $1/extra", "500 + $1/extra", "Unlimited"] },
-  { label: "Members per team", values: ["5", "30", "60", "Unlimited", "Unlimited", "Unlimited"] },
-  { label: "Contacts", values: ["500", "2,000", "10,000", "1M", "10M", "Unlimited"] },
-  { label: "Advanced analytics", values: [false, false, false, true, true, true] },
-  { label: "Custom branding", values: [false, false, false, false, false, true] },
-  { label: "Priority support", values: [false, false, true, true, true, true] },
+  { label: "Monthly emails included", values: ["12,500",        "25,000",        "50,000"]        },
+  { label: "Daily email limit",       values: ["5,000",         "12,500",        "25,000"]        },
+  { label: "Transactional emails",    values: ["Included",      "Included",      "Included"]      },
+  { label: "Marketing emails",        values: [false,           "CA$0.05/ea†",   "CA$0.02/ea†"]   },
+  { label: "Domains",                 values: ["2 + $1/extra",  "4 + $1/extra",  "6 + $1/extra"]  },
+  { label: "Members per team",        values: ["5",             "10",            "15"]            },
+  { label: "Contacts",                values: ["100",           "200",           "300"]           },
+  { label: "Priority support",        values: [false,           false,           true]            },
 ];
 
 function Pricing() {
   return (
     <section id="pricing" className="py-20 sm:py-28 border-t border-border/30">
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="mx-auto max-w-5xl px-6">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <p className="text-sm font-medium uppercase tracking-wider text-primary mb-3">Pricing</p>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
@@ -322,29 +315,23 @@ function Pricing() {
           <p className="mt-4 text-muted-foreground">
             Every plan includes transactional emails. Paid plans unlock marketing email sending.
             Usage-based overage rates apply only <em>after</em> the included monthly limit is reached.
+            Free plan is a hard cap — no overage billing.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {pricingPlans.map((plan, planIdx) => (
             <div
               key={plan.name}
               className={`relative flex flex-col rounded-2xl border p-6 ${
                 plan.popular
-                  ? "border-primary/40 bg-primary/3 ring-1 ring-primary/20 lg:scale-[1.03] z-10"
-                  : plan.selfHosted
-                    ? "border-dashed border-border/60 bg-muted/20"
-                    : "border-border/40 bg-card/40"
+                  ? "border-primary/40 bg-primary/3 ring-1 ring-primary/20 sm:scale-[1.03] z-10"
+                  : "border-border/40 bg-card/40"
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-medium text-primary-foreground shadow-sm">
                   Most popular
-                </div>
-              )}
-              {plan.badge && !plan.popular && (
-                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-medium text-white shadow-sm ${plan.selfHosted ? "bg-muted-foreground" : "bg-emerald-500"}`}>
-                  {plan.badge}
                 </div>
               )}
 
@@ -378,18 +365,31 @@ function Pricing() {
 
               <Button
                 className={`w-full rounded-xl ${plan.popular ? "shadow-sm" : ""}`}
-                variant={plan.popular ? "default" : plan.selfHosted ? "ghost" : "outline"}
+                variant={plan.popular ? "default" : "outline"}
                 size="lg"
                 asChild
               >
-                <Link href={plan.href ?? APP_URL} {...(plan.selfHosted ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{plan.cta}</Link>
+                <Link href={plan.href ?? APP_URL}>{plan.cta}</Link>
               </Button>
             </div>
           ))}
         </div>
 
+        {/* Custom / Enterprise row */}
+        <div className="mt-6 rounded-2xl border border-border/40 bg-card/40 px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-1">
+            <p className="font-semibold text-sm">Need more? Custom plans available.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Higher volumes, dedicated infrastructure, SLA guarantees, or a white-label deployment we&apos;ll build a plan that fits.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" className="shrink-0 rounded-xl" asChild>
+            <Link href="mailto:hello@bytesend.app">Contact us →</Link>
+          </Button>
+        </div>
+
         <p className="text-xs text-muted-foreground text-center mt-6">
-          † Overage rates apply only after the plan&apos;s included monthly email limit is reached. Free plan is a hard cap — no overage billing.
+          † Overage rates apply only after the plan&apos;s included monthly email limit is reached. Free plan is a hard cap no overage billing.
         </p>
       </div>
     </section>
@@ -399,7 +399,7 @@ function Pricing() {
 /* ─────────────────────── Comparison Table ─────────────────────── */
 
 const comparisonRows: { feature: string; bs: string | boolean; resend: string | boolean; sendgrid: string | boolean; postmark: string | boolean; ses: string | boolean }[] = [
-  { feature: "Free tier",             bs: "5,000/mo",     resend: "3,000/mo",    sendgrid: "100/day",     postmark: "100 test/mo",  ses: "Pay-per-use" },
+  { feature: "Free tier",             bs: "12,500/mo",    resend: "3,000/mo",    sendgrid: "100/day",     postmark: "100 test/mo",  ses: "Pay-per-use" },
   { feature: "Marketing campaigns",   bs: true,           resend: false,         sendgrid: true,          postmark: false,          ses: false },
   { feature: "Visual email editor",   bs: true,           resend: false,         sendgrid: "Basic",       postmark: false,          ses: false },
   { feature: "Self-hostable",         bs: true,           resend: false,         sendgrid: false,         postmark: false,          ses: false },
@@ -407,7 +407,7 @@ const comparisonRows: { feature: string; bs: string | boolean; resend: string | 
   { feature: "Webhooks",              bs: true,           resend: true,          sendgrid: true,          postmark: true,           ses: false },
   { feature: "SMTP relay",            bs: true,           resend: true,          sendgrid: true,          postmark: true,           ses: true },
   { feature: "Analytics dashboard",   bs: true,           resend: "Basic",       sendgrid: true,          postmark: "Basic",        ses: false },
-  { feature: "Lifetime plan",         bs: "CA$60 once",   resend: false,         sendgrid: false,         postmark: false,          ses: false },
+  { feature: "Custom plans",          bs: true,           resend: false,         sendgrid: false,         postmark: false,          ses: false },
 ];
 
 function CompCell({ val }: { val: string | boolean }) {
@@ -435,7 +435,7 @@ function ComparisonTable() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-border/40 bg-muted/30">
-                <th className="text-left font-medium text-muted-foreground px-5 py-3.5 w-[220px]">Feature</th>
+                <th className="text-left font-medium text-muted-foreground px-5 py-3.5 w-55">Feature</th>
                 {cols.map((col, i) => (
                   <th
                     key={col}
@@ -493,7 +493,7 @@ function Cta() {
           Start sending today.
         </h2>
         <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Create your free account in seconds. 5,000 emails per month, forever.
+          Create your free account in seconds. 12,500 emails per month, forever.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">

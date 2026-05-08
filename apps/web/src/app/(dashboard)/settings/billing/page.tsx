@@ -11,7 +11,7 @@ import { api } from "~/trpc/react";
 import { PlanDetails } from "~/components/payments/PlanDetails";
 import { UpgradeButton } from "~/components/payments/UpgradeButton";
 
-type PaidPlan = "HOBBY" | "LITE" | "BASIC" | "LIFETIME";
+type PaidPlan = "HOBBY" | "LITE";
 
 const PLAN_OPTIONS: {
   plan: PaidPlan;
@@ -25,10 +25,11 @@ const PLAN_OPTIONS: {
     name: "Hobby",
     price: "CA$5 / mo",
     perks: [
-      "15,000 emails / month",
-      "500 emails / day",
-      "5 domains",
-      "Usage-based billing",
+      "25,000 emails / month",
+      "12,500 emails / day",
+      "4 domains + $1/extra",
+      "10 team members",
+      "Marketing CA$0.05/ea (overage)",
     ],
   },
   {
@@ -37,33 +38,13 @@ const PLAN_OPTIONS: {
     price: "CA$10 / mo",
     perks: [
       "50,000 emails / month",
-      "2,000 emails / day",
-      "10 domains",
+      "25,000 emails / day",
+      "6 domains + $1/extra",
+      "15 team members",
+      "Marketing CA$0.02/ea (overage)",
       "Priority support",
     ],
-  },
-  {
-    plan: "BASIC",
-    name: "Professional",
-    price: "CA$30 / mo",
-    perks: [
-      "Unlimited emails",
-      "No per-email charges",
-      "100 domains · 50 members",
-      "Advanced analytics",
-    ],
     highlight: true,
-  },
-  {
-    plan: "LIFETIME",
-    name: "Lifetime",
-    price: "CA$60 one-time",
-    perks: [
-      "Unlimited emails forever",
-      "No recurring charges",
-      "500 domains · 200 members",
-      "All future features",
-    ],
   },
 ];
 
@@ -144,7 +125,7 @@ export default function SettingsPage() {
       {currentTeam?.plan === "FREE" && (
         <div>
           <h3 className="text-lg font-semibold mb-4">Upgrade Your Plan</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {PLAN_OPTIONS.map(({ plan, name, price, perks, highlight }) => (
               <div
                 key={plan}
