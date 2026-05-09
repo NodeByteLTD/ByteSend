@@ -621,12 +621,10 @@ export class NotificationProviderService {
             "Discord webhook URL is required"
           );
         }
-        if (!config.webhookUrl.includes("discord.com")) {
-          throw new ByteSendApiError(
-            "BAD_REQUEST",
-            "Invalid Discord webhook URL"
-          );
-        }
+        this.assertAllowedWebhookUrl(config.webhookUrl, "Discord", [
+          "discord.com",
+          "discordapp.com",
+        ]);
         break;
 
       case "SLACK":
@@ -636,12 +634,9 @@ export class NotificationProviderService {
             "Slack webhook URL is required"
           );
         }
-        if (!config.webhookUrl.includes("hooks.slack.com")) {
-          throw new ByteSendApiError(
-            "BAD_REQUEST",
-            "Invalid Slack webhook URL"
-          );
-        }
+        this.assertAllowedWebhookUrl(config.webhookUrl, "Slack", [
+          "hooks.slack.com",
+        ]);
         break;
 
       case "MICROSOFT_TEAMS":
@@ -651,12 +646,11 @@ export class NotificationProviderService {
             "Microsoft Teams webhook URL is required"
           );
         }
-        if (!config.webhookUrl.includes("outlook.webhook.office.com")) {
-          throw new ByteSendApiError(
-            "BAD_REQUEST",
-            "Invalid Microsoft Teams webhook URL"
-          );
-        }
+        this.assertAllowedWebhookUrl(config.webhookUrl, "Microsoft Teams", [
+          "outlook.webhook.office.com",
+          "webhook.office.com",
+          "outlook.office.com",
+        ]);
         break;
 
       case "TELEGRAM":
@@ -682,6 +676,46 @@ export class NotificationProviderService {
           );
         }
         break;
+    }
+  }
+
+  private static assertAllowedWebhookUrl(
+    rawUrl: string,
+    providerName: string,
+    allowedHostnames: string[]
+  ) {
+    let parsedUrl: URL;
+
+    try {
+      parsedUrl = new URL(rawUrl);
+    } catch {
+      throw new ByteSendApiError(
+        "BAD_REQUEST",
+        `${providerName} webhook URL is invalid`
+      );
+    }
+
+    if (parsedUrl.protocol !== "https:") {
+      throw new ByteSendApiError(
+        "BAD_REQUEST",
+        `${providerName} webhook URL must use HTTPS`
+      );
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const isAllowed = allowedHostnames.some((allowedHostname) => {
+      const normalizedAllowed = allowedHostname.toLowerCase();
+      return (
+        hostname === normalizedAllowed ||
+        hostname.endsWith(`.${normalizedAllowed}`)
+      );
+    });
+
+    if (!isAllowed) {
+      throw new ByteSendApiError(
+        "BAD_REQUEST",
+        `Invalid ${providerName} webhook URL`
+      );
     }
   }
 }
