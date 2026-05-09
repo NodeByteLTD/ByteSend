@@ -1,4 +1,4 @@
-![ByteSend](./apps/web/public/nameplate.png)
+![ByteSend](../apps/web/public/nameplate.png)
 
 **Open-source email infrastructure that works.** REST API, SMTP relay, campaigns, contact management, and real-time webhooks self-hosted or managed on [bytesend.cloud](https://bytesend.cloud).
 
