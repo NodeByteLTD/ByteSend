@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockDb, mockValidateDomainFromEmail } = vi.hoisted(() => ({
+const { mockDb, mockValidateDomainFromEmail, mockCheckMarketingAccess } = vi.hoisted(() => ({
   mockDb: {
     teamUser: {
       findFirst: vi.fn(),
@@ -15,6 +15,7 @@ const { mockDb, mockValidateDomainFromEmail } = vi.hoisted(() => ({
     },
   },
   mockValidateDomainFromEmail: vi.fn(),
+  mockCheckMarketingAccess: vi.fn(),
 }));
 
 vi.mock("~/server/db", () => ({
@@ -29,6 +30,12 @@ vi.mock("~/server/service/campaign-service", () => ({}));
 vi.mock("~/server/service/webhook-service", () => ({}));
 vi.mock("~/server/service/domain-service", () => ({
   validateDomainFromEmail: mockValidateDomainFromEmail,
+}));
+
+vi.mock("~/server/service/limit-service", () => ({
+  LimitService: {
+    checkMarketingAccess: mockCheckMarketingAccess,
+  },
 }));
 
 import { createCallerFactory } from "~/server/api/trpc";
@@ -59,6 +66,8 @@ describe("campaignRouter.updateCampaign authorization", () => {
     mockDb.campaign.update.mockReset();
     mockDb.campaign.create.mockReset();
     mockDb.contactBook.findUnique.mockReset();
+    mockCheckMarketingAccess.mockReset();
+    mockCheckMarketingAccess.mockResolvedValue(true);
 
     mockDb.teamUser.findFirst.mockResolvedValue({
       teamId: 10,
@@ -115,6 +124,8 @@ describe("campaignRouter.duplicateCampaign", () => {
     mockDb.teamUser.findFirst.mockReset();
     mockDb.campaign.findUnique.mockReset();
     mockDb.campaign.create.mockReset();
+    mockCheckMarketingAccess.mockReset();
+    mockCheckMarketingAccess.mockResolvedValue(true);
 
     mockDb.teamUser.findFirst.mockResolvedValue({
       teamId: 10,
