@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "packages/sdk/**"
+      - ".github/workflows/npm-release.yml"
   workflow_dispatch:
 
 permissions:

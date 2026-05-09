@@ -8,8 +8,8 @@ on:
     branches:
       - main
     paths:
-      - "packages/python-sdk/**" # Trigger only changes within sdk/python
-      - ".github/workflows/release-python-package.yml"
+      - "packages/python-sdk/**"
+      - ".github/workflows/pypi-release.yml"
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
