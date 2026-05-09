@@ -1,4 +1,4 @@
-name: Publish Python package
+name: Relase Python SDK
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -9,7 +9,6 @@ on:
       - main
     paths:
       - "packages/python-sdk/**"
-      - ".github/workflows/pypi-release.yml"
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
