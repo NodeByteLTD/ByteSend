@@ -143,6 +143,24 @@ jobs:
 
       - name: Create and push DockerHub manifest
         run: |
+          wait_for_remote_image() {
+            local image_ref="$1"
+            local attempts=18
+            local sleep_seconds=10
+
+            for ((i=1; i<=attempts; i++)); do
+              if docker buildx imagetools inspect "$image_ref" >/dev/null 2>&1; then
+                return 0
+              fi
+
+              echo "[$i/$attempts] Waiting for $image_ref to become available..."
+              sleep "$sleep_seconds"
+            done
+
+            echo "Timed out waiting for $image_ref"
+            return 1
+          }
+
           GIT_SHA="$(git rev-parse HEAD)"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             REF_TYPE="branch"
@@ -163,16 +181,40 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              AMD64_REF="bytesend/$APP_NAME-amd64:$TAG"
+              ARM64_REF="bytesend/$APP_NAME-arm64:$TAG"
+
+              wait_for_remote_image "$AMD64_REF"
+              wait_for_remote_image "$ARM64_REF"
+
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag bytesend/$APP_NAME:$TAG \
-                bytesend/$APP_NAME-amd64:$TAG \
-                bytesend/$APP_NAME-arm64:$TAG
+                "$AMD64_REF" \
+                "$ARM64_REF"
             done
           done
 
       - name: Create and push GitHub Container Registry manifest
         run: |
+          wait_for_remote_image() {
+            local image_ref="$1"
+            local attempts=18
+            local sleep_seconds=10
+
+            for ((i=1; i<=attempts; i++)); do
+              if docker buildx imagetools inspect "$image_ref" >/dev/null 2>&1; then
+                return 0
+              fi
+
+              echo "[$i/$attempts] Waiting for $image_ref to become available..."
+              sleep "$sleep_seconds"
+            done
+
+            echo "Timed out waiting for $image_ref"
+            return 1
+          }
+
           GIT_SHA="$(git rev-parse HEAD)"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             REF_TYPE="branch"
@@ -193,10 +235,16 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              AMD64_REF="ghcr.io/bytesend/$APP_NAME-amd64:$TAG"
+              ARM64_REF="ghcr.io/bytesend/$APP_NAME-arm64:$TAG"
+
+              wait_for_remote_image "$AMD64_REF"
+              wait_for_remote_image "$ARM64_REF"
+
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag ghcr.io/bytesend/$APP_NAME:$TAG \
-                ghcr.io/bytesend/$APP_NAME-amd64:$TAG \
-                ghcr.io/bytesend/$APP_NAME-arm64:$TAG
+                "$AMD64_REF" \
+                "$ARM64_REF"
             done
           done
