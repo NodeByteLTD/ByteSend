@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Label action token update** — updated token reference in `.github/workflows/label.yml`
 - **Website test workflow tuning** — adjusted website test workflow behavior
 - **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
+- **Website tests pnpm version alignment** — removed hardcoded pnpm version from `.github/workflows/website-test.yml` so CI uses the repository `packageManager` version (`pnpm@9.0.0`)
+- **Docker publish tag strategy hardening** — `.github/workflows/docker-publish.yml` now publishes ref-aware tags (`latest`, `develop`, version tag, and commit SHA) with matching multi-arch manifests
+- **Manual Docker publish branch support** — wired `workflow_dispatch` branch input into checkout and tag resolution so manual runs build/publish the selected branch
+- **Labeler rules refresh** — updated `.github/labeler.yml` to align automated PR labeling with the current repository structure
 
 ### Fixed
 
@@ -65,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Marketing Site
 - **Contact CTA destination** — changed the marketing contact link from email to Discord
+
+#### CI / Tests
+- **Domain-service unit test import stability** — `apps/web/src/server/service/domain-service.ts` now initializes DNS resolvers with runtime-safe fallbacks (promises API or callback API), preventing `ERR_INVALID_ARG_TYPE` when DNS methods are partially mocked in tests
+- **Usage unit test expectation alignment** — `apps/web/src/lib/usage.unit.test.ts` now derives expected costs from exported usage constants instead of stale hardcoded values
+
+#### SMTP Server
+- **SMTP Dockerfile context compatibility** — `apps/smtp-server/Dockerfile` no longer expects `pnpm-lock.yaml` in app-only build contexts and now uses an app-local install path that works with the `apps/smtp-server` Docker build context
+- **SMTP container entrypoint correction** — fixed runtime command in `apps/smtp-server/Dockerfile` to execute `dist/server.js` from the container working directory
 
 ### Security
 
