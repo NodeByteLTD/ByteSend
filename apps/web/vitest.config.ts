@@ -1,8 +1,18 @@
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { fileURLToPath } from "node:url";
+
+const bytesendSdkEntry = fileURLToPath(
+  new URL("../../packages/sdk/index.ts", import.meta.url),
+);
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  resolve: {
+    alias: {
+      "bytesend-js": bytesendSdkEntry,
+    },
+  },
   test: {
     environment: "node",
     globals: true,

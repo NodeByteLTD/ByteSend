@@ -3,14 +3,14 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
-RUN corepack prepare pnpm@latest --activate
+RUN corepack prepare pnpm@9.0.0 --activate
 
 FROM base AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+COPY package.json ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
 
 # Build the SMTP server
 COPY src ./src
@@ -32,4 +32,4 @@ COPY --from=builder /app/node_modules ./node_modules
 # 2465: Alternative SMTPS port
 EXPOSE 25 465 587 2465 2587
 
-CMD ["node", "apps/smtp-server/dist/server.js"]
+CMD ["node", "dist/server.js"]

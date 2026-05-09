@@ -9,11 +9,11 @@ Need help with ByteSend?
 
 ## Commercial / Cloud Support
 
-- support@bytesend.cloud
+- support@nodebyte.co.uk
 
 ## Security Reports
 
 Do not open public issues for vulnerabilities.
 
 - See `SECURITY.md`
-- Email: support@bytesend.cloud
+- Email: support@nodebyte.co.uk

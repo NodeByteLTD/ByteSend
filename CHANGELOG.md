@@ -54,6 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Label action token update** — updated token reference in `.github/workflows/label.yml`
 - **Website test workflow tuning** — adjusted website test workflow behavior
 - **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
+- **Website tests pnpm version alignment** — removed hardcoded pnpm version from `.github/workflows/website-test.yml` so CI uses the repository `packageManager` version (`pnpm@9.0.0`)
+- **Docker publish tag strategy hardening** — `.github/workflows/docker-publish.yml` now publishes ref-aware tags (`latest`, `develop`, version tag, and commit SHA) with matching multi-arch manifests
+- **Manual Docker publish branch support** — wired `workflow_dispatch` branch input into checkout and tag resolution so manual runs build/publish the selected branch
+- **Labeler rules refresh** — updated `.github/labeler.yml` to align automated PR labeling with the current repository structure
+- **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` on pushes to `main` and manual dispatch
 
 ### Fixed
 
@@ -65,6 +70,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Marketing Site
 - **Contact CTA destination** — changed the marketing contact link from email to Discord
+
+#### CI / Tests
+- **Domain-service unit test import stability** — `apps/web/src/server/service/domain-service.ts` now initializes DNS resolvers with runtime-safe fallbacks (promises API or callback API), preventing `ERR_INVALID_ARG_TYPE` when DNS methods are partially mocked in tests
+- **Usage unit test expectation alignment** — `apps/web/src/lib/usage.unit.test.ts` now derives expected costs from exported usage constants instead of stale hardcoded values
+- **Workspace SDK resolution in Vitest** — `apps/web/vitest.config.ts` now aliases `bytesend-js` to `packages/sdk/index.ts` during tests so unit suites do not depend on prebuilt SDK `dist` artifacts
+- **Contact-service unit test isolation** — `apps/web/src/server/service/contact-service.unit.test.ts` now mocks `LimitService.checkContactsLimit` to avoid transitive `TeamService` cache dependencies and prevent brittle failures
+
+#### SMTP Server
+- **SMTP Dockerfile context compatibility** — `apps/smtp-server/Dockerfile` no longer expects `pnpm-lock.yaml` in app-only build contexts and now uses an app-local install path that works with the `apps/smtp-server` Docker build context
+- **SMTP container entrypoint correction** — fixed runtime command in `apps/smtp-server/Dockerfile` to execute `dist/server.js` from the container working directory
+- **SMTP Docker Corepack compatibility** — pinned Docker image pnpm activation in `apps/smtp-server/Dockerfile` to `pnpm@9.0.0` (instead of `latest`) to avoid Corepack bootstrap/runtime failures in CI builds
+- **SMTP package manager metadata** — added `packageManager: pnpm@9.0.0` to `apps/smtp-server/package.json` so Corepack does not auto-inject newer pnpm versions during container installs
 
 ### Security
 
