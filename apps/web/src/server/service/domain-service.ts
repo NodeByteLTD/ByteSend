@@ -116,8 +116,21 @@ function withDnsRecords<T extends Domain>(
   };
 }
 
-const dnsResolveTxt = util.promisify(dns.resolveTxt);
-const dnsResolveMx = util.promisify(dns.resolveMx);
+const dnsResolveTxt = dns.promises?.resolveTxt
+  ? dns.promises.resolveTxt.bind(dns.promises)
+  : typeof dns.resolveTxt === "function"
+    ? util.promisify(dns.resolveTxt.bind(dns))
+    : (async () => {
+        throw new Error("DNS TXT resolver unavailable");
+      }) as (hostname: string) => Promise<string[][]>;
+
+const dnsResolveMx = dns.promises?.resolveMx
+  ? dns.promises.resolveMx.bind(dns.promises)
+  : typeof dns.resolveMx === "function"
+    ? util.promisify(dns.resolveMx.bind(dns))
+    : (async () => {
+        throw new Error("DNS MX resolver unavailable");
+      }) as (hostname: string) => Promise<Array<{ exchange: string }>>;
 
 /** How long DKIM must be stuck in PENDING/NOT_STARTED before we auto-reregister */
 const DKIM_STUCK_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour

@@ -5,6 +5,7 @@ import {
   getUsageDate,
   getUsageTimestamp,
   getUsageUnits,
+  UNIT_PRICE,
   TRANSACTIONAL_UNIT_CONVERSION,
 } from "~/lib/usage";
 
@@ -29,7 +30,9 @@ describe("usage helpers", () => {
   });
 
   it("calculates cost per email type", () => {
-    expect(getCost(10, EmailUsageType.MARKETING)).toBe(0.01);
-    expect(getCost(4, EmailUsageType.TRANSACTIONAL)).toBe(0.001);
+    expect(getCost(10, EmailUsageType.MARKETING)).toBe(10 * UNIT_PRICE);
+    expect(getCost(4, EmailUsageType.TRANSACTIONAL)).toBe(
+      Math.floor(4 / TRANSACTIONAL_UNIT_CONVERSION) * UNIT_PRICE,
+    );
   });
 });
