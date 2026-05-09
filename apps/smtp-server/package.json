@@ -10,6 +10,7 @@
   },
   "keywords": [],
   "author": "",
+  "packageManager": "pnpm@9.0.0",
   "license": "ISC",
   "dependencies": {
     "@types/mailparser": "^3.4.5",
