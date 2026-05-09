@@ -22,7 +22,17 @@ def webhook() -> ResponseReturnValue:
     try:
         event = webhooks.construct_event(raw_body, headers=request.headers)
     except WebhookVerificationError as exc:
-        return jsonify({"ok": False, "code": exc.code, "message": str(exc)}), 400
+        app.logger.warning("Webhook verification failed: %s", exc.code)
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "code": exc.code,
+                    "message": "Webhook signature verification failed",
+                }
+            ),
+            400,
+        )
 
     print(f"Received event: {event['type']}")
 

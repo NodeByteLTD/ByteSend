@@ -27,7 +27,7 @@ async function main() {
   });
 
   console.log(`📦  Environment : ${ENVIRONMENT}`);
-  console.log(`🔑  Stripe key  : ${STRIPE_SECRET_KEY.slice(0, 20)}...`);
+  console.log("🔑  Stripe key  : configured");
   console.log("\n📝  Syncing plans to Stripe...\n");
 
   const result = await syncPlansToStripe(stripe, ENVIRONMENT);

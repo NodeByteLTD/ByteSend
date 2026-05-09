@@ -66,6 +66,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Marketing Site
 - **Contact CTA destination** — changed the marketing contact link from email to Discord
 
+### Security
+
+- **SES callback SSRF hardening** — `apps/web/src/app/api/ses_callback/route.ts` no longer fetches user-provided `SubscribeURL` directly; it now constructs a trusted AWS SNS confirmation URL from validated `TopicArn`/`Token` components before issuing the request
+- **SES callback log-safety hardening** — replaced ad-hoc request/parse logging in `apps/web/src/app/api/ses_callback/route.ts` with constant-format structured logs to avoid tainted-format-string risks from untrusted payload fields
+- **SPF verification sanitization fix** — `apps/web/src/server/service/domain-service.ts` now parses SPF TXT mechanisms and validates `include:` domains (`amazonses.com` or subdomains) instead of broad substring checks
+- **DKIM key strength upgrade** — `apps/web/src/server/aws/ses.ts` now generates 2048-bit RSA keys (up from 1024-bit)
+- **Stripe seed secret logging removal** — `packages/scripts/stripe-seed.ts` no longer logs any portion of `STRIPE_SECRET_KEY`
+- **Python webhook example exception exposure fix** — `packages/python-sdk/example/webhook-test-project/receiver.py` now returns a generic verification failure message and avoids exposing exception text to clients
+- **Workflow least-privilege permissions** — `.github/workflows/website-test.yml` now sets explicit `permissions` with `contents: read`
+
 ---
 
 ## [0.2.4] - 2026-05-08

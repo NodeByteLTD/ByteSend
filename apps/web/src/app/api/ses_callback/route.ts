@@ -14,11 +14,19 @@ export async function GET() {
 export async function POST(req: Request) {
   const data = await req.json();
 
-  console.log(data, data.Message);
+  logger.debug(
+    {
+      type: data?.Type,
+      topicArn: data?.TopicArn,
+      messageId: data?.MessageId,
+      hasMessage: typeof data?.Message === "string",
+    },
+    "Received SES callback payload",
+  );
 
   const isEventValid = await checkEventValidity(data);
 
-  console.log("Is event valid: ", isEventValid);
+  logger.debug({ isEventValid }, "SES callback topic validation result");
 
   if (!isEventValid) {
     return Response.json({ data: "Event is not valid" });
@@ -42,7 +50,10 @@ export async function POST(req: Request) {
 
     return Response.json({ data: "Success" });
   } catch (e) {
-    console.error(e);
+    logger.error(
+      { error: e instanceof Error ? e.message : "Unknown error" },
+      "Failed to parse SES callback message",
+    );
     return Response.json({ data: "Error is parsing hook" });
   }
 }
@@ -51,7 +62,9 @@ export async function POST(req: Request) {
  * Handles the subscription confirmation event. called only once for a webhook
  */
 async function handleSubscription(message: any) {
-  await fetch(message.SubscribeURL, {
+  const subscribeUrl = buildSnsSubscribeConfirmUrl(message);
+
+  await fetch(subscribeUrl, {
     method: "GET",
   });
 
@@ -78,6 +91,42 @@ async function handleSubscription(message: any) {
   SesSettingsService.invalidateCache();
 
   return Response.json({ data: "Success" });
+}
+
+/**
+ * Build a trusted SNS subscription confirmation URL from message fields.
+ * We intentionally do not use message.SubscribeURL directly to prevent SSRF.
+ */
+function buildSnsSubscribeConfirmUrl(message: {
+  TopicArn?: string;
+  Token?: string;
+}) {
+  const topicArn = message.TopicArn;
+  const token = message.Token;
+
+  if (!topicArn || !token) {
+    throw new Error("Invalid SNS subscription payload");
+  }
+
+  const arnParts = topicArn.split(":");
+  if (arnParts.length < 6 || arnParts[2] !== "sns") {
+    throw new Error("Invalid SNS TopicArn");
+  }
+
+  const partition = arnParts[1];
+  const region = arnParts[3];
+
+  if (!region) {
+    throw new Error("SNS TopicArn is missing region");
+  }
+
+  const domain = partition === "aws-cn" ? "amazonaws.com.cn" : "amazonaws.com";
+  const confirmUrl = new URL(`https://sns.${region}.${domain}/`);
+  confirmUrl.searchParams.set("Action", "ConfirmSubscription");
+  confirmUrl.searchParams.set("TopicArn", topicArn);
+  confirmUrl.searchParams.set("Token", token);
+
+  return confirmUrl.toString();
 }
 
 /**
