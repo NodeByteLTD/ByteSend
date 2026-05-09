@@ -24,7 +24,8 @@ export async function POST(req: Request) {
     "Received SES callback payload",
   );
 
-  const isEventValid = await checkEventValidity(data);
+  const trustedTopicArn = await getTrustedTopicArn(data?.TopicArn);
+  const isEventValid = trustedTopicArn !== null;
 
   logger.debug({ isEventValid }, "SES callback topic validation result");
 
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
   }
 
   if (data.Type === "SubscriptionConfirmation") {
-    return handleSubscription(data);
+    return handleSubscription(data, trustedTopicArn);
   }
 
   let message = null;
@@ -61,17 +62,19 @@ export async function POST(req: Request) {
 /**
  * Handles the subscription confirmation event. called only once for a webhook
  */
-async function handleSubscription(message: any) {
-  const subscribeUrl = buildSnsSubscribeConfirmUrl(message);
+async function handleSubscription(
+  message: { Token?: string },
+  trustedTopicArn: string,
+) {
+  const subscribeUrl = buildSnsSubscribeConfirmUrl(trustedTopicArn, message.Token);
 
   await fetch(subscribeUrl, {
     method: "GET",
   });
 
-  const topicArn = message.TopicArn as string;
   const setting = await db.sesSetting.findFirst({
     where: {
-      topicArn,
+      topicArn: trustedTopicArn,
     },
   });
 
@@ -97,14 +100,9 @@ async function handleSubscription(message: any) {
  * Build a trusted SNS subscription confirmation URL from message fields.
  * We intentionally do not use message.SubscribeURL directly to prevent SSRF.
  */
-function buildSnsSubscribeConfirmUrl(message: {
-  TopicArn?: string;
-  Token?: string;
-}) {
-  const topicArn = message.TopicArn;
-  const token = message.Token;
+function buildSnsSubscribeConfirmUrl(topicArn: string, token?: string) {
 
-  if (!topicArn || !token) {
+  if (!token) {
     throw new Error("Invalid SNS subscription payload");
   }
 
@@ -130,19 +128,27 @@ function buildSnsSubscribeConfirmUrl(message: {
 }
 
 /**
- * A simple check to ensure that the event is from the correct topic
+ * Returns an exact TopicArn from server configuration if input matches.
+ * This keeps downstream URL construction anchored to trusted configuration.
  */
-async function checkEventValidity(message: SnsNotificationMessage) {
+async function getTrustedTopicArn(topicArn: SnsNotificationMessage["TopicArn"]) {
+  if (!topicArn || typeof topicArn !== "string") {
+    return null;
+  }
+
+  const configuredTopicArns = await SesSettingsService.getTopicArns();
+  const trustedTopicArn = configuredTopicArns.find((configured) => configured === topicArn);
+
+  if (trustedTopicArn) {
+    return trustedTopicArn;
+  }
+
   if (env.NODE_ENV === "development") {
-    return true;
+    logger.warn(
+      { topicArn },
+      "SES callback TopicArn not configured in development",
+    );
   }
 
-  const { TopicArn } = message;
-  const configuredTopicArn = await SesSettingsService.getTopicArns();
-
-  if (!configuredTopicArn.includes(TopicArn)) {
-    return false;
-  }
-
-  return true;
+  return null;
 }
