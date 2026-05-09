@@ -26,6 +26,7 @@ import {
 import { Trash2, Download } from "lucide-react";
 import RemoveSuppressionDialog from "./remove-suppression";
 import Spinner from "@bytesend/ui/src/spinner";
+import { toast } from "@bytesend/ui/src/toaster";
 
 const reasonLabels = {
   HARD_BOUNCE: "Hard Bounce",
@@ -63,6 +64,10 @@ export default function SuppressionList() {
       utils.suppression.getSuppressions.invalidate();
       utils.suppression.getSuppressionStats.invalidate();
       setEmailToRemove(null);
+      toast.success("Suppression removed");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to remove suppression");
     },
   });
 
@@ -104,9 +109,9 @@ export default function SuppressionList() {
     setEmailToRemove(email);
   };
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (emailToRemove) {
-      removeMutation.mutate({ email: emailToRemove });
+      await removeMutation.mutateAsync({ email: emailToRemove });
     }
   };
 

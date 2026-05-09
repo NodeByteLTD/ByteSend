@@ -16,6 +16,7 @@ import { EmailUsageType } from "@prisma/client";
 import { PlanDetails } from "~/components/payments/PlanDetails";
 import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { Progress } from "@bytesend/ui/src/progress";
+import { PLANS } from "@bytesend/lib";
 
 const UNLIMITED_PLANS = new Set(["BASIC", "LIFETIME"]);
 
@@ -28,7 +29,8 @@ function ChoosePlanButton() {
   );
 }
 
-const FREE_PLAN_LIMIT = 3000;
+const FREE_PLAN_LIMIT = PLANS.FREE.limits.monthlyEmailLimit;
+const FREE_PLAN_DAILY_LIMIT = PLANS.FREE.limits.dailyEmailLimit;
 
 /* ────────── Free-tier usage ────────── */
 
@@ -39,11 +41,10 @@ function FreePlanUsage({
   usage: { type: EmailUsageType; sent: number }[];
   dayUsage: { type: EmailUsageType; sent: number }[];
 }) {
-  const DAILY_LIMIT = 100;
   const totalSent = usage?.reduce((acc, item) => acc + item.sent, 0) || 0;
   const monthlyPct = Math.min((totalSent / FREE_PLAN_LIMIT) * 100, 100);
   const dailyUsage = dayUsage?.reduce((acc, item) => acc + item.sent, 0) || 0;
-  const dailyPct = Math.min((dailyUsage / DAILY_LIMIT) * 100, 100);
+  const dailyPct = Math.min((dailyUsage / FREE_PLAN_DAILY_LIMIT) * 100, 100);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -69,7 +70,7 @@ function FreePlanUsage({
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Daily limit</span>
             <span className="text-sm font-mono text-muted-foreground">
-              {dailyUsage.toLocaleString()}/{DAILY_LIMIT.toLocaleString()}
+              {dailyUsage.toLocaleString()}/{FREE_PLAN_DAILY_LIMIT.toLocaleString()}
             </span>
           </div>
           <Progress value={dailyPct} className="h-2" />

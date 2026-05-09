@@ -1,4 +1,4 @@
-import { SuppressionReason, SuppressionList } from "@prisma/client";
+import { Prisma, SuppressionReason, SuppressionList } from "@prisma/client";
 import { db } from "../db";
 import { ByteSendApiError } from "~/server/public-api/api-error";
 import { logger } from "../logger/log";
@@ -172,31 +172,19 @@ export class SuppressionService {
       );
     }
 
-    // Delete from local database
+    // Delete from local database. Use case-insensitive match to handle legacy rows.
     try {
-      const deleted = await db.suppressionList.delete({
+      const deleted = await db.suppressionList.deleteMany({
         where: {
-          teamId_email: {
-            teamId,
-            email: normalizedEmail,
+          teamId,
+          email: {
+            equals: normalizedEmail,
+            mode: "insensitive",
           },
         },
       });
 
-      logger.info(
-        {
-          email: normalizedEmail,
-          teamId,
-          suppressionId: deleted.id,
-        },
-        "Email removed from suppression list"
-      );
-    } catch (error) {
-      // If the record doesn't exist, that's fine - it's already not suppressed
-      if (
-        error instanceof Error &&
-        error.message.includes("Record to delete does not exist")
-      ) {
+      if (deleted.count === 0) {
         logger.debug(
           {
             email: normalizedEmail,
@@ -207,11 +195,25 @@ export class SuppressionService {
         return;
       }
 
+      logger.info(
+        {
+          email: normalizedEmail,
+          teamId,
+          deletedCount: deleted.count,
+        },
+        "Email removed from suppression list"
+      );
+    } catch (error) {
       logger.error(
         {
           email: normalizedEmail,
           teamId,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error:
+            error instanceof Prisma.PrismaClientKnownRequestError
+              ? `${error.code}: ${error.message}`
+              : error instanceof Error
+                ? error.message
+                : "Unknown error",
         },
         "Failed to remove email from suppression list"
       );

@@ -1,4 +1,5 @@
 import { Plan } from "@prisma/client";
+import { PLANS } from "@bytesend/lib";
 
 export enum LimitReason {
   DOMAIN = "DOMAIN",
@@ -27,53 +28,53 @@ export const PLAN_LIMITS: Record<
   }
 > = {
   FREE: {
-    emailsPerMonth: 12_500,
-    emailsPerDay: 5_000,   // Hard cap — must wait or upgrade
-    domains: 2,
-    contactBooks: 5,
-    contacts: 100,         // Hard cap across all contact books
-    teamMembers: 5,        // Hard cap — upgrade required
-    webhooks: 3,
-    marketingEmailsIncluded: false, // Marketing emails blocked on free plan
+    emailsPerMonth: PLANS.FREE.limits.monthlyEmailLimit,
+    emailsPerDay: PLANS.FREE.limits.dailyEmailLimit,   // Hard cap — must wait or upgrade
+    domains: PLANS.FREE.limits.maxDomains,
+    contactBooks: PLANS.FREE.limits.maxContactBooks,
+    contacts: PLANS.FREE.limits.contactsLimit,         // Hard cap across all contact books
+    teamMembers: PLANS.FREE.limits.maxTeamMembers,        // Hard cap — upgrade required
+    webhooks: PLANS.FREE.limits.maxWebhooks,
+    marketingEmailsIncluded: PLANS.FREE.limits.marketingEmailsIncluded, // Marketing emails blocked on free plan
   },
   HOBBY: {
-    emailsPerMonth: 25_000, // Included; overage billed at CA$0.05 marketing / CA$0.03 transactional
-    emailsPerDay: 12_500,
-    domains: 4,
-    contactBooks: 10,
-    contacts: 200,
-    teamMembers: 10,        // Hard cap — upgrade required
-    webhooks: 5,
-    marketingEmailsIncluded: true,
+    emailsPerMonth: PLANS.HOBBY.limits.monthlyEmailLimit, // Included; overage billed at CA$0.05 marketing / CA$0.03 transactional
+    emailsPerDay: PLANS.HOBBY.limits.dailyEmailLimit,
+    domains: PLANS.HOBBY.limits.maxDomains,
+    contactBooks: PLANS.HOBBY.limits.maxContactBooks,
+    contacts: PLANS.HOBBY.limits.contactsLimit,
+    teamMembers: PLANS.HOBBY.limits.maxTeamMembers,        // Hard cap — upgrade required
+    webhooks: PLANS.HOBBY.limits.maxWebhooks,
+    marketingEmailsIncluded: PLANS.HOBBY.limits.marketingEmailsIncluded,
   },
   LITE: {
-    emailsPerMonth: 50_000, // Included; overage billed at CA$0.02/ea
-    emailsPerDay: 25_000,
-    domains: 6,
-    contactBooks: 25,
-    contacts: 300,
-    teamMembers: 15,        // Hard cap — upgrade required
-    webhooks: 10,
-    marketingEmailsIncluded: true,
+    emailsPerMonth: PLANS.LITE.limits.monthlyEmailLimit, // Included; overage billed at CA$0.02/ea
+    emailsPerDay: PLANS.LITE.limits.dailyEmailLimit,
+    domains: PLANS.LITE.limits.maxDomains,
+    contactBooks: PLANS.LITE.limits.maxContactBooks,
+    contacts: PLANS.LITE.limits.contactsLimit,
+    teamMembers: PLANS.LITE.limits.maxTeamMembers,        // Hard cap — upgrade required
+    webhooks: PLANS.LITE.limits.maxWebhooks,
+    marketingEmailsIncluded: PLANS.LITE.limits.marketingEmailsIncluded,
   },
   BASIC: {
-    emailsPerMonth: 150_000, // Included; overage billed at CA$0.01/ea
+    emailsPerMonth: PLANS.BASIC.limits.monthlyEmailLimit, // Included; overage billed at CA$0.01/ea
     emailsPerDay: -1, // Unlimited daily
-    domains: 100,
-    contactBooks: 500,
+    domains: PLANS.BASIC.limits.maxDomains,
+    contactBooks: PLANS.BASIC.limits.maxContactBooks,
     contacts: -1, // Unlimited
     teamMembers: -1, // Unlimited
-    webhooks: 50,
-    marketingEmailsIncluded: true,
+    webhooks: PLANS.BASIC.limits.maxWebhooks,
+    marketingEmailsIncluded: PLANS.BASIC.limits.marketingEmailsIncluded,
   },
   LIFETIME: {
     emailsPerMonth: -1, // Unlimited
     emailsPerDay: -1,  // Unlimited
-    domains: 500,
-    contactBooks: 1000,
+    domains: PLANS.LIFETIME.limits.maxDomains,
+    contactBooks: PLANS.LIFETIME.limits.maxContactBooks,
     contacts: -1, // Unlimited
     teamMembers: -1, // Unlimited
-    webhooks: 100,
-    marketingEmailsIncluded: true,
+    webhooks: PLANS.LIFETIME.limits.maxWebhooks,
+    marketingEmailsIncluded: PLANS.LIFETIME.limits.marketingEmailsIncluded,
   },
 };
