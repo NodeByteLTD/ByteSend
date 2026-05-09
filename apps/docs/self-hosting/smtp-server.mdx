@@ -3,9 +3,9 @@ title: ByteSend SMTP Server
 description: "An end-to-end guide on how to self-host the ByteSend SMTP Server."
 ---
 
-The ByteSend SMTP Server is an independent, lightweight Node.js application that forwards incoming SMTP connections to the ByteSend API. It runs separately from the main ByteSend application and can be deployed on the same host or an entirely different machine.
+The ByteSend SMTP Server is a lightweight Node.js application inside the ByteSend monorepo that forwards incoming SMTP connections to the ByteSend API. It can be deployed on the same host as ByteSend or on a separate machine.
 
-**Repository:** [github.com/NodeByteHosting/ByteSend-SMTP](https://github.com/NodeByteHosting/ByteSend-SMTP)
+**Source path:** [`apps/smtp-server`](https://github.com/NodeByteLTD/ByteSend/tree/main/apps/smtp-server)
 
 ---
 
@@ -62,10 +62,10 @@ The server supports two TLS configurations:
 
 #### Quick Start
 
-1. **Clone the ByteSend SMTP repository:**
+1. **Clone the ByteSend repository:**
    ```bash
-   git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git
-   cd ByteSend-SMTP
+  git clone https://github.com/NodeByteLTD/ByteSend.git
+  cd ByteSend/apps/smtp-server
    ```
 
 2. **Set up environment variables:**
@@ -145,8 +145,8 @@ The server supports two TLS configurations:
 
 1. **Clone and install:**
    ```bash
-   git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git
-   cd ByteSend-SMTP
+  git clone https://github.com/NodeByteLTD/ByteSend.git
+  cd ByteSend/apps/smtp-server
    npm install
    ```
 
@@ -303,21 +303,21 @@ Save as `/etc/systemd/system/bytesend-smtp.service`:
 ```ini
 [Unit]
 Description=ByteSend SMTP Server
-Documentation=https://github.com/NodeByteHosting/ByteSend-SMTP
+Documentation=https://github.com/NodeByteLTD/ByteSend/tree/main/apps/smtp-server
 After=network.target
 
 [Service]
 Type=simple
 User=smtp
-WorkingDirectory=/opt/bytesend-smtp
-ExecStart=/usr/bin/node /opt/bytesend-smtp/dist/server.js
+WorkingDirectory=/opt/bytesend-smtp/apps/smtp-server
+ExecStart=/usr/bin/node /opt/bytesend-smtp/apps/smtp-server/dist/server.js
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 # Load environment from .env file (optional)
-EnvironmentFile=-/opt/bytesend-smtp/.env
+EnvironmentFile=-/opt/bytesend-smtp/apps/smtp-server/.env
 
 # Or set directly (override .env if both exist):
 Environment="NODE_ENV=production"
@@ -354,13 +354,12 @@ sudo chown smtp:smtp /opt/bytesend-smtp/logs
 
 # Clone and build
 cd /opt/bytesend-smtp
-sudo -u smtp HOME=/opt/bytesend-smtp git clone https://github.com/NodeByteHosting/ByteSend-SMTP.git .
-sudo -u smtp HOME=/opt/bytesend-smtp npm install
-sudo -u smtp HOME=/opt/bytesend-smtp npm run build
+sudo -u smtp HOME=/opt/bytesend-smtp git clone https://github.com/NodeByteLTD/ByteSend.git .
+sudo -u smtp HOME=/opt/bytesend-smtp bash -lc "cd /opt/bytesend-smtp/apps/smtp-server && npm install && npm run build"
 
 # (Optional) Copy and configure .env file
-sudo -u smtp cp .env.example .env
-sudo nano /opt/bytesend-smtp/.env  # Edit with your settings
+sudo -u smtp cp /opt/bytesend-smtp/apps/smtp-server/.env.example /opt/bytesend-smtp/apps/smtp-server/.env
+sudo nano /opt/bytesend-smtp/apps/smtp-server/.env  # Edit with your settings
 ```
 
 <Note>The `HOME=/opt/bytesend-smtp` prefix is needed if Node.js is installed via snap, which restricts home directory access to `/home`. If you get "home directories outside of /home needs configuration", use this workaround or install Node.js via `apt` or `nvm` instead.</Note>
@@ -485,7 +484,7 @@ For high-volume deployments, consider:
 ## Support & Issues
 
 For bugs, feature requests, or questions:
-- **GitHub Issues:** [github.com/NodeByteHosting/ByteSend-SMTP](https://github.com/NodeByteHosting/ByteSend-SMTP)
+- **GitHub Issues:** [github.com/NodeByteLTD/ByteSend/issues](https://github.com/NodeByteLTD/ByteSend/issues)
 - **ByteSend Support:** [Contact us](https://bytesend.cloud/support)
 
 
