@@ -15,16 +15,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Authentication
+- **GitHub OAuth support** — added GitHub as a sign-in provider alongside Discord (`GITHUB_ID` / `GITHUB_SECRET`), enabling GitHub auth for cloud and self-hosted deployments
+
+#### Notification Providers
+- **Multi-provider notifications** — teams can now configure external alerting providers for operational events (email, campaign, domain, and error notifications)
+- **Supported providers** — Discord, Slack, Microsoft Teams, Telegram, and Custom Webhook are now supported with provider-specific configuration
+- **Notification provider schema** — added `NotificationProvider` model to store provider type, config, status, and team linkage
+- **Notification log schema** — added `NotificationLog` model to store per-dispatch delivery outcomes and failure details
+- **Notification provider API** — added `notificationProvider` tRPC router with `list`, `getById`, `create`, `update`, `delete`, `test`, `getLogs`, and `getStats`
+- **Notification dispatcher services** — added provider dispatch and event emission services (`notification-provider-service.ts` and `notification-emitter.ts`)
+- **Notifications settings page** — added `/settings/notifications` UI for provider management, testing, logs, and usage guidance
+- **Notification integration reference** — added `.references/notification-integration.md`
+
+#### Admin / Billing Operations
+- **Admin plan assignment flow** — added `adminAssignPlan` to let cloud admins assign plans to teams either as complimentary grants or Stripe checkout-link driven assignments
+- **Admin team billing controls** — admin team settings now supports `dailyEmailLimit = -1` for unlimited daily sending
+
+#### Billing / Plan Source-of-Truth
+- **Perks derived from shared plan constants** — `apps/web/src/lib/constants/payments.ts` now generates plan perks from `@bytesend/lib` PLANS rather than static duplicated data
+- **Billing plan cards from shared plans** — `/settings/billing` plan options now derive from the shared PLANS map to avoid UI/config drift
+
 #### CI / Automation
 - **Issue summary workflow** — added `.github/workflows/issue-summary.yml` to automatically summarize newly opened issues
 - **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
 - **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
+- **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` on pushes to `main` and manual dispatch
 
 #### Community / Governance
-- **Repository security policy** — added root `SECURITY.md` with supported versions, private reporting process, and response expectations
-- **Code of Conduct** — added root `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
-- **Contributing guide** — added root `CONTRIBUTING.md` with development workflow, PR expectations, and testing checklist
-- **Support guide** — added root `SUPPORT.md` with support channels and security-report routing
+- **Repository security policy** — added `.github/SECURITY.md` with supported versions, private reporting process, and response expectations
+- **Code of Conduct** — added `.github/CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
+- **Contributing guide** — added `.github/CONTRIBUTING.md` with development workflow, PR expectations, and testing checklist
+- **Support guide** — added `.github/SUPPORT.md` with support channels and security-report routing
 
 #### GitHub Templates
 - **PR template** — added `.github/PULL_REQUEST_TEMPLATE.md` to standardize change summaries, testing notes, and release-impact checks
@@ -32,6 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New issue forms** — added `.github/ISSUE_TEMPLATE/feature.yml` and `.github/ISSUE_TEMPLATE/docs.yml`
 
 ### Changed
+
+#### Plans & Pricing
+- **BASIC plan updated** — aligned plan limits/pricing model by setting BASIC to CA$20/mo with 100,000 monthly emails, 30 members, and 12 domains
+- **LIFETIME plan updated** — aligned lifetime limits to current plan progression at CA$199 one-time with 500,000 monthly emails, 100 members, and 30 domains
+
+#### Settings UX
+- **Settings navigation restructured** — removed Team inner General/Members subtabs and promoted them to top-level Settings navigation
+- **General tab behavior** — `/settings` now serves as the General overview (team profile and core team settings)
+- **Members tab split-out** — members management moved to dedicated `/settings/members` tab alongside billing/usage-related settings
+- **Usage resource breakdowns** — usage view now includes explicit domain, webhook, and member usage breakdowns with limit context
 
 #### SMTP Server
 - **SMTP server vendored into monorepo** — `apps/smtp-server` is now tracked directly in this repository (no gitlink/submodule-style entry), simplifying versioning and release consistency
@@ -54,11 +86,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Label action token update** — updated token reference in `.github/workflows/label.yml`
 - **Website test workflow tuning** — adjusted website test workflow behavior
 - **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
+- **Docker manifest recreation safety** — docker publish now removes existing manifests before create, preventing rerun failures on previously published tags
 - **Website tests pnpm version alignment** — removed hardcoded pnpm version from `.github/workflows/website-test.yml` so CI uses the repository `packageManager` version (`pnpm@9.0.0`)
 - **Docker publish tag strategy hardening** — `.github/workflows/docker-publish.yml` now publishes ref-aware tags (`latest`, `develop`, version tag, and commit SHA) with matching multi-arch manifests
 - **Manual Docker publish branch support** — wired `workflow_dispatch` branch input into checkout and tag resolution so manual runs build/publish the selected branch
 - **Labeler rules refresh** — updated `.github/labeler.yml` to align automated PR labeling with the current repository structure
-- **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` on pushes to `main` and manual dispatch
 
 ### Fixed
 
@@ -76,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Usage unit test expectation alignment** — `apps/web/src/lib/usage.unit.test.ts` now derives expected costs from exported usage constants instead of stale hardcoded values
 - **Workspace SDK resolution in Vitest** — `apps/web/vitest.config.ts` now aliases `bytesend-js` to `packages/sdk/index.ts` during tests so unit suites do not depend on prebuilt SDK `dist` artifacts
 - **Contact-service unit test isolation** — `apps/web/src/server/service/contact-service.unit.test.ts` now mocks `LimitService.checkContactsLimit` to avoid transitive `TeamService` cache dependencies and prevent brittle failures
+- **Campaign security test alignment** — `apps/web/src/server/api/routers/campaign-security.trpc.test.ts` updated for current plan access expectations
 
 #### SMTP Server
 - **SMTP Dockerfile context compatibility** — `apps/smtp-server/Dockerfile` no longer expects `pnpm-lock.yaml` in app-only build contexts and now uses an app-local install path that works with the `apps/smtp-server` Docker build context

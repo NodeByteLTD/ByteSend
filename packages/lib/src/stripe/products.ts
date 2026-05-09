@@ -46,19 +46,21 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
     name: "ByteSend Professional",
     description:
       "For professionals and growing businesses. " +
-      "150,000 emails/month included. " +
-      "Overage billed at CA$0.01/email (marketing and transactional).",
-    priceMonthly: 3000, // CA$30/month
+      "100,000 emails/month included with unlimited daily sending. " +
+      "Overage billed at CA$0.01/email (marketing and transactional). " +
+      "Up to 12 domains, 30 team members, 1,000 contacts.",
+    priceMonthly: 2000, // CA$20/month
   },
 
   LIFETIME: {
     plan: "LIFETIME",
     name: "ByteSend Lifetime",
     description:
-      "One-time payment for lifetime access to all ByteSend features, forever. " +
-      "Unlimited emails — marketing and transactional included at no extra cost. " +
+      "One-time payment for long-term access to ByteSend. " +
+      "500,000 emails/month included with unlimited daily sending. " +
+      "Up to 30 domains, 100 team members, 10,000 contacts. " +
       "No subscriptions, no renewals.",
-    priceOneTime: 6000, // CA$60 one-time purchase
+    priceOneTime: 19900, // CA$199 one-time purchase
   },
 };
 

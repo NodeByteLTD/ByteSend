@@ -134,6 +134,8 @@ model Team {
   suppressionList  SuppressionList[]
   webhookEndpoints Webhook[]
   webhookCalls     WebhookCall[]
+  notificationProviders NotificationProvider[]
+  notificationLogs NotificationLog[]
 }
 
 model TeamInvite {
@@ -313,7 +315,7 @@ model ContactBook {
   doubleOptInContent String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  emoji              String    @default("📙")
+  emoji              String    @default("�")
   team               Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   contacts           Contact[]
 
@@ -518,5 +520,68 @@ model WebhookCall {
   team           Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@index([teamId, webhookId, status])
+  @@index([createdAt(sort: Desc)])
+}
+
+enum NotificationProviderType {
+  DISCORD
+  SLACK
+  MICROSOFT_TEAMS
+  TELEGRAM
+  CUSTOM_WEBHOOK
+}
+
+enum NotificationEventType {
+  EMAIL_SENT
+  EMAIL_DELIVERED
+  EMAIL_BOUNCED
+  EMAIL_COMPLAINED
+  EMAIL_OPENED
+  EMAIL_CLICKED
+  CONTACT_CREATED
+  CONTACT_DELETED
+  DOMAIN_VERIFIED
+  CAMPAIGN_STARTED
+  CAMPAIGN_COMPLETED
+  ERROR_ALERT
+}
+
+model NotificationProvider {
+  id                   String                   @id @default(cuid())
+  teamId               Int
+  type                 NotificationProviderType
+  name                 String
+  description          String?
+  config               Json // Stores provider-specific config (webhookUrl, channelId, token, etc.)
+  eventTypes           NotificationEventType[]  @default([])
+  isActive             Boolean                  @default(true)
+  testMessageSentAt    DateTime?
+  consecutiveFailures  Int                      @default(0)
+  lastFailureAt        DateTime?
+  lastSuccessAt        DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  team                 Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, type, name])
+  @@index([teamId, isActive])
+}
+
+model NotificationLog {
+  id              String                 @id @default(cuid())
+  teamId          Int
+  providerId      String
+  eventType       NotificationEventType
+  payload         Json
+  status          String                 @default("PENDING") // PENDING, SENT, FAILED
+  attempt         Int                    @default(0)
+  lastError       String?
+  responseStatus  Int?
+  responseTimeMs  Int?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  team            Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, providerId, status])
   @@index([createdAt(sort: Desc)])
 }

@@ -93,6 +93,9 @@ jobs:
           IMAGE_TAG_ARGS=""
           for TAG in $TAGS; do
             IMAGE_TAG_ARGS="$IMAGE_TAG_ARGS -t bytesend/$APP-$BUILD_PLATFORM:$TAG -t ghcr.io/bytesend/$APP-$BUILD_PLATFORM:$TAG"
+            # Clean up any existing platform-specific tags to avoid manifest conflicts on re-run
+            docker manifest rm bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
+            docker manifest rm ghcr.io/bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
           done
 
           docker buildx build \
@@ -154,6 +157,11 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              # Clean up any existing manifests (allows re-running without failures)
+              docker manifest rm bytesend/$APP_NAME:$TAG 2>/dev/null || true
+              docker manifest rm bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
+              docker manifest rm bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
+              
               docker manifest create \
                 bytesend/$APP_NAME:$TAG \
                 --amend bytesend/$APP_NAME-amd64:$TAG \
@@ -185,6 +193,11 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              # Clean up any existing manifests (allows re-running without failures)
+              docker manifest rm ghcr.io/bytesend/$APP_NAME:$TAG 2>/dev/null || true
+              docker manifest rm ghcr.io/bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
+              docker manifest rm ghcr.io/bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
+              
               docker manifest create \
                 ghcr.io/bytesend/$APP_NAME:$TAG \
                 --amend ghcr.io/bytesend/$APP_NAME-amd64:$TAG \

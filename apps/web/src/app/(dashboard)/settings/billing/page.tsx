@@ -10,43 +10,23 @@ import { useTeam } from "~/providers/team-context";
 import { api } from "~/trpc/react";
 import { PlanDetails } from "~/components/payments/PlanDetails";
 import { UpgradeButton } from "~/components/payments/UpgradeButton";
+import { PLANS, getAllPlans } from "@bytesend/lib";
+import { PLAN_PERKS } from "~/lib/constants/payments";
 
-type PaidPlan = "HOBBY" | "LITE";
+type UpgradePlan = "HOBBY" | "LITE" | "BASIC";
 
-const PLAN_OPTIONS: {
-  plan: PaidPlan;
-  name: string;
-  price: string;
-  perks: string[];
-  highlight?: boolean;
-}[] = [
-  {
-    plan: "HOBBY",
-    name: "Hobby",
-    price: "CA$5 / mo",
-    perks: [
-      "25,000 emails / month",
-      "12,500 emails / day",
-      "4 domains + $1/extra",
-      "10 team members",
-      "Marketing CA$0.05/ea (overage)",
-    ],
-  },
-  {
-    plan: "LITE",
-    name: "Lite",
-    price: "CA$10 / mo",
-    perks: [
-      "50,000 emails / month",
-      "25,000 emails / day",
-      "6 domains + $1/extra",
-      "15 team members",
-      "Marketing CA$0.02/ea (overage)",
-      "Priority support",
-    ],
-    highlight: true,
-  },
+// Plans shown as upgrade options when on FREE plan (exclude FREE and LIFETIME)
+const UPGRADE_PLANS: { plan: UpgradePlan; highlight?: boolean }[] = [
+  { plan: "HOBBY" },
+  { plan: "LITE", highlight: true },
+  { plan: "BASIC" },
 ];
+
+function formatPlanPrice(plan: (typeof PLANS)[keyof typeof PLANS]): string {
+  if (plan.oneTimePrice) return `CA$${plan.oneTimePrice / 100} one-time`;
+  if (plan.monthlyPrice === 0) return "Free";
+  return `CA$${plan.monthlyPrice / 100} / mo`;
+}
 
 export default function SettingsPage() {
   const { currentTeam, currentIsAdmin } = useTeam();
@@ -125,34 +105,38 @@ export default function SettingsPage() {
       {currentTeam?.plan === "FREE" && (
         <div>
           <h3 className="text-lg font-semibold mb-4">Upgrade Your Plan</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {PLAN_OPTIONS.map(({ plan, name, price, perks, highlight }) => (
-              <div
-                key={plan}
-                className={`rounded-lg border p-4 flex flex-col gap-3 ${
-                  highlight ? "border-primary bg-primary/5" : "border-border"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-sm">{name}</span>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {price}
-                  </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {UPGRADE_PLANS.map(({ plan, highlight }) => {
+              const planData = PLANS[plan];
+              const perks = PLAN_PERKS[plan] ?? [];
+              return (
+                <div
+                  key={plan}
+                  className={`rounded-lg border p-4 flex flex-col gap-3 ${
+                    highlight ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">{planData.displayName}</span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {formatPlanPrice(planData)}
+                    </span>
+                  </div>
+                  <ul className="space-y-1.5 flex-1">
+                    {perks.map((perk, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-xs text-muted-foreground"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                  <UpgradeButton plan={plan} label={`Choose ${planData.displayName}`} />
                 </div>
-                <ul className="space-y-1.5 flex-1">
-                  {perks.map((perk, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-xs text-muted-foreground"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-                <UpgradeButton plan={plan} label={`Choose ${name}`} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

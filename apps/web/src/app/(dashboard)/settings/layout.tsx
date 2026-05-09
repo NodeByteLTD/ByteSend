@@ -22,15 +22,17 @@ export default function ApiKeysPage({
         </p>
       </div>
       <div className="flex flex-wrap gap-1 border-b border-border/60">
+        <SettingsNavButton href="/settings">General</SettingsNavButton>
         {isCloud() ? (
-          <SettingsNavButton href="/settings">Usage</SettingsNavButton>
+          <SettingsNavButton href="/settings/usage">Usage</SettingsNavButton>
         ) : null}
         {currentIsAdmin && isCloud() ? (
           <SettingsNavButton href="/settings/billing">
             Billing
           </SettingsNavButton>
         ) : null}
-        <SettingsNavButton href="/settings/team">Team</SettingsNavButton>
+        <SettingsNavButton href="/settings/members">Members</SettingsNavButton>
+        <SettingsNavButton href="/settings/notifications">Notifications</SettingsNavButton>
       </div>
       <div>{children}</div>
     </div>

@@ -17,6 +17,7 @@ import { PlanDetails } from "~/components/payments/PlanDetails";
 import { useUpgradeModalStore } from "~/store/upgradeModalStore";
 import { Progress } from "@bytesend/ui/src/progress";
 import { PLANS } from "@bytesend/lib";
+import { LimitReason } from "~/lib/constants/plans";
 
 const UNLIMITED_PLANS = new Set(["BASIC", "LIFETIME"]);
 
@@ -210,6 +211,90 @@ function PaidPlanUsage({
   );
 }
 
+/* ────────── Resource limits ────────── */
+
+function ResourceLimitRow({
+  label,
+  currentCount,
+  limit,
+}: {
+  label: string;
+  currentCount: number;
+  limit: number;
+}) {
+  const unlimited = limit === -1;
+  const pct = unlimited ? 0 : Math.min((currentCount / limit) * 100, 100);
+  const nearLimit = !unlimited && pct >= 80;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-mono text-muted-foreground">
+          {currentCount.toLocaleString()}{" "}
+          {unlimited ? "/ ∞" : `/ ${limit.toLocaleString()}`}
+        </span>
+      </div>
+      {!unlimited && (
+        <Progress
+          value={pct}
+          className={`h-1.5 ${nearLimit ? "[&>div]:bg-amber-500" : ""}`}
+        />
+      )}
+      {unlimited && (
+        <p className="text-xs text-muted-foreground">No limit on this plan</p>
+      )}
+    </div>
+  );
+}
+
+function ResourceLimits() {
+  const { data: domainLimit, isLoading: dl } = api.limits.get.useQuery({ type: LimitReason.DOMAIN });
+  const { data: memberLimit, isLoading: ml } = api.limits.get.useQuery({ type: LimitReason.TEAM_MEMBER });
+  const { data: webhookLimit, isLoading: wl } = api.limits.get.useQuery({ type: LimitReason.WEBHOOK });
+
+  const isLoading = dl || ml || wl;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Spinner className="w-5 h-5" innerSvgClass="stroke-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Resource limits</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {domainLimit && (
+          <ResourceLimitRow
+            label="Domains"
+            currentCount={domainLimit.currentCount ?? 0}
+            limit={domainLimit.limit}
+          />
+        )}
+        {memberLimit && (
+          <ResourceLimitRow
+            label="Team members"
+            currentCount={memberLimit.currentCount ?? 0}
+            limit={memberLimit.limit}
+          />
+        )}
+        {webhookLimit && (
+          <ResourceLimitRow
+            label="Webhooks"
+            currentCount={webhookLimit.currentCount ?? 0}
+            limit={webhookLimit.limit}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ────────── Main page ────────── */
 
 export default function UsagePage() {
@@ -248,6 +333,9 @@ export default function UsagePage() {
           <PaidPlanUsage usage={usage?.month ?? []} />
         )}
       </div>
+
+      {/* Resource limits */}
+      <ResourceLimits />
 
       {/* Current plan section */}
       {currentTeam?.plan && (
