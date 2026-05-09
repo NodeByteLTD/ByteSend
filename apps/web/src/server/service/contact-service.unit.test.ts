@@ -5,6 +5,7 @@ const {
   mockWebhookEmit,
   mockSendDoubleOptInConfirmationEmail,
   mockAddBulkContactJobs,
+  mockCheckContactsLimit,
   mockLogger,
 } = vi.hoisted(() => ({
   mockDb: {
@@ -21,6 +22,7 @@ const {
   mockWebhookEmit: vi.fn(),
   mockSendDoubleOptInConfirmationEmail: vi.fn(),
   mockAddBulkContactJobs: vi.fn(),
+  mockCheckContactsLimit: vi.fn(),
   mockLogger: {
     warn: vi.fn(),
     error: vi.fn(),
@@ -47,6 +49,12 @@ vi.mock("~/server/service/contact-queue-service", () => ({
   },
 }));
 
+vi.mock("~/server/service/limit-service", () => ({
+  LimitService: {
+    checkContactsLimit: mockCheckContactsLimit,
+  },
+}));
+
 vi.mock("~/server/logger/log", () => ({
   logger: mockLogger,
 }));
@@ -66,6 +74,12 @@ describe("contact-service addOrUpdateContact", () => {
     mockDb.contact.findUnique.mockReset();
     mockDb.contact.update.mockReset();
     mockDb.contact.upsert.mockReset();
+    mockCheckContactsLimit.mockReset();
+    mockCheckContactsLimit.mockResolvedValue({
+      isLimitReached: false,
+      limit: -1,
+      currentCount: 0,
+    });
     mockWebhookEmit.mockReset();
     mockSendDoubleOptInConfirmationEmail.mockReset();
     mockLogger.warn.mockReset();
