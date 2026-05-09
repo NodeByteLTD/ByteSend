@@ -20,6 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
 - **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
 
+#### Community / Governance
+- **Repository security policy** — added root `SECURITY.md` with supported versions, private reporting process, and response expectations
+- **Code of Conduct** — added root `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
+- **Contributing guide** — added root `CONTRIBUTING.md` with development workflow, PR expectations, and testing checklist
+- **Support guide** — added root `SUPPORT.md` with support channels and security-report routing
+
+#### GitHub Templates
+- **PR template** — added `.github/PULL_REQUEST_TEMPLATE.md` to standardize change summaries, testing notes, and release-impact checks
+- **Issue template config** — added `.github/ISSUE_TEMPLATE/config.yml` with contact links and blank-issue controls
+- **New issue forms** — added `.github/ISSUE_TEMPLATE/feature.yml` and `.github/ISSUE_TEMPLATE/docs.yml`
+
 ### Changed
 
 #### SMTP Server
@@ -29,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Documentation
 - **SMTP docs refreshed for monorepo paths** — clone/build/deployment documentation now references `NodeByteLTD/ByteSend` and `apps/smtp-server` paths throughout
 - **SMTP quickstart clarified** — get-started docs now direct users to use their configured SMTP username (default `bytesend`) rather than implying only a fixed username
+- **Core docs/readme refresh** — updated main README and docs navigation/content pages for current monorepo structure and self-hosting guidance (`apps/docs/README.md`, `apps/docs/docs.json`, local/docker/self-hosting guide pages)
+
+#### References
+- **Internal references expanded** — added `.references/README.md`, `smtp-auth-and-operations.md`, `release-playbook.md`, and `repository-governance.md`
+- **Webhook reference improvements** — expanded `.references/webhook-architecture.md` with operations checklist, common failure modes, and change-safety notes
+
+#### GitHub Templates
+- **Issue form upgrades** — revamped bug/marketing/SMTP templates with clearer triage metadata, reproducibility fields, and validation checkboxes
 
 #### Workflows
 - **PR labeling workflow rename** — renamed the workflow file to `label-prs.yml`
