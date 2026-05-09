@@ -181,17 +181,11 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
-              AMD64_REF="bytesend/$APP_NAME-amd64:$TAG"
-              ARM64_REF="bytesend/$APP_NAME-arm64:$TAG"
-
-              wait_for_remote_image "$AMD64_REF"
-              wait_for_remote_image "$ARM64_REF"
-
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag bytesend/$APP_NAME:$TAG \
-                "$AMD64_REF" \
-                "$ARM64_REF"
+                bytesend/$APP_NAME-amd64:$TAG \
+                bytesend/$APP_NAME-arm64:$TAG
             done
           done
 
@@ -235,16 +229,10 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
-              AMD64_REF="ghcr.io/bytesend/$APP_NAME-amd64:$TAG"
-              ARM64_REF="ghcr.io/bytesend/$APP_NAME-arm64:$TAG"
-
-              wait_for_remote_image "$AMD64_REF"
-              wait_for_remote_image "$ARM64_REF"
-
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag ghcr.io/bytesend/$APP_NAME:$TAG \
-                "$AMD64_REF" \
-                "$ARM64_REF"
+                ghcr.io/bytesend/$APP_NAME-amd64:$TAG \
+                ghcr.io/bytesend/$APP_NAME-arm64:$TAG
             done
           done
