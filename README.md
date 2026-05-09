@@ -10,15 +10,6 @@
 
 The fastest way to get started is the managed cloud at [bytesend.cloud](https://bytesend.cloud). No infrastructure to manage — just sign up, verify a domain, and start sending.
 
-| Plan | Price | Emails/month | Domains | Contacts |
-|---|---|---|---|---|
-| **Free** | CA$0 | 12,500 | 2 | 100 |
-| **Hobby** | CA$5/mo | 25,000 | 4 | 200 |
-| **Lite** | CA$10/mo | 50,000 | 6 | 300 |
-| **Professional** | CA$30/mo | 150,000 | 100 | 1,000,000 |
-| **Lifetime** | CA$60 once | Unlimited | 500 | 10,000,000 |
-
-Hobby and above include marketing campaigns and usage-based overage billing. Professional and Lifetime include advanced analytics and priority support.
 
 ---
 
