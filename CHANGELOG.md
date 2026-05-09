@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
 - **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
 - **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` changes on `main` (plus manual dispatch)
+- **Python SDK release workflow** — added `.github/workflows/pypi-release.yml` to build and publish the `bytesend-python` package from `packages/python-sdk` on pushes to `main` and manual dispatch
 
 #### Community / Governance
 - **Repository security policy** — added `.github/SECURITY.md` with supported versions, private reporting process, and response expectations
