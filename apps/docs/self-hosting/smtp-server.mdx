@@ -75,7 +75,7 @@ The server supports two TLS configurations:
    
    # Edit with your values
    # BYTESEND_BASE_URL=https://your-bytesend-instance.com
-   # SMTP_AUTH_USERNAME=bytesend
+  # SMTP_AUTH_USERNAME=bytesend  # Optional legacy fallback when client omits username
    # SMTP_TLS_MODE=none  # or 'manual' if you have certs
    ```
 
@@ -166,7 +166,7 @@ The server supports two TLS configurations:
    Or set them in your shell:
    ```bash
    export NODE_ENV=production
-   export SMTP_AUTH_USERNAME=bytesend
+  export SMTP_AUTH_USERNAME=bytesend
    export BYTESEND_BASE_URL=https://bytesend.cloud
    export SMTP_TLS_MODE=none
    # For manual TLS:
@@ -187,7 +187,7 @@ The server supports two TLS configurations:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SMTP_AUTH_USERNAME` | `bytesend` | Username for SMTP authentication |
+| `SMTP_AUTH_USERNAME` | `bytesend` | Optional legacy fallback if SMTP client omits username |
 | `BYTESEND_BASE_URL` | `https://bytesend.cloud` | URL to your ByteSend instance (e.g., `https://api.example.com`) |
 | `SMTP_TLS_MODE` | `none` | TLS mode: `none` or `manual` |
 | `SMTP_TLS_CERT_PATH` | — | Path to certificate file (required if `SMTP_TLS_MODE=manual`) |
@@ -216,6 +216,17 @@ Docker Compose automatically loads variables from `.env` and the docker-compose.
 - **Dokploy Integration:** Add environment variables in Dokploy UI → they override defaults automatically
 - **Local Testing:** Use `.env` file for local development with `docker compose up`
 - **Production:** Both methods work; use .env or set variables directly in your deployment platform
+
+### Health Checks
+
+For status pages, monitor the SMTP listener ports directly:
+
+- `25`
+- `587`
+- `2587`
+- `465` and `2465` when `SMTP_TLS_MODE=manual`
+
+Most status providers support TCP checks for SMTP services, which is the recommended way to monitor this server.
 
 ### TLS Certificates
 

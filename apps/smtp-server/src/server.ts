@@ -1,12 +1,35 @@
 import dotenv from "dotenv";
-import { Readable } from "stream";
-import { simpleParser } from "mailparser";
 import { readFileSync, watch, FSWatcher } from "fs";
+import { simpleParser } from "mailparser";
 import { SMTPServer, SMTPServerOptions, SMTPServerSession } from "smtp-server";
+import { Readable } from "stream";
 
 dotenv.config();
 
 const BASE_URL = process.env.BYTESEND_BASE_URL ?? "https://bytesend.cloud";
+const TLS_MODE = (process.env.SMTP_TLS_MODE ?? "none").toLowerCase();
+const SSL_KEY_PATH = process.env.SMTP_TLS_KEY_PATH;
+const SSL_CERT_PATH = process.env.SMTP_TLS_CERT_PATH;
+
+const LEGACY_DEFAULT_USERNAME = (process.env.SMTP_AUTH_USERNAME ?? "bytesend").trim();
+
+const SMTP_PLAIN_PORTS = [25, 587, 2587] as const;
+const SMTP_IMPLICIT_TLS_PORTS = [465, 2465] as const;
+
+function buildUsernameCandidates(username: unknown): string[] {
+  const candidates = new Set<string>();
+
+  const providedUsername = typeof username === "string" ? username.trim() : "";
+  if (providedUsername) {
+    candidates.add(providedUsername);
+  }
+
+  if (LEGACY_DEFAULT_USERNAME) {
+    candidates.add(LEGACY_DEFAULT_USERNAME);
+  }
+
+  return [...candidates];
+}
 
 async function verifySmtpCredentials(
   username: string,
@@ -19,15 +42,13 @@ async function verifySmtpCredentials(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
+
     return response.ok;
   } catch (error) {
     console.error("SMTP auth check failed:", error);
     return false;
   }
 }
-const TLS_MODE = (process.env.SMTP_TLS_MODE ?? "none").toLowerCase();
-const SSL_KEY_PATH = process.env.SMTP_TLS_KEY_PATH;
-const SSL_CERT_PATH = process.env.SMTP_TLS_CERT_PATH;
 
 async function sendEmailToByteSend(emailData: any, apiKey: string) {
   try {
@@ -64,20 +85,22 @@ async function sendEmailToByteSend(emailData: any, apiKey: string) {
     if (error instanceof Error) {
       console.error("Error message:", error.message);
       throw new Error(`Failed to send email: ${error.message}`);
-    } else {
-      console.error("Unexpected error:", error);
-      throw new Error("Failed to send email: Unexpected error occurred");
     }
+
+    console.error("Unexpected error:", error);
+    throw new Error("Failed to send email: Unexpected error occurred");
   }
 }
 
 function loadCertificates(): { key?: Buffer; cert?: Buffer } {
   if (TLS_MODE !== "manual") return {};
+
   if (!SSL_KEY_PATH || !SSL_CERT_PATH) {
     throw new Error(
       "SMTP_TLS_MODE is 'manual' but SMTP_TLS_KEY_PATH / SMTP_TLS_CERT_PATH are not set",
     );
   }
+
   return {
     key: readFileSync(SSL_KEY_PATH),
     cert: readFileSync(SSL_CERT_PATH),
@@ -131,19 +154,36 @@ const serverOptions: SMTPServerOptions = {
         });
     });
   },
-  onAuth(auth, session: any, callback: (error?: Error, user?: any) => void) {
-    if (!auth.password) {
+  onAuth(auth, _session: any, callback: (error?: Error, user?: any) => void) {
+    const providedPassword =
+      typeof auth.password === "string" ? auth.password : "";
+
+    if (!providedPassword.trim()) {
       console.error("SMTP auth rejected: no password provided");
       return callback(new Error("Invalid username or password"));
     }
-    verifySmtpCredentials(auth.username ?? "", auth.password).then((valid) => {
-      if (valid) {
-        console.log("Authenticated successfully");
-        callback(undefined, { user: auth.password });
-      } else {
-        console.error("Invalid username or password");
-        callback(new Error("Invalid username or password"));
+
+    const usernameCandidates = buildUsernameCandidates(auth.username);
+    if (usernameCandidates.length === 0) {
+      console.error("SMTP auth rejected: no username provided");
+      return callback(new Error("Invalid username or password"));
+    }
+
+    void (async () => {
+      for (const username of usernameCandidates) {
+        const valid = await verifySmtpCredentials(username, providedPassword);
+        if (valid) {
+          console.log(`Authenticated successfully with username '${username}'`);
+          callback(undefined, { user: providedPassword, smtpUsername: username });
+          return;
+        }
       }
+
+      console.error("Invalid username or password");
+      callback(new Error("Invalid username or password"));
+    })().catch((error) => {
+      console.error("SMTP auth processing failed", error);
+      callback(new Error("Invalid username or password"));
     });
   },
   size: 10485760,
@@ -156,7 +196,7 @@ function startServers() {
   console.log(`SMTP TLS mode: ${TLS_MODE}`);
 
   if (TLS_MODE === "manual") {
-    [465, 2465].forEach((port) => {
+    SMTP_IMPLICIT_TLS_PORTS.forEach((port) => {
       const server = new SMTPServer({ ...serverOptions, secure: true });
       server.listen(port, () => {
         console.log(`SMTP server (implicit TLS) is listening on port ${port}`);
@@ -168,7 +208,7 @@ function startServers() {
     });
   }
 
-  [25, 587, 2587].forEach((port) => {
+  SMTP_PLAIN_PORTS.forEach((port) => {
     const server = new SMTPServer(serverOptions);
     server.listen(port, () => {
       const label = TLS_MODE === "manual" ? "STARTTLS" : "plain (no TLS)";
@@ -192,6 +232,7 @@ function startServers() {
         console.error("Failed to reload TLS certificates", err);
       }
     };
+
     [SSL_KEY_PATH, SSL_CERT_PATH].forEach((file) => {
       watchers.push(watch(file, { persistent: false }, reloadCertificates));
     });

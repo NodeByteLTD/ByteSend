@@ -50,7 +50,7 @@ npm install
 npm run build
 
 # Run
-NODE_ENV=production SMTP_AUTH_USERNAME=bytesend BYTESEND_BASE_URL=https://bytesend.cloud node dist/server.js
+NODE_ENV=production BYTESEND_BASE_URL=https://bytesend.cloud node dist/server.js
 ```
 
 ### Systemd
@@ -73,7 +73,7 @@ Set environment variables to configure the server:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SMTP_AUTH_USERNAME` | `bytesend` | Username for SMTP authentication |
+| `SMTP_AUTH_USERNAME` | `bytesend` | Legacy fallback username candidate (used if the client omits username) |
 | `BYTESEND_BASE_URL` | `https://bytesend.cloud` | ByteSend API endpoint (e.g., `https://api.example.com`) |
 | `SMTP_TLS_MODE` | `none` | TLS mode: `none` (plain) or `manual` (with certs) |
 | `SMTP_TLS_CERT_PATH` | — | Path to full certificate chain (PEM format) |
@@ -125,6 +125,15 @@ node dist/server.js
 - **587** — Submission port (plain or STARTTLS)
 - **465** — Implicit TLS (SMTPS, manual mode only)
 - **2465 & 2587** — Alternative ports for testing/internal use
+
+## Health Checks
+
+Monitor SMTP listener ports directly from your status page:
+
+- `25`
+- `587`
+- `2587`
+- `465` and `2465` when `SMTP_TLS_MODE=manual`
 
 ---
 
@@ -212,7 +221,7 @@ telnet smtp.example.com 587
 
 ### Authentication Failed
 - Verify the API key is correct
-- Check `SMTP_AUTH_USERNAME` matches client config
+- Check the SMTP client username matches the team's configured SMTP username in ByteSend
 - Review server logs: `docker compose logs smtp`
 
 ### STARTTLS Not Supported

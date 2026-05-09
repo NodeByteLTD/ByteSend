@@ -17,7 +17,7 @@ To set up your SMTP integration, you'll need to provide the following credential
 
 - **Host:** ```smtp.bytesend.cloud```
 - **Port:** ```465```, ```587```, ```2465```, or ```2587```
-- **Username:** ```bytesend```
+- **Username:** your SMTP username from ByteSend Dev Settings (default: ```bytesend```)
 - **Password:** ```YOUR-API-KEY```
 
 ## Example with Nodemailer
@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: false,
   auth: {
-    user: "bytesend",
+    user: "your_smtp_username",
     pass: "bs_your_api_key",
   },
   tls: {
