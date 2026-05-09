@@ -1,0 +1,283 @@
+---
+title: Discord Notifications
+description: "Receive ByteSend alerts in your Discord server"
+icon: discord
+---
+
+## Overview
+
+Send real-time ByteSend notifications directly to your Discord server. Get instant alerts about email delivery, team changes, billing updates, and more.
+
+## Prerequisites
+
+- Discord server where you have manage permissions
+- Admin or Editor role in ByteSend
+
+## Setting Up Discord Webhooks
+
+### Step 1: Create a Discord Server (if needed)
+
+If you don't have a Discord server yet:
+
+1. Open Discord and click the "+" button
+2. Click **Create a New Server**
+3. Give your server a name (e.g., "ByteSend Alerts")
+4. Click **Create**
+5. You now have a server to set up webhooks
+
+### Step 2: Create a Discord Channel
+
+1. In your Discord server, click the "+" next to "Text Channels"
+2. Enter channel name (e.g., "bytesend-alerts")
+3. Set visibility (public or private)
+4. Click **Create Channel**
+
+### Step 3: Create a Webhook
+
+1. Right-click the channel name
+2. Select **Edit Channel**
+3. Click **Integrations** in the left sidebar
+4. Click **Webhooks**
+5. Click **New Webhook** (or **Create Webhook**)
+6. Give it a name: "ByteSend Notifications"
+7. Click **Copy Webhook URL**
+8. Save the URL (you'll need it in the next step)
+
+<Tip>
+Keep your webhook URL secret! Anyone with this URL can post messages to your channel. Don't share it publicly or commit it to version control.
+</Tip>
+
+## Connecting ByteSend to Discord
+
+### In ByteSend Dashboard
+
+1. Log in to [ByteSend Dashboard](https://bytesend.cloud)
+2. Navigate to **Settings** → **Notifications**
+3. Find **Discord** under "Notification Channels"
+4. Click **Connect** or **Add Discord**
+5. Paste your webhook URL
+6. Click **Save**
+
+### Test the Connection
+
+After connecting:
+
+1. Click **Test** next to the Discord provider
+2. You should receive a test message in your Discord channel
+3. The message confirms the connection is working
+
+If you don't receive the test message:
+- Verify the webhook URL is correct
+- Check that the bot has permissions in the channel
+- Try creating a new webhook
+
+## Configuring Alert Preferences
+
+### Choose Alert Types
+
+1. Go to **Settings** → **Notifications**
+2. Click **Configure** next to Discord
+3. Check which alert types to receive:
+   - **Email Delivery**: Send, bounce, delivery alerts
+   - **Domain Issues**: Verification failures, DNS problems
+   - **Team Changes**: Member additions, removals, role changes
+   - **Billing Alerts**: Limit warnings, payment failures
+   - **Security Events**: Unusual activity, login attempts
+   - **API Quota**: Rate limit warnings
+   - **Maintenance**: Platform maintenance notices
+4. Click **Save**
+
+### Set Notification Frequency
+
+- **Real-time**: Get alerts immediately as they occur
+- **Daily Digest**: Receive one message per day summarizing all events
+- **Weekly Digest**: Receive one message per week
+
+Select the frequency that works best for your team.
+
+## Discord Message Format
+
+ByteSend sends formatted Discord messages with:
+
+**Sample Email Alert**:
+```
+🚨 Email Failed to Send
+Team: Your Team Name
+Recipient: user@example.com
+Reason: Bounced
+Time: May 9, 2024 10:30 AM UTC
+```
+
+**Sample Team Alert**:
+```
+👥 Team Member Added
+User: john@example.com
+Role: Editor
+Added by: admin@example.com
+Time: May 9, 2024 2:15 PM UTC
+```
+
+All messages include:
+- Event icon/emoji for quick scanning
+- Event details (what happened)
+- Timestamp
+- Direct link to dashboard (if applicable)
+
+## Managing Discord Notifications
+
+### Disable Temporarily
+
+To pause Discord notifications without disconnecting:
+
+1. Go to **Settings** → **Notifications** → **Discord**
+2. Click **Pause Notifications**
+3. Notifications will not be sent to Discord
+4. Click **Resume** to re-enable
+
+### Update Webhook
+
+If you need to change the webhook URL:
+
+1. Go to **Settings** → **Notifications** → **Discord**
+2. Click **Update Webhook**
+3. Paste the new webhook URL
+4. Click **Save**
+5. Test the connection
+
+### Disconnect Discord
+
+To stop sending notifications to Discord:
+
+1. Go to **Settings** → **Notifications**
+2. Click **Disconnect** next to Discord
+3. Confirm the action
+4. Discord will no longer receive ByteSend notifications
+
+### Revoke Webhook in Discord
+
+To prevent ByteSend from posting to a specific channel:
+
+1. Go to your Discord server settings
+2. Navigate to **Integrations** → **Webhooks**
+3. Find the "ByteSend Notifications" webhook
+4. Click **Delete Webhook**
+5. The webhook URL becomes invalid
+
+## Advanced Configuration
+
+### Multiple Discord Channels
+
+To send different alerts to different channels:
+
+1. Create separate webhooks for different channels
+2. In ByteSend, use the "Custom Webhook" option
+3. Route different alert types to different endpoints
+
+### Discord Bot Advanced Setup
+
+**For team members**:
+
+If you want team members to receive direct messages:
+
+1. Create a ByteSend bot user in Discord
+2. Send each team member a DM from the bot
+3. Bot can post to multiple channels/DMs
+4. Requires more complex webhook configuration
+
+<Tip>
+For simpler setup, use a single channel for all alerts and have team members enable Discord notifications at their preference level.
+</Tip>
+
+### Filtering Alerts
+
+To reduce alert noise:
+
+1. Only enable alert types you care about
+2. Use digest mode for low-priority notifications
+3. Create separate webhooks for critical vs. informational alerts
+4. Use channel topics to document what alerts appear where
+
+## Troubleshooting
+
+### Not Receiving Messages
+
+**Webhook URL incorrect**:
+- Copy the URL again from Discord integrations
+- Paste it exactly into ByteSend
+- Re-test the connection
+
+**Bot lacks permissions**:
+- Right-click the channel
+- Select **Edit Channel**
+- Go to **Permissions**
+- Ensure "ByteSend Notifications" webhook has Send Messages permission
+- Add "Send Embeds" permission for formatted messages
+
+**Channel is archived**:
+- Unarchive the channel
+- Create a new channel if preferred
+- Generate a new webhook for the new channel
+
+**Webhook deleted in Discord**:
+- Your webhook URL is now invalid
+- Generate a new webhook URL
+- Update it in ByteSend settings
+- Test again
+
+### Too Many Messages
+
+- Uncheck alert types you don't need in settings
+- Switch to digest mode (daily or weekly)
+- Create separate webhooks for different alert severities
+- Use channel threads to organize related alerts
+
+### Formatting Issues
+
+If messages don't look formatted:
+- Ensure the bot has embed permissions
+- Try deleting and recreating the webhook
+- Contact [ByteSend Support](https://discord.gg/xqkqzVRC4S)
+
+### Webhook URL Expired
+
+Discord webhooks don't expire, but:
+- If you deleted the webhook, create a new one
+- If you changed channel permissions, verify settings
+- Generate a fresh webhook URL if uncertain
+
+## Best Practices
+
+### Organization
+
+- Create a dedicated `#bytesend-alerts` channel
+- Pin important notification configuration
+- Archive old alerts periodically
+- Document which alerts go to which channels
+
+### Security
+
+- Never share your webhook URL publicly
+- Don't commit webhook URLs to version control
+- Regenerate webhooks if accidentally exposed
+- Use a secure password manager to store URLs
+
+### Team Communication
+
+- Set channel topic: "Real-time ByteSend notifications"
+- Educate team members on alert types
+- Establish response procedures for critical alerts
+- Review and adjust alert types monthly
+
+### Integration Tips
+
+- Combine with other Discord bots (e.g., custom analytics)
+- Use Discord threads to discuss specific alerts
+- React to alerts with acknowledgment emojis
+- Create automation rules for high-priority alerts
+
+## Next Steps
+
+- [Return to notification providers](/guides/notification-providers)
+- [Set up Slack notifications](/guides/slack-notifications)
+- [Manage all notifications settings](/settings/notifications)
+- [Join the community Discord](https://discord.gg/xqkqzVRC4S)

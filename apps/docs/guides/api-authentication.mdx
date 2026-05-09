@@ -1,0 +1,168 @@
+---
+title: API Authentication
+description: "Authenticate your API requests to ByteSend with API keys"
+icon: lock
+---
+
+## Overview
+
+ByteSend API uses **Bearer token authentication** for all API endpoints. You can generate API keys from your dashboard to authenticate requests.
+
+## Generating an API Key
+
+### Via Dashboard
+
+1. Log in to your [ByteSend Dashboard](https://bytesend.cloud)
+2. Navigate to **Settings** → **General**
+3. Scroll to the **API Keys** section
+4. Click **Generate New API Key**
+5. Give your key a name (e.g., "Development", "Production")
+6. Click **Create**
+7. Copy the key immediately — you won't be able to see it again
+8. Store it securely (use environment variables, not in version control)
+
+## Using Your API Key
+
+### In API Requests
+
+Include your API key in the `Authorization` header with the `Bearer` scheme:
+
+```bash
+curl -X GET https://bytesend.cloud/api/v1/domains \
+  -H "Authorization: Bearer your_api_key_here"
+```
+
+### In SDK Clients
+
+#### JavaScript/TypeScript
+
+```typescript
+import { ByteSend } from '@bytesend/js';
+
+const client = new ByteSend({
+  apiKey: process.env.BYTESEND_API_KEY,
+});
+
+// Now use the client
+const emails = await client.emails.list();
+```
+
+#### Python
+
+```python
+from bytesend import ByteSend
+
+client = ByteSend(api_key=os.getenv('BYTESEND_API_KEY'))
+
+# Now use the client
+emails = client.emails.list()
+```
+
+## API Key Management
+
+### Viewing Your Keys
+
+1. Go to **Settings** → **General**
+2. All active API keys are listed with:
+   - Key name
+   - Creation date
+   - Last used date
+   - Masked key preview
+
+### Rotating Keys
+
+To rotate your API key safely:
+
+1. Generate a new API key in the dashboard
+2. Update all applications to use the new key
+3. Test that everything works correctly
+4. Delete the old key from the dashboard
+
+### Revoking Keys
+
+1. Navigate to **Settings** → **General**
+2. Find the key you want to revoke
+3. Click **Revoke**
+4. Confirm the action
+5. The key will be immediately invalidated
+
+## Security Best Practices
+
+### Protect Your Keys
+
+- **Never commit API keys to version control**
+- Use environment variables to store sensitive keys
+- Use different keys for different environments (development, staging, production)
+- Rotate keys regularly (every 90 days recommended)
+- Revoke keys immediately if compromised
+
+### Environment Variables
+
+Create a `.env` file (never commit this):
+
+```bash
+BYTESEND_API_KEY=sk_live_your_key_here
+```
+
+Load it in your application:
+
+```typescript
+import dotenv from 'dotenv';
+dotenv.config();
+
+const apiKey = process.env.BYTESEND_API_KEY;
+```
+
+### Monitoring Usage
+
+- Check the "Last used" timestamp to identify unused keys
+- Monitor your API usage through the dashboard analytics
+- Set up alerts for unusual activity
+
+## Troubleshooting
+
+### "Unauthorized" Error
+
+- Verify the API key is correct and not expired
+- Check that the key is included in the `Authorization` header
+- Ensure the header format is `Bearer {key}` (with a space)
+- Verify the key hasn't been revoked
+
+### Key Not Working After Generation
+
+- Make sure you copied the entire key
+- Check that there are no extra spaces or characters
+- Try revoking and generating a new key
+
+### Lost or Forgotten Key
+
+If you lose your API key:
+
+1. You cannot recover the old key
+2. Generate a new API key from the dashboard
+3. Update all applications to use the new key
+4. Revoke the old key (if known)
+
+## Rate Limiting
+
+API keys are subject to rate limits:
+
+- **Free Plan**: 100 requests/minute
+- **BASIC Plan**: 1,000 requests/minute
+- **LIFETIME Plan**: 10,000 requests/minute
+
+Rate limit headers are included in all responses:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1234567890
+```
+
+If you exceed the rate limit, you'll receive a `429 Too Many Requests` response.
+
+## Next Steps
+
+- [Send your first email](/api-reference/emails/send-email)
+- [Explore the full API reference](/api-reference/introduction)
+- [View SDK documentation](/get-started/nodejs)

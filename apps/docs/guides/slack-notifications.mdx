@@ -1,0 +1,285 @@
+---
+title: Slack Notifications
+description: "Integrate ByteSend alerts with your Slack workspace"
+icon: slack
+---
+
+## Overview
+
+Connect ByteSend to your Slack workspace to receive real-time notifications about email delivery, team activity, billing updates, and more directly in your Slack channels.
+
+## Prerequisites
+
+- Slack workspace (free or paid plan)
+- Admin or Editor role in ByteSend
+- Slack workspace admin or app installation permissions
+
+## Setting Up Slack Integration
+
+### Step 1: Authorize ByteSend in Slack
+
+1. Log in to [ByteSend Dashboard](https://bytesend.cloud)
+2. Navigate to **Settings** → **Notifications**
+3. Find **Slack** under "Notification Channels"
+4. Click **Connect** or **Add Slack**
+5. Click **Authorize with Slack**
+
+You'll be redirected to Slack's authorization page.
+
+### Step 2: Grant Permissions
+
+On the Slack authorization page:
+
+1. Select your workspace from the dropdown (if you have multiple)
+2. Review the permissions ByteSend requests
+3. Click **Allow** to authorize
+
+**Permissions requested**:
+- Post messages to channels
+- Send direct messages
+- Access user profiles
+- Read workspace information
+
+### Step 3: Choose Notification Channel
+
+After authorization:
+
+1. Select which Slack channel receives notifications (e.g., #bytesend-alerts)
+2. Or choose to send direct messages to your Slack user
+3. Click **Save**
+
+### Test the Connection
+
+1. ByteSend will ask to send a test message
+2. Click **Send Test**
+3. Check your Slack channel or DMs for the test notification
+4. If successful, you're ready to receive alerts
+
+## Configuring Slack Alerts
+
+### Alert Types
+
+Choose which events trigger Slack notifications:
+
+- **Email Events**: Delivery, bounces, opens, clicks, failures
+- **Domain Management**: Verification status, DNS issues
+- **Team Changes**: Members added/removed, role changes
+- **Billing**: Limit warnings, payment failures, upgrades
+- **Security**: Suspicious activity, unusual login patterns
+- **API**: Rate limit warnings, quota updates
+- **Maintenance**: Scheduled downtime, updates
+
+### Notification Frequency
+
+- **Real-time**: Immediate notification as events occur
+- **Daily Digest**: Single message at end of day summarizing events
+- **Weekly Digest**: Single message summarizing the week's events
+- **Critical Only**: Only severe issues and errors
+
+**Recommendation**: Use real-time for critical alerts, digest for informational updates.
+
+### Message Formatting
+
+Slack messages include:
+
+**Email Delivery Alert**:
+```
+⚡ Email Bounced
+Team: Your Team
+Recipient: user@example.com
+Bounce Type: Permanent
+Time: May 9, 10:30 AM
+```
+
+**Team Member Alert**:
+```
+👥 New Team Member
+Name: John Doe
+Email: john@example.com
+Role: Editor
+Added by: Admin
+```
+
+All messages include a **View in Dashboard** link for quick access.
+
+## Managing Your Slack Connection
+
+### Update Alert Channel
+
+To change which channel receives alerts:
+
+1. Go to **Settings** → **Notifications** → **Slack**
+2. Click **Change Channel**
+3. Select a different channel
+4. Click **Save**
+
+### Pause Notifications
+
+To temporarily stop receiving Slack alerts:
+
+1. Go to **Settings** → **Notifications** → **Slack**
+2. Click **Pause**
+3. Notifications will stop
+4. Click **Resume** to re-enable
+
+### Disconnect Slack
+
+To remove the Slack integration:
+
+1. Go to **Settings** → **Notifications**
+2. Click **Disconnect** next to Slack
+3. Confirm the action
+4. ByteSend will no longer send Slack messages
+
+### Revoke in Slack
+
+To remove ByteSend from your Slack workspace:
+
+1. In Slack, click your workspace name (top left)
+2. Select **Settings & administration** → **Manage apps**
+3. Search for "ByteSend"
+4. Click **ByteSend**
+5. Click **Remove App**
+6. Confirm removal
+
+## Advanced Slack Configuration
+
+### Multiple Channels
+
+To send different alerts to different channels, you can:
+
+1. Disconnect the current Slack integration
+2. Reconnect and choose a different channel
+3. Or use a Slack workflow to route messages
+
+### Filtering for Your Team
+
+Configure which team members receive notifications:
+
+1. Go to **Settings** → **Notifications** → **Slack**
+2. Under "Notification Recipients", select team members
+3. Only selected members will be @mentioned in alerts
+4. Others can still see the message
+
+### Slack Workflow Integration
+
+Create Slack workflows triggered by ByteSend alerts:
+
+1. In your Slack channel, click the menu (⋯)
+2. Select **Automations**
+3. Create a workflow triggered by messages containing "ByteSend"
+4. Set up actions (create tasks, send emails, etc.)
+
+**Example Workflow**:
+- Trigger: Email delivery fails
+- Action: Create task in project management tool
+- Action: Notify #support channel
+
+### Message Threading
+
+Organize alerts by type:
+
+1. Reply to ByteSend messages to start threads
+2. Related alerts are grouped together
+3. Easy to track related issues
+4. Less channel clutter
+
+## Troubleshooting
+
+### Not Receiving Slack Notifications
+
+**Authorization issue**:
+- Disconnect and re-authorize ByteSend in Slack
+- Check that you have permissions to install apps
+- Try a different Slack workspace
+
+**Channel issue**:
+- Verify the bot can access the selected channel
+- Check channel permissions
+- Ensure the channel isn't archived
+- Try selecting a different channel
+
+**Settings issue**:
+- Verify alert types are enabled
+- Check notification frequency isn't set to "never"
+- Try sending a test message
+
+### Not a Member of Channel
+
+If you see "ByteSend cannot post to this channel":
+
+1. Manually join the channel in Slack
+2. Go back to ByteSend settings
+3. Reconnect/refresh Slack integration
+4. Try again
+
+### Connection Keeps Failing
+
+1. Disconnect Slack from ByteSend
+2. Revoke ByteSend in Slack app settings
+3. Clear your browser cache
+4. Reconnect from scratch
+5. Contact support if still failing
+
+### Too Many Notifications
+
+To reduce alert fatigue:
+
+1. Uncheck alert types you don't need
+2. Switch to digest mode
+3. Create a separate Slack workspace or channel for low-priority alerts
+4. Mute the channel during off-hours
+
+### Messages Not Formatting Correctly
+
+- Refresh your Slack window
+- Try disconnecting and reconnecting ByteSend
+- Update your Slack app to the latest version
+- Contact support if formatting still broken
+
+## Best Practices
+
+### Channel Organization
+
+- Create dedicated channels:
+  - `#bytesend-critical` for errors and urgent alerts
+  - `#bytesend-daily` for daily digests
+  - `#bytesend-team` for team and billing updates
+
+- Use channel descriptions: "Real-time ByteSend notifications"
+- Pin alert configuration docs
+
+### Alert Configuration
+
+- **Critical alerts** (email failures, payment issues): Real-time
+- **Important alerts** (domain issues, member changes): Daily digest
+- **Informational** (stats, updates): Weekly digest or custom channel
+
+### Team Communication
+
+- Establish response protocols for critical alerts
+- @mention relevant team members in threads
+- Document common alert meanings
+- Share alert guidelines with team
+
+### Privacy & Security
+
+- Don't share Slack channel links that contain sensitive info
+- Review who has access to notification channels
+- Rotate channel access as team changes
+- Archive old notifications periodically
+
+### Monitoring
+
+- Periodically review which alerts your team actually uses
+- Adjust settings monthly based on usage patterns
+- Evaluate if some alerts can be disabled
+- Consider consolidating channels
+
+## Next Steps
+
+- [Return to notification providers](/guides/notification-providers)
+- [Set up Discord notifications](/guides/discord-notifications)
+- [Manage all notifications](/settings/notifications)
+- [Configure team members](/guides/plan-management)
+- [Explore billing operations](/guides/admin-operations)

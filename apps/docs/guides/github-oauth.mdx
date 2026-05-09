@@ -1,0 +1,132 @@
+---
+title: GitHub OAuth Authentication
+description: "Secure your ByteSend account with GitHub OAuth single sign-on"
+icon: github
+---
+
+## Overview
+
+ByteSend now supports GitHub OAuth authentication, allowing you to securely sign in to your account using your GitHub credentials. This eliminates the need to manage separate passwords for ByteSend.
+
+## Benefits
+
+- **Single Sign-On**: Use your GitHub account to quickly access ByteSend
+- **Secure**: Leverage GitHub's industry-leading authentication infrastructure
+- **Convenient**: No additional passwords to remember
+- **Account Linking**: Connect existing ByteSend accounts to GitHub
+
+## Setting Up GitHub OAuth
+
+### Initial Login
+
+1. Visit [ByteSend Dashboard](https://bytesend.cloud)
+2. Click **Sign in with GitHub** on the login page
+3. You'll be redirected to GitHub's authorization page
+4. Review the requested permissions and click **Authorize ByteSend**
+5. You'll be redirected back to ByteSend and automatically logged in
+
+### First Time Setup
+
+On your first GitHub OAuth login, ByteSend will:
+- Create a new account associated with your GitHub profile
+- Use your GitHub username as your initial display name
+- Set up a default workspace for your account
+
+### Linking to Existing Account
+
+If you already have a ByteSend account:
+
+1. Sign out of your existing account
+2. Click **Sign in with GitHub**
+3. Complete the GitHub authorization
+4. After authorization, you'll be prompted to link your existing account
+5. Enter your existing ByteSend email and password to confirm
+6. Your accounts will be merged, and you'll use GitHub OAuth going forward
+
+## Permissions Requested
+
+ByteSend requests the following GitHub permissions:
+
+- **Public profile access**: To retrieve your GitHub username and profile picture
+- **Email access**: To verify your GitHub email address
+
+We **never** request access to your repositories or any private GitHub data.
+
+## Security Considerations
+
+### Token Storage
+
+- OAuth tokens are encrypted and stored securely
+- Tokens are never exposed in logs or API responses
+- Tokens are refreshed automatically when expired
+
+### Session Management
+
+- GitHub OAuth sessions automatically expire after a period of inactivity
+- You can revoke ByteSend's access at any time from your GitHub settings
+- Logging out of ByteSend will not affect your GitHub session
+
+### Revoking Access
+
+To revoke ByteSend's access to your GitHub account:
+
+1. Go to [GitHub Settings → Applications](https://github.com/settings/apps/authorizations)
+2. Find "ByteSend" in your authorized applications
+3. Click **Revoke** to disconnect the application
+4. You'll no longer be able to log in with GitHub until you re-authorize
+
+## Troubleshooting
+
+### "Authorization Failed" Error
+
+- Clear your browser cookies and try again
+- Ensure you're using a supported browser (Chrome, Firefox, Safari, Edge)
+- Check that your GitHub account has email verification enabled
+
+### GitHub Authorization Was Denied
+
+If you click "Cancel" during GitHub authorization:
+
+1. Return to the ByteSend login page
+2. Click **Sign in with GitHub** again
+3. Complete the authorization process
+
+### I Can't Find My Existing Account After Linking
+
+If your accounts didn't merge as expected:
+
+1. Contact [ByteSend Support](https://discord.gg/xqkqzVRC4S)
+2. We can manually verify and link your accounts
+3. Include the email address of both accounts in your support message
+
+## Best Practices
+
+### Account Security
+
+- Keep your GitHub account password secure
+- Enable two-factor authentication on your GitHub account for added security
+- Regularly review connected applications in your GitHub settings
+
+### Multiple Teams
+
+If you have multiple GitHub organizations:
+
+- Your ByteSend workspace is tied to your personal GitHub account
+- Team members can each use their own GitHub accounts to log in
+- Workspace access is managed through ByteSend team settings (not GitHub)
+
+### Switching Authentication Methods
+
+If you need to use traditional email/password authentication:
+
+1. Contact [ByteSend Support](https://discord.gg/xqkqzVRC4S)
+2. We can reset your authentication method
+3. You'll be able to set a traditional password
+
+## Next Steps
+
+After logging in with GitHub OAuth:
+
+- [Set up your first domain](/guides/getting-started)
+- [Explore the dashboard](https://bytesend.cloud/dashboard)
+- [Join our community](https://discord.gg/xqkqzVRC4S)

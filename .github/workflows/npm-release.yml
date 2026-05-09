@@ -1,12 +1,14 @@
 name: Release JS Packages
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches:
       - main
     paths:
-      - "packages/sdk/**" # Trigger only changes in packages
-      - ".github/workflows/npm-release.yml"
+      - "packages/sdk/**"
   workflow_dispatch:
 
 permissions:

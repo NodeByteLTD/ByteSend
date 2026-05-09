@@ -5,6 +5,9 @@
 # https://github.com/actions/stale
 name: Mark stale issues and pull requests
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   schedule:
   - cron: '23 13 * * *'
