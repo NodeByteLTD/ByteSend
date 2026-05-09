@@ -65,7 +65,7 @@ export const suppressionRouter = createTRPCRouter({
   removeSuppression: teamProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        email: z.string().trim().min(1),
       })
     )
     .mutation(async ({ ctx, input }) => {

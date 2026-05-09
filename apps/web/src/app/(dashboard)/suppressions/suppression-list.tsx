@@ -111,7 +111,7 @@ export default function SuppressionList() {
 
   const confirmRemove = async () => {
     if (emailToRemove) {
-      await removeMutation.mutateAsync({ email: emailToRemove });
+      await removeMutation.mutateAsync({ email: emailToRemove.trim() });
     }
   };
 
