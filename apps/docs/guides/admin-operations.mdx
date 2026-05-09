@@ -1,0 +1,325 @@
+---
+title: Admin Operations & Billing
+description: "Manage billing operations and admin settings for your ByteSend account"
+icon: shield-admin
+---
+
+## Overview
+
+Admin operations allow you to manage billing, team permissions, and advanced account settings. These features are only available to users with Admin role.
+
+## Admin Capabilities
+
+### Account Administration
+
+**Team Member Management**:
+- Add and remove team members
+- Assign and modify roles (Admin, Editor, Viewer)
+- View member activity and last login information
+- Manage pending invitations
+
+**Plan & Billing Management**:
+- View current plan and usage
+- Upgrade or downgrade plans
+- Access billing history and invoices
+- Update payment methods
+- Set up billing notifications
+
+**Workspace Settings**:
+- Configure account name and branding
+- Manage API keys
+- Set security policies
+- Configure notification channels
+
+## Billing Management
+
+### Accessing Billing
+
+1. Log in to [ByteSend Dashboard](https://bytesend.cloud)
+2. Navigate to **Settings** → **Billing**
+3. View current plan, usage, and invoices
+
+### Current Plan Information
+
+The billing dashboard shows:
+- **Active Plan**: Your current subscription level
+- **Monthly Usage**: Emails sent vs. plan limit
+- **Team Members**: Used vs. plan limit
+- **Verified Domains**: Used vs. plan limit
+- **Renewal Date**: When your next billing cycle begins
+- **Cost**: Monthly/annual amount
+
+### Upgrading Your Plan
+
+#### Automatic Plan Limits
+
+Each plan comes with specific limits:
+
+**Free Plan**:
+- 100 emails/month
+- 1 domain
+- 1 team member
+- 7-day history
+
+**BASIC Plan**:
+- 100,000 emails/month
+- 12 domains
+- 30 team members
+- 90-day history
+
+**LIFETIME Plan**:
+- 500,000 emails/month
+- 30 domains
+- 100 team members
+- Unlimited history
+
+#### When to Upgrade
+
+You should upgrade when:
+- Approaching your monthly email limit
+- Need more verified domains
+- Adding team members
+- Need longer message history
+
+**To upgrade**:
+
+1. Go to **Settings** → **Billing** → **Plans**
+2. Click **Upgrade Plan**
+3. Select your desired plan
+4. Review the changes
+5. Enter payment details
+6. Confirm upgrade
+7. Changes take effect immediately
+
+<Tip>
+If upgrading mid-month to BASIC, remaining months credit to your account. Upgrading to LIFETIME is a flat one-time fee regardless of your billing cycle.
+</Tip>
+
+### Downgrading Your Plan
+
+<Warning>
+Downgrading may impact your account if you exceed free tier limits. For example, extra team members will be archived.
+</Warning>
+
+**To downgrade**:
+
+1. Go to **Settings** → **Billing**
+2. Click **Downgrade Plan**
+3. Review what will change
+4. Confirm the downgrade
+5. Changes take effect at the end of your current billing cycle
+
+### Managing Payment Methods
+
+#### Adding a Payment Method
+
+1. Go to **Settings** → **Billing** → **Payment Methods**
+2. Click **Add Payment Method**
+3. Select payment type (Credit Card / PayPal)
+4. Enter payment details
+5. Click **Save**
+
+#### Changing Default Payment Method
+
+1. Go to **Settings** → **Billing** → **Payment Methods**
+2. Click **Set as Default** next to the desired method
+3. Future charges will use this method
+
+#### Removing Payment Method
+
+1. Go to **Settings** → **Billing** → **Payment Methods**
+2. Click **Remove** next to the method
+3. Ensure another method is set as default
+4. Method is removed from your account
+
+#### Failed Payment Recovery
+
+If a payment fails:
+- You'll receive an email notification
+- Retry within 5 days to avoid service interruption
+- Update your payment method if the card was declined
+- Contact support if the issue persists
+
+### Invoices & Billing History
+
+#### Viewing Invoices
+
+1. Go to **Settings** → **Billing** → **Invoices**
+2. Click on any invoice to view details
+3. View PDF or download for records
+
+#### Invoice Details
+
+Each invoice includes:
+- Invoice number and date
+- Billing period
+- Plan and pricing
+- Any prorated charges/credits
+- Total amount due
+- Payment status
+
+#### Downloading Invoices
+
+1. Click the invoice you want
+2. Click **Download PDF**
+3. Invoice is saved to your computer
+4. Keep for your records and accounting
+
+### Tax Information
+
+#### Adding Tax Details
+
+1. Go to **Settings** → **Billing** → **Tax**
+2. Enter your tax ID or business number
+3. Select your country/region
+4. Click **Save**
+
+#### Tax Calculation
+
+- Tax is applied based on your billing location
+- Tax ID may exempt you from VAT/GST
+- Tax information appears on your invoices
+
+## Team Permissions & Roles
+
+### Admin Role
+
+**Capabilities**:
+- Add/remove team members
+- Change member roles
+- Access all account settings
+- Manage billing and payment methods
+- View all team activity
+- Create and manage API keys
+- Configure notifications
+
+**Best for**: Account owners, billing contacts, senior team members
+
+### Editor Role
+
+**Capabilities**:
+- Create and edit campaigns
+- Manage email templates
+- Verify new domains
+- Create webhooks
+- View analytics and reports
+- Access API with owned keys
+
+**Restrictions**: Cannot manage team members, billing, or settings
+
+**Best for**: Team members actively managing emails
+
+### Viewer Role
+
+**Capabilities**:
+- View campaigns and reports
+- View analytics and dashboards
+- Read-only access to settings
+- Cannot make changes
+
+**Restrictions**: Cannot send emails, create campaigns, or modify settings
+
+**Best for**: Stakeholders, clients, observers
+
+## Security & Compliance
+
+### Two-Factor Authentication
+
+For GitHub OAuth users:
+- Enable 2FA on your GitHub account
+- [GitHub 2FA setup](https://github.com/settings/security)
+
+### API Key Management
+
+Admin admins should:
+- Regularly audit active API keys
+- Revoke old or unused keys
+- Use different keys for different environments
+- Never share keys with team members
+- Store keys in environment variables
+
+### Audit Logs
+
+Monitor admin actions:
+- Team member additions/removals
+- Plan changes
+- Payment method updates
+- API key generation/revocation
+
+<Tip>
+Keep audit logs for compliance and security purposes. Consider setting up webhook notifications for admin activity.
+</Tip>
+
+## Compliance & Business Management
+
+### Canceling Your Account
+
+To cancel your ByteSend account:
+
+1. Go to **Settings** → **Billing**
+2. Click **Cancel Account**
+3. Select reason for cancellation
+4. Confirm the action
+5. Your account will be deactivated
+
+<Warning>
+Account cancellation is permanent. All data will be deleted after 30 days. Export any data you need before canceling.
+</Warning>
+
+### Data Export
+
+To export your data before leaving:
+
+1. Go to **Settings** → **Data**
+2. Click **Export All Data**
+3. Select data types to export (campaigns, contacts, logs, etc.)
+4. Download the exported files (CSV/JSON format)
+
+### GDPR & Data Privacy
+
+ByteSend complies with:
+- GDPR (General Data Protection Regulation)
+- CCPA (California Consumer Privacy Act)
+- PIPEDA (Personal Information Protection and Electronic Documents Act)
+
+For privacy inquiries:
+- Contact [privacy@bytesend.cloud](mailto:privacy@bytesend.cloud)
+- Submit requests via [Privacy Center](https://bytesend.cloud/privacy)
+
+## Troubleshooting
+
+### Payment Declined
+
+- Verify card details are correct
+- Check if card is expired
+- Confirm available credit/funds
+- Try a different payment method
+- Contact your bank to ensure no fraud blocks
+
+### Can't Access Billing Settings
+
+- Verify you have Admin role
+- Check that your account is active
+- Try logging out and back in
+- Contact support if issue persists
+
+### Need an Invoice
+
+1. Go to **Settings** → **Billing** → **Invoices**
+2. Find the invoice you need
+3. Click **Download PDF**
+4. If invoice is missing, contact support
+
+### Upgrade Not Applied
+
+- Confirm payment was successful
+- Check that plan change is showing in dashboard
+- Try refreshing the page
+- Contact support if still not showing
+
+## Next Steps
+
+- [Manage your team members](/guides/plan-management)
+- [Configure notification alerts](/settings/notifications)
+- [Explore your usage](/settings/usage)
+- [Contact support](https://discord.gg/xqkqzVRC4S)

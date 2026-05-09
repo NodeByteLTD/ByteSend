@@ -1,12 +1,14 @@
-name: Release JS Packages
+name: Relase Node SDK
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   push:
     branches:
       - main
     paths:
-      - "packages/sdk/**" # Trigger only changes in packages
-      - ".github/workflows/npm-release.yml"
+      - "packages/sdk/**"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js 20.x
         uses: actions/setup-node@v4
@@ -43,18 +45,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Publish with Trusted Publishing (OIDC)
-        if: ${{ secrets.NPM_TOKEN == '' }}
-        working-directory: packages/sdk
-        run: |
-          pnpm run build
-          npm publish --access public --no-git-checks --provenance
-
-      - name: Publish with NPM token
-        if: ${{ secrets.NPM_TOKEN != '' }}
+      - name: Publish package
         working-directory: packages/sdk
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           pnpm run build
-          npm publish --access public --no-git-checks
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            npm publish --access public --no-git-checks
+          else
+            npm publish --access public --no-git-checks --provenance
+          fi

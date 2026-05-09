@@ -3,14 +3,14 @@
   "theme": "mint",
   "name": "ByteSend",
   "colors": {
-    "primary": "#144B90",
-    "light": "#DBEAFE",
-    "dark": "#4395F9"
+    "primary": "#0066CC",
+    "light": "#E6F2FF",
+    "dark": "#3D9FFF"
   },
   "background": {
     "color": {
-      "light": "#F5F7FA",
-      "dark": "#101120"
+      "light": "#F8F9FB",
+      "dark": "#0A0E1A"
     }
   },
   "fonts": {
@@ -33,6 +33,7 @@
               "introduction",
               "get-started/smtp",
               "get-started/nodejs",
+              "get-started/python",
               "get-started/local",
               "get-started/set-up-docker"
             ]
@@ -59,7 +60,30 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "User Guides",
+            "group": "Account & Authentication",
+            "pages": [
+              "guides/github-oauth",
+              "guides/api-authentication"
+            ]
+          },
+          {
+            "group": "Account & Billing",
+            "pages": [
+              "guides/plans-and-pricing",
+              "guides/plan-management",
+              "guides/admin-operations"
+            ]
+          },
+          {
+            "group": "Notifications & Alerts",
+            "pages": [
+              "guides/notification-providers",
+              "guides/discord-notifications",
+              "guides/slack-notifications"
+            ]
+          },
+          {
+            "group": "Integration Guides",
             "pages": [
               "guides/webhooks",
               "guides/double-opt-in",

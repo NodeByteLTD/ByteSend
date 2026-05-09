@@ -1,0 +1,247 @@
+---
+title: Notification Providers
+description: "Set up real-time alerts through Discord, Slack, Telegram, Teams, or custom webhooks"
+icon: bell
+---
+
+## Overview
+
+ByteSend supports multiple notification providers for real-time alerts about your account activity. Choose from Discord, Slack, Microsoft Teams, Telegram, or custom webhooks to receive notifications where you work.
+
+## Supported Providers
+
+- **Discord**: Direct messages and channel notifications
+- **Slack**: Channel and direct message alerts
+- **Microsoft Teams**: Team channel notifications
+- **Telegram**: Direct Telegram messages
+- **Webhook**: Custom JSON webhooks for programmatic handling
+
+## General Setup
+
+All notification providers follow a similar setup pattern:
+
+1. Log in to [ByteSend Dashboard](https://bytesend.cloud)
+2. Navigate to **Settings** → **Notifications**
+3. Find your desired provider under "Notification Channels"
+4. Click **Connect** or **Configure**
+5. Follow the provider-specific setup steps
+6. Test the connection
+7. Choose which alerts to receive
+
+## Alert Types
+
+Available notification triggers:
+
+- **Email Delivery Issues**: Emails failing to send or bounce
+- **Domain Problems**: Domain verification failures or DNS issues
+- **Team Changes**: Members added, removed, or roles changed
+- **Billing Alerts**: Plan limit warnings, payment failures
+- **Security Events**: Unusual activity, login attempts
+- **API Quota**: Approaching rate limits or quota
+- **Maintenance**: Scheduled maintenance notifications
+
+## Provider Setup Guides
+
+### Discord Notifications
+
+See [Discord Notifications](/guides/discord-notifications) for detailed setup instructions.
+
+**Quick Setup**:
+1. Create a Discord webhook in your server
+2. Go to **Settings** → **Notifications** → **Discord**
+3. Paste your webhook URL
+4. Choose alert types
+5. Click **Test** to verify connection
+
+### Slack Notifications
+
+See [Slack Notifications](/guides/slack-notifications) for detailed setup instructions.
+
+**Quick Setup**:
+1. Authorize ByteSend in Slack
+2. Select the channel for alerts
+3. Go to **Settings** → **Notifications** → **Slack**
+4. Confirm the connection
+5. Choose alert types
+
+### Microsoft Teams
+
+**Setup**:
+1. In Teams, navigate to your desired channel
+2. Click **⋯ More options** → **Connectors** → **Configure**
+3. Search for "Webhook" and click **Configure**
+4. Give your webhook a name
+5. Copy the webhook URL
+6. Go to **Settings** → **Notifications** → **Teams**
+7. Paste the webhook URL
+8. Select alert types
+
+**Testing**:
+- Click **Send Test Message** to verify the connection
+- You should see a test message in your Teams channel
+
+### Telegram
+
+**Prerequisites**:
+- Telegram account (download from [telegram.org](https://telegram.org))
+- ByteSend Bot username
+
+**Setup**:
+1. Open Telegram and search for "@ByteSendBot"
+2. Click **Start** to initiate the bot
+3. The bot will provide a unique code
+4. Go to **Settings** → **Notifications** → **Telegram**
+5. Enter the code provided by the bot
+6. Click **Verify**
+7. Select which alerts to receive
+
+**Receiving Alerts**:
+- Notifications appear as direct messages from @ByteSendBot
+- Choose between real-time or daily digest mode
+- Reply to mute or configure alerts directly in Telegram
+
+### Custom Webhooks
+
+For advanced users who need programmatic handling of alerts.
+
+**Setup**:
+1. Go to **Settings** → **Notifications** → **Custom Webhook**
+2. Enter your webhook URL
+3. (Optional) Add authentication headers or query parameters
+4. Select alert types
+5. Click **Test Webhook** to verify
+
+**Webhook Payload Format**:
+
+```json
+{
+  "event": "email_failed",
+  "timestamp": "2024-05-09T10:30:00Z",
+  "severity": "error",
+  "details": {
+    "email_id": "email_12345",
+    "recipient": "user@example.com",
+    "reason": "bounced",
+    "team_id": "team_789"
+  }
+}
+```
+
+**Event Types**:
+- `email_delivered`, `email_failed`, `email_bounced`
+- `domain_verified`, `domain_verification_failed`
+- `member_added`, `member_removed`, `role_changed`
+- `plan_limit_warning`, `payment_failed`
+- `security_alert`, `unusual_activity`
+- `quota_warning`, `maintenance_notice`
+
+**Retry Logic**:
+- Failed webhooks are automatically retried up to 5 times
+- Retry backoff: 1s, 5s, 30s, 2min, 5min
+- Webhook timeout: 30 seconds
+
+## Managing Notifications
+
+### Enable/Disable Providers
+
+1. Go to **Settings** → **Notifications**
+2. Toggle providers on/off as needed
+3. Disabled providers won't send notifications
+
+### Configure Alert Preferences
+
+For each provider:
+1. Click **Configure** or the settings icon
+2. Check/uncheck alert types you want to receive
+3. Set delivery frequency (real-time, daily, weekly)
+4. Click **Save**
+
+### Test Connection
+
+Before relying on a provider:
+1. Click **Test** next to any connected provider
+2. Should immediately receive a test notification
+3. If no notification, check webhook URL or permissions
+
+### Remove Provider
+
+1. Go to **Settings** → **Notifications**
+2. Click **Disconnect** next to the provider
+3. Confirm removal
+4. Notifications will no longer be sent to that provider
+
+## Notification Best Practices
+
+### Set Up Multiple Providers
+
+- Use Discord/Slack for immediate team alerts
+- Use email for important billing notifications
+- Use Telegram for critical issues
+- Use webhooks for integration with your systems
+
+### Configure Alert Levels
+
+- **Critical** (billing, security): All channels
+- **Important** (domain issues): Slack + email
+- **Info** (stats, updates): Discord only
+
+### Alert Fatigue Prevention
+
+- Don't subscribe to every alert type
+- Use digest mode for low-priority notifications
+- Set specific channel for specific alert types
+- Review and clean up unused providers
+
+### Testing in Development
+
+- Use separate webhooks/channels for development vs. production
+- Clearly label test notifications
+- Test provider connectivity before production deployment
+
+## Troubleshooting
+
+### Not Receiving Notifications
+
+**Discord**:
+- Verify webhook URL is correct
+- Check bot has channel permissions
+- Try sending a test message
+
+**Slack**:
+- Confirm ByteSend is authorized
+- Check bot permissions in channel settings
+- Verify channel isn't muted
+
+**Telegram**:
+- Ensure you've replied "Start" to the bot
+- Check that notifications aren't muted in Telegram
+- Verify your code hasn't expired
+
+**Webhook**:
+- Check endpoint is publicly accessible
+- Verify SSL certificate is valid (for HTTPS)
+- Review webhook logs for POST requests
+- Confirm HTTP status code is 200-299
+
+### Webhook Returning Errors
+
+- **400 Bad Request**: Check JSON payload format
+- **401 Unauthorized**: Verify API key/auth headers
+- **403 Forbidden**: Check permission scopes
+- **500 Server Error**: Investigate endpoint logs
+- **Timeout**: Check endpoint performance
+
+### Too Many Notifications
+
+1. Go to **Settings** → **Notifications**
+2. Click **Configure** for the provider
+3. Uncheck alert types you don't need
+4. Switch to digest mode if available
+5. Consider consolidating providers
+
+## Next Steps
+
+- [Set up Discord notifications](/guides/discord-notifications)
+- [Set up Slack notifications](/guides/slack-notifications)
+- [Manage your team members](/guides/plan-management)
+- [Return to settings](/settings/notifications)

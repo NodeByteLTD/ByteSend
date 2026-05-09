@@ -1,41 +1,234 @@
----
 title: Introduction
 description: "ByteSend is a developer-friendly alternative to Resend, Sendgrid, Mailgun, and Postmark."
 icon: rocket
----
 
-## Setting up
 
-Quicklinks to set up your account and get started
+## Welcome to ByteSend
+
+ByteSend is a powerful, open-source email delivery platform designed for developers. Send transactional and marketing emails reliably with a simple REST API, SMTP support, and comprehensive analytics.
+
+## What's New in v0.2.5
+
+**Smarter Billing, Better Alerts**
+
+- **GitHub OAuth**: Secure single sign-on with your GitHub account
+- **Notification Providers**: Real-time alerts via Discord, Slack, Microsoft Teams, Telegram, and webhooks
+- **Enhanced Admin Controls**: Better team and billing management
+- **Flexible Pricing**: BASIC and LIFETIME plans with adjusted limits
+- **Restructured Settings**: Cleaner, more intuitive account management
+
+## Getting Started
 
 <CardGroup col={2}>
   <Card
-    title="Add domain"
+    title="Add Domain"
     icon="globe"
     href="https://bytesend.cloud/domains"
   >
-  Add domains to send emails
+    Add domains to send emails. We'll guide you through verification.
   </Card>
 
   <Card
-    title="Create API key"
+    title="Create API Key"
     icon="key"
     href="https://bytesend.cloud/dev-settings/api-keys"
   >
-    Generate API key to send emails from your app.
+    Generate an API key to start sending emails from your app.
   </Card>
+
   <Card
-    title="Try our API"
-    icon="code"
-    href="/api-reference/introduction"
+    title="Send Your First Email"
+    icon="paper-plane"
+    href="/api-reference/emails/send-email"
   >
-    Learn how to use our API to send emails programmatically.
+    Send a test email using the REST API or SDK.
   </Card>
-    <Card
-    title="SMTP support"
+
+  <Card
+    title="SMTP Support"
     icon="envelope"
     href="/get-started/smtp"
   >
-    Send emails with SMTP server instead of REST API.
+    Prefer SMTP? Connect via our SMTP server.
   </Card>
 </CardGroup>
+
+## Authentication & Security
+
+<CardGroup col={2}>
+  <Card
+    title="GitHub OAuth"
+    icon="github"
+    href="/guides/github-oauth"
+  >
+    Sign in securely with your GitHub account.
+  </Card>
+
+  <Card
+    title="API Authentication"
+    icon="lock"
+    href="/guides/api-authentication"
+  >
+    Learn how to authenticate API requests with your API key.
+  </Card>
+</CardGroup>
+
+## Account & Billing
+
+<CardGroup col={2}>
+  <Card
+    title="Plans & Pricing"
+    icon="credit-card"
+    href="/guides/plans-and-pricing"
+  >
+    Choose the plan that fits your needs (Free, BASIC, or LIFETIME).
+  </Card>
+
+  <Card
+    title="Plan Management"
+    icon="users"
+    href="/guides/plan-management"
+  >
+    Manage team members, settings, and account preferences.
+  </Card>
+
+  <Card
+    title="Admin Operations"
+    icon="shield-admin"
+    href="/guides/admin-operations"
+  >
+    Advanced billing and team administration features.
+  </Card>
+</CardGroup>
+
+## Notifications & Alerts
+
+Set up real-time notifications for your team across multiple platforms:
+
+<CardGroup col={3}>
+  <Card
+    title="Notification Providers"
+    icon="bell"
+    href="/guides/notification-providers"
+  >
+    Overview of all notification options.
+  </Card>
+
+  <Card
+    title="Discord Alerts"
+    icon="discord"
+    href="/guides/discord-notifications"
+  >
+    Receive alerts in your Discord server.
+  </Card>
+
+  <Card
+    title="Slack Integration"
+    icon="slack"
+    href="/guides/slack-notifications"
+  >
+    Send alerts to your Slack workspace.
+  </Card>
+</CardGroup>
+
+## Integration Guides
+
+<CardGroup col={2}>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/guides/webhooks"
+  >
+    Receive real-time notifications about email events.
+  </Card>
+
+  <Card
+    title="React Email"
+    icon="react"
+    href="/guides/use-with-react-email"
+  >
+    Build beautiful emails with React Email and ByteSend.
+  </Card>
+
+  <Card
+    title="Double Opt-In"
+    icon="checkbox"
+    href="/guides/double-opt-in"
+  >
+    Implement compliant double opt-in flows.
+  </Card>
+
+  <Card
+    title="Campaign Personalization"
+    icon="sparkles"
+    href="/guides/campaign-personalization"
+  >
+    Create personalized email campaigns at scale.
+  </Card>
+</CardGroup>
+
+## API Reference
+
+<CardGroup>
+  <Card
+    title="API Documentation"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    Explore the complete ByteSend REST API with interactive examples.
+  </Card>
+</CardGroup>
+
+## Self-Hosting
+
+Want to run ByteSend on your own infrastructure?
+
+<CardGroup col={2}>
+  <Card
+    title="Self-Hosting Guide"
+    icon="server"
+    href="/self-hosting/overview"
+  >
+    Complete guide to self-host ByteSend with Docker or bare-metal.
+  </Card>
+
+  <Card
+    title="SMTP Server Setup"
+    icon="envelope"
+    href="/self-hosting/smtp-server"
+  >
+    Set up the ByteSend SMTP server.
+  </Card>
+
+  <Card
+    title="Security"
+    icon="shield"
+    href="/self-hosting/security"
+  >
+    Security considerations for self-hosted deployments.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+- **Easy Integration**: Simple REST API, JavaScript/Python SDKs, and SMTP support
+- **Real-time Analytics**: Track delivery, opens, clicks, bounces, and more
+- **Team Collaboration**: Add team members with role-based access control
+- **Flexible Billing**: Pay-as-you-go or lifetime access
+- **Developer Friendly**: Full API documentation, code examples, and webhooks
+- **Open Source**: Self-host or use our managed cloud platform
+- **Notifications**: Discord, Slack, Teams, Telegram, and custom webhooks
+
+## Quick Links
+
+- [View GitHub Repository](https://github.com/NodeByteLTD/ByteSend)
+- [Join Community Discord](https://discord.gg/xqkqzVRC4S)
+- [Follow on Twitter](https://twitter.com/TryByteSend)
+- [Dashboard](https://bytesend.cloud)
+
+## Need Help?
+
+- Browse the [API Reference](/api-reference/introduction)
+- Check out [Integration Guides](/guides/webhooks)
+- Join our [Community Discord](https://discord.gg/xqkqzVRC4S)
+- View [GitHub Discussions](https://github.com/NodeByteLTD/ByteSend/discussions)

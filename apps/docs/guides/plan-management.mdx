@@ -1,0 +1,229 @@
+---
+title: Plan Management
+description: "Manage your team, members, and account settings in ByteSend"
+icon: users
+---
+
+## Overview
+
+The **Settings** panel in ByteSend allows you to manage your account, team members, and workspace preferences. Access settings by clicking your profile menu and selecting **Settings**.
+
+## Settings Tabs
+
+### General
+
+Manage your account basics and API keys.
+
+**Account Information**:
+- Display name
+- Email address
+- Profile picture
+- Account creation date
+
+**API Keys**:
+- Generate new API keys for development and production
+- View key creation date and last used timestamp
+- Revoke old or unused keys
+
+### Members
+
+Manage team members and their access levels.
+
+#### Adding Team Members
+
+1. Navigate to **Settings** → **Members**
+2. Click **Invite Member**
+3. Enter the team member's email address
+4. Select their role:
+   - **Admin**: Full access to all features and settings
+   - **Editor**: Can manage campaigns, domains, and templates
+   - **Viewer**: Read-only access to reports and analytics
+5. Click **Send Invite**
+6. The member will receive an email invitation and can accept it to join
+
+#### Member Roles
+
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access, manage team members, billing, settings |
+| **Editor** | Create/edit campaigns, manage templates, view analytics |
+| **Viewer** | View reports, analytics, and read-only access |
+
+#### Removing Members
+
+1. Go to **Settings** → **Members**
+2. Find the member to remove
+3. Click **Remove Member**
+4. Confirm the action
+5. The member loses access immediately
+
+#### Changing Member Roles
+
+1. In **Settings** → **Members**, find the member
+2. Click the role dropdown
+3. Select the new role
+4. Changes apply immediately
+
+### Usage
+
+Track your account usage and resource consumption.
+
+**Overview**:
+- Current email volume used this month
+- Verified domains count
+- Team members count
+- Webhooks count
+- Storage usage
+
+**Resource Breakdown**:
+- **Domains**: List of all verified domains with verification status
+- **Webhooks**: Active webhooks with recent activity
+- **Team Members**: Active team members and pending invitations
+
+**Upgrading**:
+- See your current plan limits
+- Link to upgrade to a higher plan if approaching limits
+
+### Notifications
+
+Configure alert preferences and notification methods.
+
+#### Alert Preferences
+
+Choose what events trigger notifications:
+- Emails failing to send
+- Domain verification issues
+- Billing alerts
+- Security events
+- API quota warnings
+- Team member additions/removals
+
+#### Notification Channels
+
+Choose how you receive alerts:
+
+**Email Notifications**:
+- Receive alerts to your registered email
+- Customizable digest frequency (real-time, daily, weekly)
+- Unsubscribe from specific alert types
+
+**Discord Notifications**:
+- Connect your Discord server
+- Receive real-time alerts in a dedicated channel
+- Requires Discord webhook setup
+
+**Slack Notifications**:
+- Connect your Slack workspace
+- Receive alerts in a designated Slack channel
+- Requires Slack app authorization
+
+**Webhook Notifications**:
+- Set up custom webhooks for all events
+- Receive JSON payloads for programmatic handling
+- Retry logic for failed deliveries
+
+**Telegram Notifications**:
+- Connect your Telegram account
+- Receive direct messages for critical alerts
+- Optional alerts for all events
+
+#### Setting Up Notification Providers
+
+For detailed setup instructions:
+- [Discord Notifications](/guides/discord-notifications)
+- [Slack Notifications](/guides/slack-notifications)
+- [Notification Providers Overview](/guides/notification-providers)
+
+## Team Management Best Practices
+
+### Organizing Your Team
+
+**Small Teams (1-5 members)**:
+- Most team members can be Editors
+- Have one Admin for account management
+- Use Viewer role for observers/clients
+
+**Growing Teams (6-30 members)**:
+- Designate 2-3 Admins for redundancy
+- Use Editor role for active contributors
+- Use Viewer role for stakeholders and reporting
+
+**Large Teams (30+ members)**:
+- Multiple Admins by function (Billing Admin, Technical Admin)
+- Use roles strategically based on responsibilities
+- Use API keys for system integrations instead of personal accounts
+
+### Security Best Practices
+
+- **Remove inactive members promptly** to maintain security
+- **Use strong passwords** and enable 2FA on your GitHub account (for GitHub OAuth users)
+- **Rotate admin roles** to prevent over-privileging
+- **Review team members regularly** in your monthly management checklist
+- **Use different API keys** for different integrations
+- **Never share API keys** between team members — generate individual keys
+
+### Offboarding Team Members
+
+When a team member leaves:
+
+1. Remove their account from **Settings** → **Members**
+2. Revoke any API keys they created
+3. Transfer ownership of critical campaigns/templates
+4. Update GitHub OAuth settings if applicable
+5. Document which features they managed
+
+## Account Security
+
+### Password & Authentication
+
+If using email/password authentication:
+- Change your password regularly (every 90 days recommended)
+- Use a strong, unique password
+- Never share your password with team members
+
+If using GitHub OAuth:
+- [Enable 2FA on your GitHub account](https://github.com/settings/security)
+- [Review connected applications](https://github.com/settings/apps/authorizations)
+- Revoke ByteSend access if switching providers
+
+### Session Management
+
+- Active sessions are displayed in your security settings
+- Sign out from all devices if suspicious activity is detected
+- Sessions automatically expire after 30 days of inactivity
+
+## Troubleshooting
+
+### Can't Add Team Members
+
+- Verify the email address is correct
+- Check that the invite hasn't already been sent
+- Ensure your plan allows the number of team members (free plan = 1 member)
+
+### Member Didn't Receive Invitation
+
+- Check their spam/junk folder
+- Ask them to sign up directly at [ByteSend](https://bytesend.cloud)
+- Resend the invitation from the settings panel
+
+### Need to Change Someone's Role
+
+1. Go to **Settings** → **Members**
+2. Click the role dropdown for that member
+3. Select the new role
+4. Changes take effect immediately
+
+### Forgotten Password
+
+1. Click **Forgot Password** on the login page
+2. Enter your email address
+3. Check your email for the reset link
+4. Click the link and set a new password
+5. Log in with your new password
+
+## Next Steps
+
+- [View your usage](/settings/usage)
+- [Set up notifications](/settings/notifications)
+- [Upgrade your plan](/guides/plans-and-pricing)
+- [Configure notification providers](/guides/notification-providers)

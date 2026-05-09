@@ -1,5 +1,8 @@
 name: Publish Docker
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches:
@@ -36,25 +39,28 @@ jobs:
             context: ./apps/smtp-server
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -93,9 +99,9 @@ jobs:
           IMAGE_TAG_ARGS=""
           for TAG in $TAGS; do
             IMAGE_TAG_ARGS="$IMAGE_TAG_ARGS -t bytesend/$APP-$BUILD_PLATFORM:$TAG -t ghcr.io/bytesend/$APP-$BUILD_PLATFORM:$TAG"
-            # Clean up any existing platform-specific tags to avoid manifest conflicts on re-run
-            docker manifest rm bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
-            docker manifest rm ghcr.io/bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
+            # Remove remote tags (single image or manifest list) so re-runs can safely republish.
+            docker buildx imagetools rm bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
+            docker buildx imagetools rm ghcr.io/bytesend/$APP-$BUILD_PLATFORM:$TAG 2>/dev/null || true
           done
 
           docker buildx build \
@@ -117,19 +123,19 @@ jobs:
     needs: build_and_publish_platform_containers
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref }}
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -157,10 +163,10 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
-              # Clean up any existing manifests (allows re-running without failures)
-              docker manifest rm bytesend/$APP_NAME:$TAG 2>/dev/null || true
-              docker manifest rm bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
-              docker manifest rm bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
+              # Remove remote tags/manifests first so reruns are idempotent.
+              docker buildx imagetools rm bytesend/$APP_NAME:$TAG 2>/dev/null || true
+              docker buildx imagetools rm bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
+              docker buildx imagetools rm bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
               
               docker manifest create \
                 bytesend/$APP_NAME:$TAG \
@@ -193,10 +199,10 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
-              # Clean up any existing manifests (allows re-running without failures)
-              docker manifest rm ghcr.io/bytesend/$APP_NAME:$TAG 2>/dev/null || true
-              docker manifest rm ghcr.io/bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
-              docker manifest rm ghcr.io/bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
+              # Remove remote tags/manifests first so reruns are idempotent.
+              docker buildx imagetools rm ghcr.io/bytesend/$APP_NAME:$TAG 2>/dev/null || true
+              docker buildx imagetools rm ghcr.io/bytesend/$APP_NAME-amd64:$TAG 2>/dev/null || true
+              docker buildx imagetools rm ghcr.io/bytesend/$APP_NAME-arm64:$TAG 2>/dev/null || true
               
               docker manifest create \
                 ghcr.io/bytesend/$APP_NAME:$TAG \

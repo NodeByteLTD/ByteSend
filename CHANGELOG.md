@@ -40,7 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Issue summary workflow** — added `.github/workflows/issue-summary.yml` to automatically summarize newly opened issues
 - **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
 - **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
-- **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` on pushes to `main` and manual dispatch
+- **JavaScript SDK release workflow** — added `.github/workflows/npm-release.yml` to build and publish the `bytesend-js` package from `packages/sdk` changes on `main` (plus manual dispatch)
+- **Python SDK release workflow** — added `.github/workflows/pypi-release.yml` to build and publish the `bytesend-python` package from `packages/python-sdk` on pushes to `main` and manual dispatch
 
 #### Community / Governance
 - **Repository security policy** — added `.github/SECURITY.md` with supported versions, private reporting process, and response expectations
@@ -73,6 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SMTP docs refreshed for monorepo paths** — clone/build/deployment documentation now references `NodeByteLTD/ByteSend` and `apps/smtp-server` paths throughout
 - **SMTP quickstart clarified** — get-started docs now direct users to use their configured SMTP username (default `bytesend`) rather than implying only a fixed username
 - **Core docs/readme refresh** — updated main README and docs navigation/content pages for current monorepo structure and self-hosting guidance (`apps/docs/README.md`, `apps/docs/docs.json`, local/docker/self-hosting guide pages)
+- **Feature docs expansion** — added new guides for GitHub OAuth, API authentication, plans/pricing, plan management, admin operations, and notification providers (`apps/docs/guides/*`)
+- **Mintlify branding refresh** — updated `apps/docs/docs.json` theme colors/navigation and expanded `apps/docs/introduction.mdx` to surface new billing, alerting, and auth capabilities
 
 #### References
 - **Internal references expanded** — added `.references/README.md`, `smtp-auth-and-operations.md`, `release-playbook.md`, and `repository-governance.md`
@@ -87,10 +90,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Website test workflow tuning** — adjusted website test workflow behavior
 - **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
 - **Docker manifest recreation safety** — docker publish now removes existing manifests before create, preventing rerun failures on previously published tags
+- **Docker remote tag cleanup** — docker publish now removes pre-existing remote tags/manifests with `docker buildx imagetools rm` before publishing platform images/manifests, avoiding `is a manifest list` rerun failures
 - **Website tests pnpm version alignment** — removed hardcoded pnpm version from `.github/workflows/website-test.yml` so CI uses the repository `packageManager` version (`pnpm@9.0.0`)
 - **Docker publish tag strategy hardening** — `.github/workflows/docker-publish.yml` now publishes ref-aware tags (`latest`, `develop`, version tag, and commit SHA) with matching multi-arch manifests
 - **Manual Docker publish branch support** — wired `workflow_dispatch` branch input into checkout and tag resolution so manual runs build/publish the selected branch
 - **Labeler rules refresh** — updated `.github/labeler.yml` to align automated PR labeling with the current repository structure
+- **Actions runtime forward-compatibility** — added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` across workflows to avoid Node 20 JavaScript action deprecation breakage
 
 ### Fixed
 
