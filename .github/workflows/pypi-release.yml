@@ -10,6 +10,7 @@ on:
     paths:
       - "packages/python-sdk/**" # Trigger only changes within sdk/python
       - ".github/workflows/release-python-package.yml"
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
