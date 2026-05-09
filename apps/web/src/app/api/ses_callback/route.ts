@@ -14,18 +14,27 @@ export async function GET() {
 export async function POST(req: Request) {
   const data = await req.json();
 
-  console.log(data, data.Message);
+  logger.debug(
+    {
+      type: data?.Type,
+      topicArn: data?.TopicArn,
+      messageId: data?.MessageId,
+      hasMessage: typeof data?.Message === "string",
+    },
+    "Received SES callback payload",
+  );
 
-  const isEventValid = await checkEventValidity(data);
+  const trustedTopicArn = await getTrustedTopicArn(data?.TopicArn);
+  const isEventValid = trustedTopicArn !== null;
 
-  console.log("Is event valid: ", isEventValid);
+  logger.debug({ isEventValid }, "SES callback topic validation result");
 
   if (!isEventValid) {
     return Response.json({ data: "Event is not valid" });
   }
 
   if (data.Type === "SubscriptionConfirmation") {
-    return handleSubscription(data);
+    return handleSubscription(data, trustedTopicArn);
   }
 
   let message = null;
@@ -42,7 +51,10 @@ export async function POST(req: Request) {
 
     return Response.json({ data: "Success" });
   } catch (e) {
-    console.error(e);
+    logger.error(
+      { error: e instanceof Error ? e.message : "Unknown error" },
+      "Failed to parse SES callback message",
+    );
     return Response.json({ data: "Error is parsing hook" });
   }
 }
@@ -50,15 +62,19 @@ export async function POST(req: Request) {
 /**
  * Handles the subscription confirmation event. called only once for a webhook
  */
-async function handleSubscription(message: any) {
-  await fetch(message.SubscribeURL, {
+async function handleSubscription(
+  message: { Token?: string },
+  trustedTopicArn: string,
+) {
+  const subscribeUrl = buildSnsSubscribeConfirmUrl(trustedTopicArn, message.Token);
+
+  await fetch(subscribeUrl, {
     method: "GET",
   });
 
-  const topicArn = message.TopicArn as string;
   const setting = await db.sesSetting.findFirst({
     where: {
-      topicArn,
+      topicArn: trustedTopicArn,
     },
   });
 
@@ -81,19 +97,58 @@ async function handleSubscription(message: any) {
 }
 
 /**
- * A simple check to ensure that the event is from the correct topic
+ * Build a trusted SNS subscription confirmation URL from message fields.
+ * We intentionally do not use message.SubscribeURL directly to prevent SSRF.
  */
-async function checkEventValidity(message: SnsNotificationMessage) {
+function buildSnsSubscribeConfirmUrl(topicArn: string, token?: string) {
+
+  if (!token) {
+    throw new Error("Invalid SNS subscription payload");
+  }
+
+  const arnParts = topicArn.split(":");
+  if (arnParts.length < 6 || arnParts[2] !== "sns") {
+    throw new Error("Invalid SNS TopicArn");
+  }
+
+  const partition = arnParts[1];
+  const region = arnParts[3];
+
+  if (!region) {
+    throw new Error("SNS TopicArn is missing region");
+  }
+
+  const domain = partition === "aws-cn" ? "amazonaws.com.cn" : "amazonaws.com";
+  const confirmUrl = new URL(`https://sns.${region}.${domain}/`);
+  confirmUrl.searchParams.set("Action", "ConfirmSubscription");
+  confirmUrl.searchParams.set("TopicArn", topicArn);
+  confirmUrl.searchParams.set("Token", token);
+
+  return confirmUrl.toString();
+}
+
+/**
+ * Returns an exact TopicArn from server configuration if input matches.
+ * This keeps downstream URL construction anchored to trusted configuration.
+ */
+async function getTrustedTopicArn(topicArn: SnsNotificationMessage["TopicArn"]) {
+  if (!topicArn || typeof topicArn !== "string") {
+    return null;
+  }
+
+  const configuredTopicArns = await SesSettingsService.getTopicArns();
+  const trustedTopicArn = configuredTopicArns.find((configured) => configured === topicArn);
+
+  if (trustedTopicArn) {
+    return trustedTopicArn;
+  }
+
   if (env.NODE_ENV === "development") {
-    return true;
+    logger.warn(
+      { topicArn },
+      "SES callback TopicArn not configured in development",
+    );
   }
 
-  const { TopicArn } = message;
-  const configuredTopicArn = await SesSettingsService.getTopicArns();
-
-  if (!configuredTopicArn.includes(TopicArn)) {
-    return false;
-  }
-
-  return true;
+  return null;
 }

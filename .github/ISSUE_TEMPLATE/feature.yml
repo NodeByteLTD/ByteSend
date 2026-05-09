@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest a new feature or improvement.
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Help us understand the problem first, then the proposed solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Expected impact
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and discussions for duplicates.
+          required: true

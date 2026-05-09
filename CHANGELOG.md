@@ -11,6 +11,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2026-05-09
+
+### Added
+
+#### CI / Automation
+- **Issue summary workflow** — added `.github/workflows/issue-summary.yml` to automatically summarize newly opened issues
+- **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
+- **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
+
+#### Community / Governance
+- **Repository security policy** — added root `SECURITY.md` with supported versions, private reporting process, and response expectations
+- **Code of Conduct** — added root `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
+- **Contributing guide** — added root `CONTRIBUTING.md` with development workflow, PR expectations, and testing checklist
+- **Support guide** — added root `SUPPORT.md` with support channels and security-report routing
+
+#### GitHub Templates
+- **PR template** — added `.github/PULL_REQUEST_TEMPLATE.md` to standardize change summaries, testing notes, and release-impact checks
+- **Issue template config** — added `.github/ISSUE_TEMPLATE/config.yml` with contact links and blank-issue controls
+- **New issue forms** — added `.github/ISSUE_TEMPLATE/feature.yml` and `.github/ISSUE_TEMPLATE/docs.yml`
+
+### Changed
+
+#### SMTP Server
+- **SMTP server vendored into monorepo** — `apps/smtp-server` is now tracked directly in this repository (no gitlink/submodule-style entry), simplifying versioning and release consistency
+- **Authentication compatibility fallback** — SMTP auth now supports the API-driven custom team username flow while retaining a legacy fallback username candidate for older client configurations
+
+#### Documentation
+- **SMTP docs refreshed for monorepo paths** — clone/build/deployment documentation now references `NodeByteLTD/ByteSend` and `apps/smtp-server` paths throughout
+- **SMTP quickstart clarified** — get-started docs now direct users to use their configured SMTP username (default `bytesend`) rather than implying only a fixed username
+- **Core docs/readme refresh** — updated main README and docs navigation/content pages for current monorepo structure and self-hosting guidance (`apps/docs/README.md`, `apps/docs/docs.json`, local/docker/self-hosting guide pages)
+
+#### References
+- **Internal references expanded** — added `.references/README.md`, `smtp-auth-and-operations.md`, `release-playbook.md`, and `repository-governance.md`
+- **Webhook reference improvements** — expanded `.references/webhook-architecture.md` with operations checklist, common failure modes, and change-safety notes
+
+#### GitHub Templates
+- **Issue form upgrades** — revamped bug/marketing/SMTP templates with clearer triage metadata, reproducibility fields, and validation checkboxes
+
+#### Workflows
+- **PR labeling workflow rename** — renamed the workflow file to `label-prs.yml`
+- **Label action token update** — updated token reference in `.github/workflows/label.yml`
+- **Website test workflow tuning** — adjusted website test workflow behavior
+- **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
+
+### Fixed
+
+#### Suppressions
+- **Suppression removal reliability** — improved suppression deletion flow to handle non-canonical casing/inputs more robustly in dashboard and backend paths
+
+#### Limits / Usage
+- **Usage limit consistency** — fixed plan usage limit handling to align dashboard/service behavior with shared plan constants
+
+#### Marketing Site
+- **Contact CTA destination** — changed the marketing contact link from email to Discord
+
+### Security
+
+- **SES callback SSRF hardening** — `apps/web/src/app/api/ses_callback/route.ts` no longer fetches user-provided `SubscribeURL` directly; it now constructs a trusted AWS SNS confirmation URL from validated `TopicArn`/`Token` components before issuing the request
+- **SES callback log-safety hardening** — replaced ad-hoc request/parse logging in `apps/web/src/app/api/ses_callback/route.ts` with constant-format structured logs to avoid tainted-format-string risks from untrusted payload fields
+- **SPF verification sanitization fix** — `apps/web/src/server/service/domain-service.ts` now parses SPF TXT mechanisms and validates `include:` domains (`amazonses.com` or subdomains) instead of broad substring checks
+- **DKIM key strength upgrade** — `apps/web/src/server/aws/ses.ts` now generates 2048-bit RSA keys (up from 1024-bit)
+- **Stripe seed secret logging removal** — `packages/scripts/stripe-seed.ts` no longer logs any portion of `STRIPE_SECRET_KEY`
+- **Python webhook example exception exposure fix** — `packages/python-sdk/example/webhook-test-project/receiver.py` now returns a generic verification failure message and avoids exposing exception text to clients
+- **Workflow least-privilege permissions** — `.github/workflows/website-test.yml` now sets explicit `permissions` with `contents: read`
+
+---
+
 ## [0.2.4] - 2026-05-08
 
 ### Added
@@ -393,7 +460,9 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/nodebyte/bytesend/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/nodebyte/bytesend/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/nodebyte/bytesend/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/nodebyte/bytesend/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nodebyte/bytesend/compare/v0.2.0...v0.2.1

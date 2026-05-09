@@ -60,7 +60,7 @@ function getSesClient(region: string) {
 
 function generateKeyPair() {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", {
-    modulusLength: 1024, // Length of your key in bits
+    modulusLength: 2048, // Minimum recommended RSA key length
     publicKeyEncoding: {
       type: "spki", // Recommended to be 'spki' by the Node.js docs
       format: "pem",

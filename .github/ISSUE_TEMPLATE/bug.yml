@@ -1,44 +1,109 @@
-name: Bug Report
-description: File a bug report.
-labels: ["bug"]
-title: "🐞 - "
+name: Bug report
+description: Report a reproducible bug in ByteSend.
+title: "bug: "
+labels: ["bug", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
-  - type: textarea
-    id: what-happened
+        Thanks for reporting this. Please provide enough detail so we can reproduce quickly.
+
+  - type: input
+    id: version
     attributes:
-      label: What happened?
-      placeholder: Tell us what you see!
+      label: Version / commit
+      description: Which version/tag/commit are you running?
+      placeholder: v0.2.5 or commit SHA
     validations:
       required: true
-  - type: textarea
-    id: replication
-    attributes:
-      label: Replication Steps
-      description: Provide clear steps as to how this happened
-      value: "1. First click this \n2. Navigate to this \n3. Click this \n4. See this"
-    validations:
-      required: false
+
   - type: dropdown
-    id: kind
+    id: deployment
     attributes:
-      label: Self hosted or Cloud?
-      description: Does this happen on bytesend.cloud or on your own instance?
+      label: Deployment
+      description: Where does the issue happen?
       options:
-        - Cloud
-        - Self hosted
+        - ByteSend Cloud
+        - Self-hosted
       default: 0
     validations:
       required: true
+
   - type: dropdown
-    id: browsers
+    id: area
     attributes:
-      label: What browsers are you seeing the problem on?
+      label: Affected area
+      options:
+        - API
+        - Dashboard UI
+        - SMTP relay
+        - Webhooks
+        - Billing
+        - Docs
+        - CI / workflows
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Go to ...
+        2. Click ...
+        3. Submit ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser (if UI issue)
       multiple: true
       options:
+        - Not applicable
+        - Chrome
         - Firefox
-        - Chrome (or chrome based like Brave, Arc, etc)
         - Safari
+        - Edge
+        - Other
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or errors
+      description: Paste stack traces, request IDs, or screenshots. Redact secrets.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed API keys, tokens, and sensitive data from this report.
+          required: true

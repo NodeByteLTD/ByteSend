@@ -1,0 +1,29 @@
+name: Documentation issue
+description: Report missing, incorrect, or unclear docs.
+title: "docs: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Docs page / file
+      placeholder: https://docs.bytesend.cloud/... or apps/docs/...
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should the docs say?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context

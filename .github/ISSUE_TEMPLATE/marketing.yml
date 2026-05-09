@@ -1,23 +1,60 @@
-name: Marketing Issue
-description: Issue relataed to Marketing
-labels: ["marketing"]
+name: Marketing website issue
+description: Report a bug or UX/content issue in the public marketing site.
+title: "marketing: "
+labels: ["marketing", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to create this issue
-  - type: textarea
-    id: what-happened
+        Thanks for reporting a marketing site issue.
+
+  - type: input
+    id: page
     attributes:
-      label: What happened?
-      placeholder: Tell us what you see!
+      label: Affected page URL
+      placeholder: https://bytesend.cloud/
     validations:
       required: true
+
   - type: textarea
-    id: replication
+    id: description
     attributes:
-      label: Replication Steps
-      description: Provide clear steps as to how this happened
-      value: "1. First click this \n2. Navigate to this \n3. Click this \n4. See this"
+      label: What happened?
     validations:
-      required: false
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Open ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings

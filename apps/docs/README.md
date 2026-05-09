@@ -1,32 +1,28 @@
-# Mintlify Starter Kit
+# ByteSend Docs
 
-Click on `Use this template` to copy the Mintlify starter kit. The starter kit contains examples including
+Documentation for ByteSend cloud and self-hosted users.
 
-- Guide pages
-- Navigation
-- Customizations
-- API Reference pages
-- Use of popular components
+- Cloud dashboard: https://bytesend.cloud
+- Docs: https://docs.bytesend.cloud
+- API reference: https://docs.bytesend.cloud/api-reference/introduction
 
-### Development
+## Local development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the documentation changes locally. To install, use the following command
+From the repository root:
 
-```
-npm i -g mintlify
-```
-
-Run the following command at the root of your documentation (where mint.json is)
-
-```
-mintlify dev
+```bash
+pnpm install
+pnpm dev:docs
 ```
 
-### Publishing Changes
+This starts the docs locally using Mintlify.
 
-Install our GitHub App to auto propagate changes from your repo to your deployment. Changes will be deployed to production automatically after pushing to the default branch. Find the link to install on your dashboard. 
+## Editing guidelines
 
-#### Troubleshooting
+- Use `https://bytesend.cloud` for cloud-hosted links.
+- Prefer absolute links for dashboard paths in docs examples.
+- Keep API examples aligned with `https://bytesend.cloud/api`.
 
-- Mintlify dev isn't running - Run `mintlify install` it'll re-install dependencies.
-- Page loads as a 404 - Make sure you are running in a folder with `mint.json`
+## Deployment
+
+Docs are deployed from this repository. Push changes to the default branch after review.

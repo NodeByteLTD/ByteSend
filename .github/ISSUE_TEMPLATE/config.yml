@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/NodeByteLTD/ByteSend/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately.
+  - name: Community support (Discord)
+    url: https://discord.gg/xqkqzVRC4S
+    about: Ask questions and get help from the community.
+  - name: Documentation
+    url: https://docs.bytesend.cloud
+    about: Read guides, API references, and self-hosting docs.

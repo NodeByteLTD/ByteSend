@@ -143,10 +143,29 @@ async function checkDkimDnsRecord(
 async function checkSpfDnsRecord(mailDomain: string): Promise<DnsCheckResult> {
   try {
     const records = await dnsResolveTxt(mailDomain);
-    const flat = records.flat().join(" ");
-    return flat.includes("v=spf1") && flat.includes("amazonses.com")
-      ? "found"
-      : "not_found";
+    const spfRecords = records
+      .map((parts) => parts.join(""))
+      .map((record) => record.trim().toLowerCase())
+      .filter((record) => record.startsWith("v=spf1"));
+
+    const hasAmazonSesInclude = spfRecords.some((record) => {
+      const mechanisms = record.split(/\s+/).filter(Boolean);
+
+      return mechanisms.some((mechanism) => {
+        const normalized = mechanism.replace(/^[+\-~?]/, "");
+        if (!normalized.startsWith("include:")) {
+          return false;
+        }
+
+        const includeDomain = normalized.slice("include:".length);
+        return (
+          includeDomain === "amazonses.com" ||
+          includeDomain.endsWith(".amazonses.com")
+        );
+      });
+    });
+
+    return hasAmazonSesInclude ? "found" : "not_found";
   } catch {
     return "not_found";
   }
