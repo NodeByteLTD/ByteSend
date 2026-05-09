@@ -384,7 +384,7 @@ function Pricing() {
             </p>
           </div>
           <Button variant="outline" size="sm" className="shrink-0 rounded-xl" asChild>
-            <Link href="mailto:hello@bytesend.app">Contact us →</Link>
+            <Link href="https://discord.gg/xqkqzVRC4S">Contact us →</Link>
           </Button>
         </div>
 
