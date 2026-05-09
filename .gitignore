@@ -14,7 +14,6 @@ node_modules
 .env.selfhost
 .docs
 .docker
-.references
 
 # Testing
 coverage

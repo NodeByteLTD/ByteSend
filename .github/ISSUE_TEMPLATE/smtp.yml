@@ -1,23 +1,91 @@
-name: SMTP Issue
-description: Issue relataed to SMTP
-labels: ["smtp"]
+name: SMTP relay issue
+description: Report an SMTP server issue (auth, TLS, relay, ports, delivery behavior).
+title: "smtp: "
+labels: ["smtp", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to create this issue
-  - type: textarea
-    id: what-happened
+        Thanks for reporting an SMTP issue. Include as much operational detail as possible.
+  - type: input
+    id: version
     attributes:
-      label: What happened?
-      placeholder: Tell us what you see!
+      label: Version / commit
+      placeholder: v0.2.5 or commit SHA
     validations:
       required: true
-  - type: textarea
-    id: replication
+
+  - type: dropdown
+    id: deployment
     attributes:
-      label: Replication Steps
-      description: Provide clear steps as to how this happened
-      value: "1. First click this \n2. Navigate to this \n3. Click this \n4. See this"
+      label: Deployment type
+      options:
+        - ByteSend Cloud SMTP
+        - Self-hosted SMTP
+      default: 1
     validations:
-      required: false
+      required: true
+
+  - type: dropdown
+    id: tls_mode
+    attributes:
+      label: TLS mode
+      options:
+        - none
+        - manual
+        - unknown
+      default: 2
+
+  - type: checkboxes
+    id: ports
+    attributes:
+      label: Affected port(s)
+      options:
+        - label: 25
+        - label: 587
+        - label: 2587
+        - label: 465
+        - label: 2465
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Configure SMTP client with ...
+        2. Connect using ...
+        3. Authenticate with ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: SMTP server logs / client errors
+      description: Include protocol error text and redact keys/tokens.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I used a valid API key as SMTP password.
+          required: true
+        - label: I verified the SMTP username matches my team settings (or default bytesend).
+          required: true
+        - label: I removed secrets from logs and screenshots.
+          required: true

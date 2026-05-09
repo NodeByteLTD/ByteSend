@@ -11,6 +11,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.5] - 2026-05-09
+
+### Added
+
+#### CI / Automation
+- **Issue summary workflow** — added `.github/workflows/issue-summary.yml` to automatically summarize newly opened issues
+- **Stale cleanup workflow** — added `.github/workflows/stale-cleanup.yml` to clean up inactive issues and pull requests
+- **CodeQL workflow** — introduced `.github/workflows/codeql.yml` and enabled `develop` branch triggers
+
+### Changed
+
+#### SMTP Server
+- **SMTP server vendored into monorepo** — `apps/smtp-server` is now tracked directly in this repository (no gitlink/submodule-style entry), simplifying versioning and release consistency
+- **Authentication compatibility fallback** — SMTP auth now supports the API-driven custom team username flow while retaining a legacy fallback username candidate for older client configurations
+
+#### Documentation
+- **SMTP docs refreshed for monorepo paths** — clone/build/deployment documentation now references `NodeByteLTD/ByteSend` and `apps/smtp-server` paths throughout
+- **SMTP quickstart clarified** — get-started docs now direct users to use their configured SMTP username (default `bytesend`) rather than implying only a fixed username
+
+#### Workflows
+- **PR labeling workflow rename** — renamed the workflow file to `label-prs.yml`
+- **Label action token update** — updated token reference in `.github/workflows/label.yml`
+- **Website test workflow tuning** — adjusted website test workflow behavior
+- **Docker publish workflow update** — updated `.github/workflows/docker-publish.yml`
+
+### Fixed
+
+#### Suppressions
+- **Suppression removal reliability** — improved suppression deletion flow to handle non-canonical casing/inputs more robustly in dashboard and backend paths
+
+#### Limits / Usage
+- **Usage limit consistency** — fixed plan usage limit handling to align dashboard/service behavior with shared plan constants
+
+#### Marketing Site
+- **Contact CTA destination** — changed the marketing contact link from email to Discord
+
+---
+
 ## [0.2.4] - 2026-05-08
 
 ### Added
@@ -393,7 +431,9 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/nodebyte/bytesend/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/nodebyte/bytesend/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/nodebyte/bytesend/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/nodebyte/bytesend/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nodebyte/bytesend/compare/v0.2.0...v0.2.1

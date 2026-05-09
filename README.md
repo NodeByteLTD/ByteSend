@@ -73,6 +73,13 @@ See [docs.bytesend.cloud/get-started/local](https://docs.bytesend.cloud/get-star
 
 Please check existing issues before opening a new one.
 
+See also:
+
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Support](SUPPORT.md)
+
 ---
 
 ## License
