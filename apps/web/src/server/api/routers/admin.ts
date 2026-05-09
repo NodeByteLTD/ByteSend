@@ -1,6 +1,7 @@
 import { Prisma, type Plan } from "@prisma/client";
 import { z } from "zod";
 import { env } from "~/env";
+import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, adminProcedure, founderProcedure } from "~/server/api/trpc";
 import { SesSettingsService } from "~/server/service/ses-settings-service";
@@ -12,6 +13,7 @@ import { ByteSend } from "bytesend-js";
 import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
 import { Target } from "lucide-react";
+import { createCheckoutSessionForTeam, type CheckoutPlan } from "~/server/billing/payments";
 
 const userAdminSelection = {
   id: true,
@@ -426,8 +428,10 @@ export const adminRouter = createTRPCRouter({
     .input(
       z.object({
         teamId: z.number(),
-        apiRateLimit: z.number().int().min(1).max(10_000),
-        dailyEmailLimit: z.number().int().min(0).max(10_000_000),
+        // -1 = unlimited (no rate limit), 1–10000 = custom cap
+        apiRateLimit: z.number().int().min(-1).max(10_000),
+        // -1 = unlimited override, 0 = use plan default, positive = custom hard cap
+        dailyEmailLimit: z.number().int().min(-1).max(10_000_000),
         isBlocked: z.boolean(),
         plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
       }),
@@ -442,6 +446,62 @@ export const adminRouter = createTRPCRouter({
       });
 
       return updatedTeam;
+    }),
+
+  /**
+   * Admin-driven plan assignment for cloud deployments.
+   * - "complimentary": sets plan + isActive directly in DB (no Stripe charge)
+   * - "checkout_link": creates a Stripe Checkout session for the team and returns
+   *   the URL for the admin to share with the team (team pays via Stripe)
+   */
+  adminAssignPlan: adminProcedure
+    .input(
+      z.object({
+        teamId: z.number(),
+        plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
+        method: z.enum(["complimentary", "checkout_link"]),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { teamId, plan, method } = input;
+
+      if (!isCloud()) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Plan assignment is only available in the cloud deployment",
+        });
+      }
+
+      if (method === "complimentary") {
+        const updatedTeam = await db.team.update({
+          where: { id: teamId },
+          data: {
+            plan,
+            isActive: plan !== "FREE",
+          },
+          select: teamAdminSelection,
+        });
+        logger.info(
+          { teamId, plan, method: "complimentary" },
+          "[AdminRouter]: Plan assigned complimentarily",
+        );
+        return { method: "complimentary" as const, team: updatedTeam, url: null };
+      }
+
+      // checkout_link — create a Stripe Checkout session for the team
+      if (plan === "FREE") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot generate a checkout link for the FREE plan",
+        });
+      }
+
+      const session = await createCheckoutSessionForTeam(teamId, plan as CheckoutPlan);
+      logger.info(
+        { teamId, plan, sessionId: session.id },
+        "[AdminRouter]: Checkout session created for team",
+      );
+      return { method: "checkout_link" as const, team: null, url: session.url };
     }),
 
   listAdminDomains: adminProcedure

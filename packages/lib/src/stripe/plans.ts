@@ -101,28 +101,28 @@ export const PLANS: Record<PlanType, PricingTier> = {
     displayName: "Professional",
     description: "For professionals and growing businesses",
     order: 4,
-    isLimited: false,
-    monthlyPrice: 3000, // CA$30/month in cents
+    isLimited: true,
+    monthlyPrice: 2000, // CA$20/month in cents
     usageMetering: {
-      marketing: 0.01,    // CA$0.01 per marketing email (overage after 150,000 included)
-      transactional: 0.01, // CA$0.01 per transactional email (overage after 150,000 included)
+      marketing: 0.01,    // CA$0.01 per marketing email (overage after 100,000 included)
+      transactional: 0.01, // CA$0.01 per transactional email (overage after 100,000 included)
     },
     limits: {
-      monthlyEmailLimit: 150_000,
-      dailyEmailLimit: Number.POSITIVE_INFINITY,
-      maxDomains: 100,
-      maxContactBooks: 500,
-      maxTeamMembers: Number.POSITIVE_INFINITY,
-      maxWebhooks: 50,
-      contactsLimit: 1_000_000,
-      campaignsLimit: 1_000,
+      monthlyEmailLimit: 100_000,
+      dailyEmailLimit: Number.POSITIVE_INFINITY, // unlimited daily
+      maxDomains: 12,
+      maxContactBooks: 50,
+      maxTeamMembers: 30,
+      maxWebhooks: 25,
+      contactsLimit: 1_000,
+      campaignsLimit: 200,
       prioritySupport: true,
       customBranding: false, // Self-hosted only
       advancedAnalytics: true,
       apiAccessLevel: "full",
       concurrentConnections: 10,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 0, // Unlimited members — no overage
+      extraMemberRateCents: 0, // Hard cap — upgrade required
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -130,29 +130,29 @@ export const PLANS: Record<PlanType, PricingTier> = {
   LIFETIME: {
     plan: "LIFETIME",
     displayName: "Lifetime",
-    description: "One-time payment for unlimited access",
+    description: "One-time payment for long-term access",
     order: 5,
-    isLimited: false,
+    isLimited: true,
     monthlyPrice: 0,
-    oneTimePrice: 6000, // CA$60 one-time purchase
-    // No usageMetering — everything is unlimited and included.
+    oneTimePrice: 19900, // CA$199 one-time purchase
+    // No usageMetering — emails are hard-capped at a generous limit; no overage billing.
     limits: {
-      monthlyEmailLimit: Number.POSITIVE_INFINITY,
-      dailyEmailLimit: Number.POSITIVE_INFINITY,
-      maxDomains: 500,
-      maxContactBooks: 1000,
-      maxTeamMembers: Number.POSITIVE_INFINITY,
-      maxWebhooks: 100,
-      contactsLimit: 10_000_000,
-      campaignsLimit: 10_000,
+      monthlyEmailLimit: 500_000,
+      dailyEmailLimit: Number.POSITIVE_INFINITY, // unlimited daily
+      maxDomains: 30,
+      maxContactBooks: 200,
+      maxTeamMembers: 100,
+      maxWebhooks: 50,
+      contactsLimit: 10_000,
+      campaignsLimit: 1_000,
       prioritySupport: true,
       customBranding: false, // Self-hosted only
       advancedAnalytics: true,
       apiAccessLevel: "full",
-      concurrentConnections: 50,
+      concurrentConnections: 20,
       marketingEmailsIncluded: true,
       extraMemberRateCents: 0,
-      additionalDomainRateCents: 0, // Effectively no limit at this tier
+      additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 };

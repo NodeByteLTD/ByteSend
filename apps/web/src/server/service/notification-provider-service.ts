@@ -1,0 +1,687 @@
+import {
+  NotificationProviderType,
+  NotificationEventType,
+  WebhookStatus,
+} from "@prisma/client";
+import { createHmac, randomUUID } from "crypto";
+import { db } from "../db";
+import { logger } from "../logger/log";
+import { ByteSendApiError } from "../public-api/api-error";
+
+export type DiscordConfig = {
+  webhookUrl: string;
+  mentionRole?: string;
+  threadId?: string;
+};
+
+export type SlackConfig = {
+  webhookUrl: string;
+  channelId?: string;
+  botToken?: string;
+};
+
+export type MicrosoftTeamsConfig = {
+  webhookUrl: string;
+  adaptiveCard?: boolean;
+};
+
+export type TelegramConfig = {
+  botToken: string;
+  chatId: string;
+};
+
+export type CustomWebhookConfig = {
+  url: string;
+  headers?: Record<string, string>;
+  secret?: string;
+};
+
+export type NotificationProviderConfig =
+  | DiscordConfig
+  | SlackConfig
+  | MicrosoftTeamsConfig
+  | TelegramConfig
+  | CustomWebhookConfig;
+
+export interface NotificationMessage {
+  title: string;
+  description?: string;
+  color?: string;
+  fields?: Array<{
+    name: string;
+    value: string;
+    inline?: boolean;
+  }>;
+  timestamp?: boolean;
+  data?: Record<string, unknown>;
+}
+
+export class NotificationProviderService {
+  /**
+   * Create a new notification provider
+   */
+  public static async createProvider(params: {
+    teamId: number;
+    type: NotificationProviderType;
+    name: string;
+    description?: string;
+    config: NotificationProviderConfig;
+    eventTypes?: NotificationEventType[];
+  }) {
+    // Validate config based on type
+    this.validateConfig(params.type, params.config);
+
+    const provider = await db.notificationProvider.create({
+      data: {
+        teamId: params.teamId,
+        type: params.type,
+        name: params.name,
+        description: params.description,
+        config: params.config,
+        eventTypes: params.eventTypes || [],
+        isActive: true,
+      },
+    });
+
+    logger.info(
+      { providerId: provider.id, type: params.type },
+      "Notification provider created"
+    );
+
+    return provider;
+  }
+
+  /**
+   * Update an existing notification provider
+   */
+  public static async updateProvider(params: {
+    id: string;
+    teamId: number;
+    name?: string;
+    description?: string;
+    config?: Partial<NotificationProviderConfig>;
+    eventTypes?: NotificationEventType[];
+    isActive?: boolean;
+  }) {
+    const provider = await db.notificationProvider.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!provider) {
+      throw new ByteSendApiError("NOT_FOUND", "Provider not found");
+    }
+
+    if (provider.teamId !== params.teamId) {
+      throw new ByteSendApiError("UNAUTHORIZED", "Provider not found");
+    }
+
+    // Merge configs if partial update
+    const updatedConfig = params.config
+      ? { ...provider.config, ...params.config }
+      : undefined;
+
+    if (updatedConfig) {
+      this.validateConfig(provider.type, updatedConfig as NotificationProviderConfig);
+    }
+
+    const updated = await db.notificationProvider.update({
+      where: { id: params.id },
+      data: {
+        name: params.name,
+        description: params.description,
+        config: updatedConfig,
+        eventTypes: params.eventTypes,
+        isActive: params.isActive,
+        updatedAt: new Date(),
+      },
+    });
+
+    logger.info({ providerId: params.id }, "Notification provider updated");
+
+    return updated;
+  }
+
+  /**
+   * Get all providers for a team
+   */
+  public static async listProviders(teamId: number) {
+    return db.notificationProvider.findMany({
+      where: { teamId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * Get a specific provider
+   */
+  public static async getProvider(id: string, teamId: number) {
+    const provider = await db.notificationProvider.findUnique({
+      where: { id },
+    });
+
+    if (!provider) {
+      throw new ByteSendApiError("NOT_FOUND", "Provider not found");
+    }
+
+    if (provider.teamId !== teamId) {
+      throw new ByteSendApiError("UNAUTHORIZED", "Provider not found");
+    }
+
+    return provider;
+  }
+
+  /**
+   * Delete a notification provider
+   */
+  public static async deleteProvider(id: string, teamId: number) {
+    const provider = await db.notificationProvider.findUnique({
+      where: { id },
+    });
+
+    if (!provider) {
+      throw new ByteSendApiError("NOT_FOUND", "Provider not found");
+    }
+
+    if (provider.teamId !== teamId) {
+      throw new ByteSendApiError("UNAUTHORIZED", "Provider not found");
+    }
+
+    await db.notificationProvider.delete({
+      where: { id },
+    });
+
+    logger.info({ providerId: id }, "Notification provider deleted");
+  }
+
+  /**
+   * Send a notification to a provider
+   */
+  public static async sendNotification(
+    teamId: number,
+    providerId: string,
+    message: NotificationMessage,
+    eventType: NotificationEventType
+  ) {
+    const provider = await db.notificationProvider.findUnique({
+      where: { id: providerId },
+    });
+
+    if (!provider || provider.teamId !== teamId || !provider.isActive) {
+      throw new ByteSendApiError("NOT_FOUND", "Provider not found or inactive");
+    }
+
+    // Check if provider handles this event type
+    if (provider.eventTypes.length > 0 && !provider.eventTypes.includes(eventType)) {
+      throw new ByteSendApiError(
+        "BAD_REQUEST",
+        "Provider does not handle this event type"
+      );
+    }
+
+    const notificationLog = await db.notificationLog.create({
+      data: {
+        teamId,
+        providerId,
+        eventType,
+        payload: message,
+        status: "PENDING",
+      },
+    });
+
+    try {
+      await this.dispatchNotification(provider, message);
+
+      await db.notificationLog.update({
+        where: { id: notificationLog.id },
+        data: {
+          status: "SENT",
+          lastError: null,
+          updatedAt: new Date(),
+        },
+      });
+
+      await db.notificationProvider.update({
+        where: { id: providerId },
+        data: {
+          lastSuccessAt: new Date(),
+          consecutiveFailures: 0,
+        },
+      });
+
+      logger.info(
+        { providerId, eventType },
+        "Notification sent successfully"
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      await db.notificationLog.update({
+        where: { id: notificationLog.id },
+        data: {
+          status: "FAILED",
+          lastError: errorMessage,
+          updatedAt: new Date(),
+        },
+      });
+
+      await db.notificationProvider.update({
+        where: { id: providerId },
+        data: {
+          lastFailureAt: new Date(),
+          consecutiveFailures: {
+            increment: 1,
+          },
+        },
+      });
+
+      logger.error(
+        { providerId, error: errorMessage },
+        "Failed to send notification"
+      );
+
+      throw error;
+    }
+  }
+
+  /**
+   * Test a provider by sending a test message
+   */
+  public static async testProvider(id: string, teamId: number) {
+    const provider = await this.getProvider(id, teamId);
+
+    const testMessage: NotificationMessage = {
+      title: "ByteSend Notification Test",
+      description: "This is a test message to verify your notification provider is working correctly.",
+      color: "#0EA5E9",
+      fields: [
+        {
+          name: "Provider Type",
+          value: provider.type,
+          inline: true,
+        },
+        {
+          name: "Team ID",
+          value: teamId.toString(),
+          inline: true,
+        },
+      ],
+      timestamp: true,
+    };
+
+    await this.dispatchNotification(provider, testMessage);
+
+    await db.notificationProvider.update({
+      where: { id },
+      data: {
+        testMessageSentAt: new Date(),
+      },
+    });
+
+    logger.info({ providerId: id }, "Test notification sent");
+  }
+
+  /**
+   * Send batch notifications to all active providers for an event
+   */
+  public static async broadcastNotification(
+    teamId: number,
+    eventType: NotificationEventType,
+    message: NotificationMessage
+  ) {
+    const providers = await db.notificationProvider.findMany({
+      where: {
+        teamId,
+        isActive: true,
+        OR: [
+          { eventTypes: { isEmpty: true } }, // Empty array means all events
+          { eventTypes: { has: eventType } },
+        ],
+      },
+    });
+
+    if (providers.length === 0) {
+      return { sent: 0, failed: 0 };
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const provider of providers) {
+      try {
+        await this.sendNotification(teamId, provider.id, message, eventType);
+        sent++;
+      } catch (error) {
+        failed++;
+      }
+    }
+
+    logger.info(
+      { teamId, eventType, sent, failed },
+      "Broadcast notifications completed"
+    );
+
+    return { sent, failed };
+  }
+
+  /**
+   * Dispatch notification to the appropriate provider
+   */
+  private static async dispatchNotification(
+    provider: any,
+    message: NotificationMessage
+  ) {
+    switch (provider.type) {
+      case "DISCORD":
+        return this.sendToDiscord(provider.config, message);
+      case "SLACK":
+        return this.sendToSlack(provider.config, message);
+      case "MICROSOFT_TEAMS":
+        return this.sendToMicrosoftTeams(provider.config, message);
+      case "TELEGRAM":
+        return this.sendToTelegram(provider.config, message);
+      case "CUSTOM_WEBHOOK":
+        return this.sendToCustomWebhook(provider.config, message);
+      default:
+        throw new Error(`Unknown provider type: ${provider.type}`);
+    }
+  }
+
+  /**
+   * Send to Discord
+   */
+  private static async sendToDiscord(
+    config: DiscordConfig,
+    message: NotificationMessage
+  ) {
+    const embed = {
+      title: message.title,
+      description: message.description,
+      color: message.color ? parseInt(message.color.replace("#", ""), 16) : 3669732, // Blue
+      fields: message.fields,
+      timestamp: message.timestamp ? new Date().toISOString() : undefined,
+      footer: {
+        text: "ByteSend",
+        icon_url: "https://bytesend.io/favicon.ico",
+      },
+    };
+
+    const payload = {
+      embeds: [embed],
+      ...(config.mentionRole && { content: `<@&${config.mentionRole}>` }),
+    };
+
+    const response = await fetch(config.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Discord API returned ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Send to Slack
+   */
+  private static async sendToSlack(
+    config: SlackConfig,
+    message: NotificationMessage
+  ) {
+    const blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: message.title,
+        },
+      },
+      ...(message.description
+        ? [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: message.description,
+              },
+            },
+          ]
+        : []),
+      ...(message.fields && message.fields.length > 0
+        ? [
+            {
+              type: "section",
+              fields: message.fields.map((field) => ({
+                type: "mrkdwn",
+                text: `*${field.name}*\n${field.value}`,
+              })),
+            },
+          ]
+        : []),
+    ];
+
+    const payload = {
+      blocks,
+      ...(message.data && {
+        attachments: [
+          {
+            fallback: message.title,
+            color: message.color || "#0EA5E9",
+            ts: Math.floor(Date.now() / 1000),
+          },
+        ],
+      }),
+    };
+
+    const response = await fetch(config.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Slack API returned ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Send to Microsoft Teams
+   */
+  private static async sendToMicrosoftTeams(
+    config: MicrosoftTeamsConfig,
+    message: NotificationMessage
+  ) {
+    const themeColor = message.color || "0EA5E9";
+
+    const payload = {
+      "@type": "MessageCard",
+      "@context": "https://schema.org/extensions",
+      summary: message.title,
+      themeColor: themeColor.replace("#", ""),
+      sections: [
+        {
+          activityTitle: message.title,
+          activitySubtitle: message.description,
+          facts: message.fields?.map((field) => ({
+            name: field.name,
+            value: field.value,
+          })),
+        },
+      ],
+    };
+
+    const response = await fetch(config.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Microsoft Teams API returned ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Send to Telegram
+   */
+  private static async sendToTelegram(
+    config: TelegramConfig,
+    message: NotificationMessage
+  ) {
+    let text = `*${message.title}*\n`;
+
+    if (message.description) {
+      text += `${message.description}\n\n`;
+    }
+
+    if (message.fields && message.fields.length > 0) {
+      text += message.fields.map((f) => `*${f.name}:* ${f.value}`).join("\n");
+    }
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${config.botToken}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: config.chatId,
+          text,
+          parse_mode: "Markdown",
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Telegram API returned ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Send to custom webhook
+   */
+  private static async sendToCustomWebhook(
+    config: CustomWebhookConfig,
+    message: NotificationMessage
+  ) {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...config.headers,
+    };
+
+    // Add HMAC signature if secret provided
+    if (config.secret) {
+      const payload = JSON.stringify(message);
+      const signature = createHmac("sha256", config.secret)
+        .update(payload)
+        .digest("hex");
+      headers["X-ByteSend-Signature"] = `v1=${signature}`;
+    }
+
+    const response = await fetch(config.url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(message),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Custom webhook returned ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  /**
+   * Validate provider configuration
+   */
+  private static validateConfig(
+    type: NotificationProviderType,
+    config: NotificationProviderConfig
+  ) {
+    switch (type) {
+      case "DISCORD":
+        if (!("webhookUrl" in config) || !config.webhookUrl) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Discord webhook URL is required"
+          );
+        }
+        if (!config.webhookUrl.includes("discord.com")) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Invalid Discord webhook URL"
+          );
+        }
+        break;
+
+      case "SLACK":
+        if (!("webhookUrl" in config) || !config.webhookUrl) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Slack webhook URL is required"
+          );
+        }
+        if (!config.webhookUrl.includes("hooks.slack.com")) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Invalid Slack webhook URL"
+          );
+        }
+        break;
+
+      case "MICROSOFT_TEAMS":
+        if (!("webhookUrl" in config) || !config.webhookUrl) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Microsoft Teams webhook URL is required"
+          );
+        }
+        if (!config.webhookUrl.includes("outlook.webhook.office.com")) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Invalid Microsoft Teams webhook URL"
+          );
+        }
+        break;
+
+      case "TELEGRAM":
+        if (!("botToken" in config) || !config.botToken) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Telegram bot token is required"
+          );
+        }
+        if (!("chatId" in config) || !config.chatId) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Telegram chat ID is required"
+          );
+        }
+        break;
+
+      case "CUSTOM_WEBHOOK":
+        if (!("url" in config) || !config.url) {
+          throw new ByteSendApiError(
+            "BAD_REQUEST",
+            "Webhook URL is required"
+          );
+        }
+        break;
+    }
+  }
+}

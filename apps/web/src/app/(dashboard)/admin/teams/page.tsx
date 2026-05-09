@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Link2, Gift } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@bytesend/ui/src/button";
@@ -85,13 +85,21 @@ function AdminStatusPill({
 }
 
 const updateSchema = z.object({
-  apiRateLimit: z.coerce.number().int().min(1).max(10_000),
-  dailyEmailLimit: z.coerce.number().int().min(0).max(10_000_000),
+  // -1 = no rate limit
+  apiRateLimit: z.coerce.number().int().min(-1).max(10_000),
+  // -1 = unlimited override, 0 = use plan default, positive = custom cap
+  dailyEmailLimit: z.coerce.number().int().min(-1).max(10_000_000),
   isBlocked: z.boolean(),
   plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
 });
 
+const assignSchema = z.object({
+  plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
+  method: z.enum(["complimentary", "checkout_link"]),
+});
+
 type UpdateInput = z.infer<typeof updateSchema>;
+type AssignInput = z.infer<typeof assignSchema>;
 
 export default function AdminTeamsPage() {
   const [team, setTeam] = useState<TeamAdmin | null>(null);
@@ -99,6 +107,8 @@ export default function AdminTeamsPage() {
   const [teamsPage, setTeamsPage] = useState(1);
   const [teamsQuery, setTeamsQuery] = useState("");
   const [teamsQueryInput, setTeamsQueryInput] = useState("");
+  const [dailyLimitUnlimited, setDailyLimitUnlimited] = useState(false);
+  const [generatedCheckoutUrl, setGeneratedCheckoutUrl] = useState<string | null>(null);
 
   const searchForm = useForm<SearchInput>({
     resolver: zodResolver(searchSchema),
@@ -115,14 +125,25 @@ export default function AdminTeamsPage() {
     },
   });
 
+  const assignForm = useForm<AssignInput>({
+    resolver: zodResolver(assignSchema),
+    defaultValues: {
+      plan: "LITE",
+      method: "checkout_link",
+    },
+  });
+
   useEffect(() => {
     if (team) {
+      const isUnlimited = team.dailyEmailLimit === -1;
+      setDailyLimitUnlimited(isUnlimited);
       updateForm.reset({
         apiRateLimit: team.apiRateLimit,
-        dailyEmailLimit: team.dailyEmailLimit,
+        dailyEmailLimit: isUnlimited ? -1 : team.dailyEmailLimit,
         isBlocked: team.isBlocked,
         plan: team.plan,
       });
+      setGeneratedCheckoutUrl(null);
     }
   }, [team, updateForm]);
 
@@ -152,9 +173,11 @@ export default function AdminTeamsPage() {
   const updateTeam = api.admin.updateTeamSettings.useMutation({
     onSuccess: (updated) => {
       setTeam(updated);
+      const isUnlimited = updated.dailyEmailLimit === -1;
+      setDailyLimitUnlimited(isUnlimited);
       updateForm.reset({
         apiRateLimit: updated.apiRateLimit,
-        dailyEmailLimit: updated.dailyEmailLimit,
+        dailyEmailLimit: isUnlimited ? -1 : updated.dailyEmailLimit,
         isBlocked: updated.isBlocked,
         plan: updated.plan,
       });
@@ -162,6 +185,21 @@ export default function AdminTeamsPage() {
     },
     onError: (error) => {
       toast.error(error.message ?? "Unable to update team settings");
+    },
+  });
+
+  const assignPlan = api.admin.adminAssignPlan.useMutation({
+    onSuccess: (result) => {
+      if (result.method === "complimentary" && result.team) {
+        setTeam(result.team);
+        toast.success(`Plan assigned as complimentary`);
+      } else if (result.method === "checkout_link" && result.url) {
+        setGeneratedCheckoutUrl(result.url);
+        toast.success("Checkout link generated");
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Failed to assign plan");
     },
   });
 
@@ -174,6 +212,12 @@ export default function AdminTeamsPage() {
   const onUpdateSubmit = (values: UpdateInput) => {
     if (!team) return;
     updateTeam.mutate({ teamId: team.id, ...values });
+  };
+
+  const onAssignSubmit = (values: AssignInput) => {
+    if (!team) return;
+    setGeneratedCheckoutUrl(null);
+    assignPlan.mutate({ teamId: team.id, ...values });
   };
 
   const listTeams = api.admin.listTeams.useQuery(
@@ -330,17 +374,35 @@ export default function AdminTeamsPage() {
                     <FormItem>
                       <FormLabel>Daily email limit</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={10_000_000}
-                          {...field}
-                          value={Number.isNaN(field.value) ? 0 : field.value}
-                          onChange={(event) =>
-                            field.onChange(Number(event.target.value))
-                          }
-                          disabled={updateTeam.isPending}
-                        />
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3 rounded-md border px-3 py-2">
+                            <Switch
+                              checked={dailyLimitUnlimited}
+                              onCheckedChange={(checked) => {
+                                setDailyLimitUnlimited(checked);
+                                field.onChange(checked ? -1 : 10_000);
+                              }}
+                              disabled={updateTeam.isPending}
+                            />
+                            <span className="text-sm text-muted-foreground">
+                              {dailyLimitUnlimited ? "Unlimited (no daily cap)" : "Custom daily cap"}
+                            </span>
+                          </div>
+                          {!dailyLimitUnlimited && (
+                            <Input
+                              type="number"
+                              min={0}
+                              max={10_000_000}
+                              {...field}
+                              value={Number.isNaN(field.value) || field.value === -1 ? 0 : field.value}
+                              onChange={(event) =>
+                                field.onChange(Number(event.target.value))
+                              }
+                              disabled={updateTeam.isPending}
+                              placeholder="e.g. 10000 — 0 uses plan default"
+                            />
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -409,6 +471,93 @@ export default function AdminTeamsPage() {
                 </div>
               </form>
             </Form>
+          </div>
+
+          {/* Plan Assignment */}
+          <div className="rounded-lg border p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold">Assign Plan</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Assign a plan complimentarily (no Stripe charge) or generate a checkout link for the team to pay via Stripe.
+              </p>
+            </div>
+            <Form {...assignForm}>
+              <form onSubmit={assignForm.handleSubmit(onAssignSubmit)} className="grid gap-4 lg:grid-cols-3 items-end">
+                <FormField
+                  control={assignForm.control}
+                  name="plan"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plan</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange} disabled={assignPlan.isPending}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select plan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FREE">Free</SelectItem>
+                            <SelectItem value="HOBBY">Hobby — CA$5/mo</SelectItem>
+                            <SelectItem value="LITE">Lite — CA$10/mo</SelectItem>
+                            <SelectItem value="BASIC">Professional — CA$20/mo</SelectItem>
+                            <SelectItem value="LIFETIME">Lifetime — CA$199 one-time</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={assignForm.control}
+                  name="method"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Method</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange} disabled={assignPlan.isPending}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="checkout_link">
+                              <span className="flex items-center gap-2"><Link2 className="h-3.5 w-3.5" /> Generate checkout link</span>
+                            </SelectItem>
+                            <SelectItem value="complimentary">
+                              <span className="flex items-center gap-2"><Gift className="h-3.5 w-3.5" /> Assign complimentary</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" variant="outline" disabled={assignPlan.isPending}>
+                  {assignPlan.isPending ? <Spinner className="h-4 w-4" /> : "Assign"}
+                </Button>
+              </form>
+            </Form>
+            {generatedCheckoutUrl && (
+              <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Checkout link — share with the team:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 truncate rounded bg-background px-2 py-1 text-xs font-mono border border-border/60">
+                    {generatedCheckoutUrl}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 h-7 px-2 text-xs"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(generatedCheckoutUrl);
+                      toast.success("Copied to clipboard");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
