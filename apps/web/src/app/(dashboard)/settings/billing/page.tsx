@@ -4,23 +4,15 @@ import { useState } from "react";
 import { Button } from "@bytesend/ui/src/button";
 import { Card } from "@bytesend/ui/src/card";
 import { Spinner } from "@bytesend/ui/src/spinner";
-import { CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { useTeam } from "~/providers/team-context";
 import { api } from "~/trpc/react";
 import { PlanDetails } from "~/components/payments/PlanDetails";
-import { UpgradeButton } from "~/components/payments/UpgradeButton";
-import { PLANS, getAllPlans } from "@bytesend/lib";
-import { PLAN_PERKS } from "~/lib/constants/payments";
-
-type UpgradePlan = "HOBBY" | "LITE" | "BASIC";
-
-// Plans shown as upgrade options when on FREE plan (exclude FREE and LIFETIME)
-const UPGRADE_PLANS: { plan: UpgradePlan; highlight?: boolean }[] = [
-  { plan: "HOBBY" },
-  { plan: "LITE", highlight: true },
-  { plan: "BASIC" },
-];
+import {
+  UpgradeButton,
+} from "~/components/payments/UpgradeButton";
+import { PLANS } from "@bytesend/lib";
+import { BillingPlanSelector } from "~/components/payments/BillingPlanSelector";
 
 function formatPlanPrice(plan: (typeof PLANS)[keyof typeof PLANS]): string {
   if (plan.oneTimePrice) return `CA$${plan.oneTimePrice / 100} one-time`;
@@ -102,44 +94,48 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {currentTeam?.plan === "FREE" && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Upgrade Your Plan</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {UPGRADE_PLANS.map(({ plan, highlight }) => {
-              const planData = PLANS[plan];
-              const perks = PLAN_PERKS[plan] ?? [];
-              return (
-                <div
-                  key={plan}
-                  className={`rounded-lg border p-4 flex flex-col gap-3 ${
-                    highlight ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm">{planData.displayName}</span>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {formatPlanPrice(planData)}
-                    </span>
-                  </div>
-                  <ul className="space-y-1.5 flex-1">
-                    {perks.map((perk, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-xs text-muted-foreground"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
-                        {perk}
-                      </li>
-                    ))}
-                  </ul>
-                  <UpgradeButton plan={plan} label={`Choose ${planData.displayName}`} />
-                </div>
-              );
-            })}
-          </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Available Plans</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Select monthly marketing and transactional limits, then lock in that exact Stripe contract here.
+        </p>
+        <div className="space-y-4">
+          <BillingPlanSelector
+            currentPlan={currentTeam.plan}
+            onManageClick={onManageClick}
+            isManaging={manageSessionUrl.isPending}
+          />
+
+          <Card className="rounded-xl border border-border/70 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="text-sm font-semibold">Lifetime</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  One-time purchase with a high hard cap and no recurring monthly plan charge.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                  {formatPlanPrice(PLANS.LIFETIME)}
+                </span>
+                {currentTeam.plan === "LIFETIME" ? (
+                  <Button disabled variant="outline">Current plan</Button>
+                ) : currentTeam.plan === "FREE" ? (
+                  <UpgradeButton plan="LIFETIME" label="Choose Lifetime" className="w-auto" />
+                ) : (
+                  <Button
+                    onClick={onManageClick}
+                    variant="outline"
+                    disabled={manageSessionUrl.isPending}
+                  >
+                    {manageSessionUrl.isPending ? <Spinner className="w-4 h-4" /> : "Change in billing portal"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
-      )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <Card className="p-6">
           <div>
@@ -148,7 +144,7 @@ export default function SettingsPage() {
               <div className="mt-2">
                 <div className="text-lg font-mono uppercase flex items-center gap-2">
                   {subscription.paymentMethod &&
-                  subscription.paymentMethod !== "null" ? (
+                    subscription.paymentMethod !== "null" ? (
                     <>
                       <span>💳</span>
                       <span className="capitalize">
@@ -170,9 +166,9 @@ export default function SettingsPage() {
                   Next billing date:{" "}
                   {subscription.currentPeriodEnd
                     ? format(
-                        new Date(subscription.currentPeriodEnd),
-                        "MMM dd, yyyy",
-                      )
+                      new Date(subscription.currentPeriodEnd),
+                      "MMM dd, yyyy",
+                    )
                     : "N/A"}
                 </div>
               </div>

@@ -5,7 +5,7 @@ import { TeamService } from "./team-service";
 import { withCache } from "../redis";
 import { db } from "../db";
 import { logger } from "../logger/log";
-import { Plan } from "@prisma/client";
+import { Plan, Team } from "@prisma/client";
 
 function isLimitExceeded(current: number, limit: number): boolean {
   if (limit === -1) return false; // unlimited
@@ -16,18 +16,45 @@ function getActivePlan(team: { plan: Plan; isActive: boolean }): Plan {
   return team.isActive ? team.plan : "FREE";
 }
 
+function hasCustomPlan(team: Team): boolean {
+  return Boolean(
+    team.customPlanEnabled &&
+    team.customMarketingEmailLimit &&
+    team.customTransactionalEmailLimit,
+  );
+}
+
+function getCustomMonthlyTotalLimit(team: Team): number | null {
+  if (!hasCustomPlan(team)) return null;
+  return (team.customMarketingEmailLimit ?? 0) + (team.customTransactionalEmailLimit ?? 0);
+}
+
+function getEffectiveDailyEmailLimit(team: Team): number {
+  if (hasCustomPlan(team)) return -1;
+  return PLAN_LIMITS[getActivePlan(team)].emailsPerDay;
+}
+
+function hasMarketingEnabled(team: Team): boolean {
+  if (hasCustomPlan(team)) {
+    return (team.customMarketingEmailLimit ?? 0) > 0;
+  }
+  return PLAN_LIMITS[getActivePlan(team)].marketingEmailsIncluded;
+}
+
 export class LimitService {
   /**
    * Returns true if the team has the admin or founder as a member.
    * These teams are exempt from all limits.
    */
   private static async isAdminOrFounderTeam(teamId: number): Promise<boolean> {
-    const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL].filter(Boolean) as string[];
+    const adminEmails = [env.ADMIN_EMAIL, env.FOUNDER_EMAIL]
+      .filter(Boolean)
+      .map((email) => email!.trim().toLowerCase()) as string[];
     if (adminEmails.length === 0) return false;
     const count = await db.teamUser.count({
       where: {
         teamId,
-        user: { email: { in: adminEmails } },
+        user: { email: { in: adminEmails, mode: "insensitive" } },
       },
     });
     return count > 0;
@@ -157,6 +184,36 @@ export class LimitService {
     };
   }
 
+  static async checkCampaignLimit(teamId: number): Promise<{
+    isLimitReached: boolean;
+    limit: number;
+    currentCount: number;
+    reason?: LimitReason;
+  }> {
+    if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
+    }
+
+    const team = await TeamService.getTeamCached(teamId);
+    const currentCount = await db.campaign.count({ where: { teamId } });
+    const limit = PLAN_LIMITS[getActivePlan(team)].campaigns;
+
+    if (isLimitExceeded(currentCount, limit)) {
+      return {
+        isLimitReached: true,
+        limit,
+        currentCount,
+        reason: LimitReason.CAMPAIGN,
+      };
+    }
+
+    return {
+      isLimitReached: false,
+      limit,
+      currentCount,
+    };
+  }
+
   static async checkWebhookLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;
@@ -228,10 +285,7 @@ export class LimitService {
     const activePlan = getActivePlan(team);
 
     // Block marketing emails on plans where they are not available (e.g. FREE)
-    if (
-      emailType === "MARKETING" &&
-      !PLAN_LIMITS[activePlan].marketingEmailsIncluded
-    ) {
+    if (emailType === "MARKETING" && !hasMarketingEnabled(team)) {
       return {
         isLimitReached: true,
         limit: 0,
@@ -247,10 +301,7 @@ export class LimitService {
     );
 
     const dailyUsage = usage.day.reduce((acc, curr) => acc + curr.sent, 0);
-    const dailyLimit =
-      activePlan !== "FREE"
-        ? team.dailyEmailLimit
-        : PLAN_LIMITS.FREE.emailsPerDay;
+    const dailyLimit = getEffectiveDailyEmailLimit(team);
 
     logger.info(
       { dailyUsage, dailyLimit, team },
@@ -278,6 +329,53 @@ export class LimitService {
         reason: LimitReason.EMAIL_DAILY_LIMIT_REACHED,
         available: dailyLimit - dailyUsage,
       };
+    }
+
+    const monthlyMarketingUsage =
+      usage.month.find((u) => u.type === "MARKETING")?.sent ?? 0;
+    const monthlyTransactionalUsage =
+      usage.month.find((u) => u.type === "TRANSACTIONAL")?.sent ?? 0;
+
+    if (hasCustomPlan(team)) {
+      const marketingLimit = team.customMarketingEmailLimit ?? -1;
+      const transactionalLimit = team.customTransactionalEmailLimit ?? -1;
+      const totalLimit = getCustomMonthlyTotalLimit(team) ?? -1;
+
+      if (
+        emailType === "MARKETING" &&
+        isLimitExceeded(monthlyMarketingUsage, marketingLimit)
+      ) {
+        return {
+          isLimitReached: true,
+          limit: marketingLimit,
+          reason: LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED,
+          available: marketingLimit - monthlyMarketingUsage,
+        };
+      }
+
+      if (
+        emailType === "TRANSACTIONAL" &&
+        isLimitExceeded(monthlyTransactionalUsage, transactionalLimit)
+      ) {
+        return {
+          isLimitReached: true,
+          limit: transactionalLimit,
+          reason: LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED,
+          available: transactionalLimit - monthlyTransactionalUsage,
+        };
+      }
+
+      if (!emailType) {
+        const totalUsage = monthlyMarketingUsage + monthlyTransactionalUsage;
+        if (isLimitExceeded(totalUsage, totalLimit)) {
+          return {
+            isLimitReached: true,
+            limit: totalLimit,
+            reason: LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED,
+            available: totalLimit - totalUsage,
+          };
+        }
+      }
     }
 
     // Apply monthly limit logic for FREE plan or inactive subscriptions
@@ -367,7 +465,7 @@ export class LimitService {
     if (!env.NEXT_PUBLIC_IS_CLOUD) return true;
     if (await LimitService.isAdminOrFounderTeam(teamId)) return true;
     const team = await TeamService.getTeamCached(teamId);
-    return PLAN_LIMITS[getActivePlan(team)].marketingEmailsIncluded;
+    return hasMarketingEnabled(team);
   }
 
 }

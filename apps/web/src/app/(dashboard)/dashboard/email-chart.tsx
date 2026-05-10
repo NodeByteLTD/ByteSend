@@ -17,10 +17,14 @@ import { api } from "~/trpc/react";
 import Spinner from "@bytesend/ui/src/spinner";
 import { useTheme } from "@bytesend/ui";
 import { useColors } from "./hooks/useColors";
+import { Button } from "@bytesend/ui/src/button";
+import { useUpgradeModalStore } from "~/store/upgradeModalStore";
+import { LimitReason } from "~/lib/constants/plans";
 
 interface EmailChartProps {
   days: number;
   domain: string | null;
+  isPaidTeam: boolean;
 }
 
 const STACK_ORDER = [
@@ -56,8 +60,9 @@ function createRoundedTopShape(
   };
 }
 
-export default function EmailChart({ days, domain }: EmailChartProps) {
+export default function EmailChart({ days, domain, isPaidTeam }: EmailChartProps) {
   const [selectedMetrics, setSelectedMetrics] = React.useState<StackKey[]>([]);
+  const openUpgradeModal = useUpgradeModalStore((s) => s.action.openModal);
   const domainId = domain ? Number(domain) : undefined;
   const statusQuery = api.dashboard.emailTimeSeries.useQuery({
     days: days,
@@ -79,6 +84,22 @@ export default function EmailChart({ days, domain }: EmailChartProps) {
       ? [...STACK_ORDER]
       : STACK_ORDER.filter((key) => selectedMetrics.includes(key));
 
+  const totals = statusQuery.data?.totalCounts;
+  const sent = totals?.sent ?? 0;
+  const delivered = totals?.delivered ?? 0;
+  const opened = totals?.opened ?? 0;
+  const clicked = totals?.clicked ?? 0;
+  const bounced = totals?.bounced ?? 0;
+  const complained = totals?.complained ?? 0;
+
+  const deliveryRate = ratio(delivered, sent);
+  const bounceRate = ratio(bounced, sent);
+  const complaintRate = ratio(complained, sent);
+  const openRate = ratio(opened, delivered);
+  const clickRate = ratio(clicked, delivered);
+  const clickToOpenRate = ratio(clicked, opened);
+  const avgDailyVolume = days > 0 ? sent / days : 0;
+
   const toggleMetric = (metric: StackKey) => {
     setSelectedMetrics((prev) => {
       const exists = prev.includes(metric);
@@ -95,7 +116,7 @@ export default function EmailChart({ days, domain }: EmailChartProps) {
   return (
     <div className="flex flex-col gap-8">
       {!statusQuery.isLoading && statusQuery.data ? (
-        <div className="w-full h-[450px] border border-border/60 bg-card rounded-xl p-4 shadow-sm">
+        <div className="w-full rounded-xl border border-border/60 bg-card p-4 shadow-sm">
           <div className="p-2 overflow-x-auto">
 
             <div className="flex gap-10">
@@ -173,99 +194,135 @@ export default function EmailChart({ days, domain }: EmailChartProps) {
               />
             </div>
           </div>
-          <ResponsiveContainer width="100%" height="80%">
-            <BarChart
-              width={900}
-              height={200}
-              data={statusQuery.data.result}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <XAxis
-                dataKey="date"
-                fontSize={12}
-                className="font-mono"
-                stroke={currentColors.xaxis}
-                tick={{ fill: currentColors.xaxis, fillOpacity: 0.65 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              {/* <YAxis fontSize={12} className="font-mono" /> */}
-              <Tooltip
-                content={({ payload }) => {
-                  if (!payload || payload.length === 0) return null;
-
-                  const data = payload[0]?.payload as Record<
-                    | "sent"
-                    | "delivered"
-                    | "opened"
-                    | "clicked"
-                    | "bounced"
-                    | "complained",
-                    number
-                  > & { date: string };
-
-                  if (!data) return null;
-
-                  const hasAnyData =
-                    visibleMetrics.reduce(
-                      (sum, key) => sum + (data[key] || 0),
-                      0,
-                    ) > 0;
-
-                  if (!hasAnyData) return null;
-
-                  return (
-                    <div className="bg-popover border border-border/60 shadow-lg p-3 rounded-lg flex flex-col gap-1.5 min-w-[140px]">
-                      <p className="text-sm text-muted-foreground">
-                        {data.date}
-                      </p>
-                      {visibleMetrics.map((metricKey) => {
-                        const metricValue = data[metricKey] || 0;
-                        if (!metricValue) return null;
-
-                        return (
-                          <div
-                            key={metricKey}
-                            className="flex gap-2 items-center"
-                          >
-                            <div
-                              className="w-2.5 h-2.5 rounded-[2px]"
-                              style={{
-                                backgroundColor: metricMeta[metricKey].color,
-                              }}
-                            ></div>
-                            <p className="text-xs text-muted-foreground w-[70px]">
-                              {metricMeta[metricKey].label}
-                            </p>
-                            <p className="text-xs font-mono">{metricValue}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                width={900}
+                height={200}
+                data={statusQuery.data.result}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
                 }}
-                cursor={false}
-              />
-              {visibleMetrics.map((metricKey) => (
-                <Bar
-                  key={metricKey}
-                  barSize={20}
-                  dataKey={metricKey}
-                  stackId="a"
-                  fill={metricMeta[metricKey].color}
-                  shape={createRoundedTopShape(metricKey, visibleMetrics)}
+              >
+                <XAxis
+                  dataKey="date"
+                  fontSize={12}
+                  className="font-mono"
+                  stroke={currentColors.xaxis}
+                  tick={{ fill: currentColors.xaxis, fillOpacity: 0.65 }}
+                  axisLine={false}
+                  tickLine={false}
                 />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
+                {/* <YAxis fontSize={12} className="font-mono" /> */}
+                <Tooltip
+                  content={({ payload }) => {
+                    if (!payload || payload.length === 0) return null;
+
+                    const data = payload[0]?.payload as Record<
+                      | "sent"
+                      | "delivered"
+                      | "opened"
+                      | "clicked"
+                      | "bounced"
+                      | "complained",
+                      number
+                    > & { date: string };
+
+                    if (!data) return null;
+
+                    const hasAnyData =
+                      visibleMetrics.reduce(
+                        (sum, key) => sum + (data[key] || 0),
+                        0,
+                      ) > 0;
+
+                    if (!hasAnyData) return null;
+
+                    return (
+                      <div className="min-w-35 rounded-lg border border-border/60 bg-popover p-3 shadow-lg flex flex-col gap-1.5">
+                        <p className="text-sm text-muted-foreground">
+                          {data.date}
+                        </p>
+                        {visibleMetrics.map((metricKey) => {
+                          const metricValue = data[metricKey] || 0;
+                          if (!metricValue) return null;
+
+                          return (
+                            <div
+                              key={metricKey}
+                              className="flex gap-2 items-center"
+                            >
+                              <div
+                                className="w-2.5 h-2.5 rounded-[2px]"
+                                style={{
+                                  backgroundColor: metricMeta[metricKey].color,
+                                }}
+                              ></div>
+                              <p className="w-17.5 text-xs text-muted-foreground">
+                                {metricMeta[metricKey].label}
+                              </p>
+                              <p className="text-xs font-mono">{metricValue}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                  cursor={false}
+                />
+                {visibleMetrics.map((metricKey) => (
+                  <Bar
+                    key={metricKey}
+                    barSize={20}
+                    dataKey={metricKey}
+                    stackId="a"
+                    fill={metricMeta[metricKey].color}
+                    shape={createRoundedTopShape(metricKey, visibleMetrics)}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <AnalyticsStatCard label="Total sent" value={sent.toLocaleString()} />
+            <AnalyticsStatCard label="Delivery rate" value={formatPercent(deliveryRate)} />
+            <AnalyticsStatCard label="Bounce rate" value={formatPercent(bounceRate)} />
+            <AnalyticsStatCard label="Complaint rate" value={formatPercent(complaintRate)} />
+          </div>
+
+          {isPaidTeam ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <AnalyticsStatCard label="Open rate (delivered)" value={formatPercent(openRate)} isAdvanced />
+              <AnalyticsStatCard label="Click rate (delivered)" value={formatPercent(clickRate)} isAdvanced />
+              <AnalyticsStatCard label="Click-to-open rate" value={formatPercent(clickToOpenRate)} isAdvanced />
+              <AnalyticsStatCard
+                label="Avg daily volume"
+                value={Math.round(avgDailyVolume).toLocaleString()}
+                isAdvanced
+              />
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl border border-border/60 bg-muted/15 p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-medium">Advanced analytics</p>
+                  <p className="text-xs text-muted-foreground">
+                    Open rate, click rate, click-to-open rate, and deeper engagement insights are available on paid plans.
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => openUpgradeModal(LimitReason.MARKETING_NOT_AVAILABLE)}>
+                  Upgrade for advanced analytics
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="h-[450px]"> </div>
+        <div className="h-80 w-full rounded-xl border border-border/60 bg-card p-4"> </div>
       )}
     </div>
   );
@@ -286,7 +343,7 @@ const DashboardItemCard: React.FC<DashboardItemCardProps> = ({
   percentage,
 }) => {
   return (
-    <div className="h-[100px] w-[16%] min-w-[170px]  bg-secondary/10 border shadow rounded-xl p-4 flex flex-col gap-3">
+    <div className="h-25 min-w-42.5 w-[16%] rounded-xl border bg-secondary/10 p-4 shadow flex flex-col gap-3">
       <div className="flex items-center gap-3">
         {status !== "total" ? <EmailStatusIcon status={status} /> : null}
         <div className=" capitalize">{status.toLowerCase()}</div>
@@ -339,11 +396,9 @@ const EmailChartItem: React.FC<DashboardItemCardProps> = ({
       onClick={onClick}
       disabled={!isClickable}
       aria-pressed={isClickable ? isActive : undefined}
-      className={`flex gap-3 items-stretch font-mono transition-opacity ${
-        isClickable ? "cursor-pointer" : "cursor-default"
-      } ${isActive ? "opacity-100" : "opacity-45 hover:opacity-100"} ${
-        isClickable ? "" : "pointer-events-none"
-      }`}
+      className={`flex gap-3 items-stretch font-mono transition-opacity ${isClickable ? "cursor-pointer" : "cursor-default"
+        } ${isActive ? "opacity-100" : "opacity-45 hover:opacity-100"} ${isClickable ? "" : "pointer-events-none"
+        }`}
     >
       <div>
         <div className=" flex  items-center gap-2">
@@ -368,3 +423,36 @@ const EmailChartItem: React.FC<DashboardItemCardProps> = ({
     </button>
   );
 };
+
+function ratio(numerator: number, denominator: number): number {
+  if (!denominator || denominator <= 0) return 0;
+  return (numerator / denominator) * 100;
+}
+
+function formatPercent(value: number): string {
+  return `${value.toFixed(2)}%`;
+}
+
+function AnalyticsStatCard({
+  label,
+  value,
+  isAdvanced,
+}: {
+  label: string;
+  value: string;
+  isAdvanced?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/50 px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        {isAdvanced ? (
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+            Paid
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-1 font-mono text-base">{value}</p>
+    </div>
+  );
+}

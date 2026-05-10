@@ -236,7 +236,7 @@ export default function ContactsPage({
                             {contactBookDetailQuery.data?.emoji}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full rounded-none border-0 !bg-transparent !p-0 shadow-none drop-shadow-md">
+                        <PopoverContent className="w-full rounded-none border-0 bg-transparent! p-0! shadow-none drop-shadow-md">
                           <EmojiPicker
                             onEmojiClick={(emojiObject) => {
                               // Handle emoji selection here
@@ -367,7 +367,7 @@ export default function ContactsPage({
             </CardContent>
           </Card>
 
-          {/* Recent Campaigns Card */}
+          {/* Recent Broadcasts Card */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -375,7 +375,7 @@ export default function ContactsPage({
                   <Megaphone className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <CardTitle className="text-sm font-medium">
-                  Recent Campaigns
+                  Recent Broadcasts
                 </CardTitle>
               </div>
             </CardHeader>
@@ -383,7 +383,7 @@ export default function ContactsPage({
               {!contactBookDetailQuery.isLoading &&
               contactBookDetailQuery.data?.campaigns.length === 0 ? (
                 <div className="text-muted-foreground text-sm py-4 text-center">
-                  No campaigns yet.
+                  No broadcasts yet.
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -392,16 +392,16 @@ export default function ContactsPage({
                     .map((campaign) => (
                       <Link
                         key={campaign.id}
-                        href={`/campaigns/${campaign.id}`}
+                        href={`/broadcasts/${campaign.id}`}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <Megaphone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <Megaphone className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="text-sm font-medium truncate">
                             {campaign.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {formatDistanceToNow(campaign.createdAt, {
@@ -414,10 +414,10 @@ export default function ContactsPage({
                     ))}
                   {(contactBookDetailQuery.data?.campaigns.length || 0) > 5 && (
                     <Link
-                      href="/campaigns"
+                      href="/broadcasts"
                       className="flex items-center justify-center p-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      View all campaigns
+                      View all broadcasts
                     </Link>
                   )}
                 </div>

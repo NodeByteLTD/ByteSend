@@ -19,7 +19,7 @@ This guide covers the fastest path to a running ByteSend instance using Docker C
 
 ```bash
 git clone https://github.com/NodeByteLTD/ByteSend.git
-cd bytesend
+cd ByteSend
 ```
 
 ---
@@ -76,15 +76,15 @@ Configure at least one provider. All three are supported:
 docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
 ```
 
-This starts:
+This pulls the latest images from DockerHub and starts:
 
-| Container | Description |
-|---|---|
-| `web` | ByteSend Next.js application |
-| `postgres` | PostgreSQL 16 |
-| `redis` | Redis 7 |
-| `minio` | S3-compatible object storage (console on port 9001) |
-| `smtp` | ByteSend SMTP relay server |
+| Container | Image | Description |
+|---|---|---|
+| `web` | `bytesend/bytesend:latest` | ByteSend Next.js application |
+| `postgres` | `postgres:16` | PostgreSQL 16 database |
+| `redis` | `redis:7` | Redis 7 |
+| `minio` | `minio/minio:latest` | S3-compatible object storage (console on port 9001) |
+| `smtp` | `bytesend/smtp-proxy:latest` | ByteSend SMTP relay server |
 
 ---
 
@@ -148,10 +148,10 @@ docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
 | `AWS_DEFAULT_REGION` | Yes | AWS region (e.g. `eu-west-1`) |
 | `GITHUB_ID` | No | GitHub OAuth app client ID |
 | `GITHUB_SECRET` | No | GitHub OAuth app client secret |
+| `DISCORD_CLIENT_ID` | No | Discord OAuth app client ID |
+| `DISCORD_CLIENT_SECRET` | No | Discord OAuth app client secret |
+| `GOOGLE_CLIENT_ID` | No | Google OAuth app client ID |
+| `GOOGLE_CLIENT_SECRET` | No | Google OAuth app client secret |
 | `STRIPE_SECRET_KEY` | No | Stripe secret key (billing) |
 | `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook signing secret |
-| `GITLAB_URL` | No | GitLab URL for release tracking |
-| `GITLAB_REPO_ID` | No | GitLab repository ID |
-| `GITLAB_RELEASE_TOKEN` | No | GitLab API token for releases |
-| `GITHUB_RELEASE_TOKEN` | No | GitHub API token for releases |
 

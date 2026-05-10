@@ -80,7 +80,10 @@ const worker = new Worker(
         // Period total before yesterday (subtract yesterday from period-through-yesterday)
         const priorTotal = Math.max(0, periodTotal - totalYesterday);
 
-        // The plan's included monthly email limit
+        // The plan's included monthly email limit.
+        // Custom slider contracts are fixed-price + fixed limits, so no Stripe metered overage.
+        if (team.customPlanEnabled) continue;
+
         const includedLimit = PLAN_LIMITS[team.plan as Plan].emailsPerMonth;
         if (includedLimit === -1) continue; // Unlimited plan, nothing to meter
 

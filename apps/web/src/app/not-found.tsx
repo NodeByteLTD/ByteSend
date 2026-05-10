@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaArrowLeftLong, FaHouse } from "react-icons/fa6";
 
 export default function NotFound() {
   return (
@@ -34,19 +35,14 @@ export default function NotFound() {
             href="/dashboard"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline strokeLinecap="round" strokeLinejoin="round" points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <FaHouse className="h-4 w-4" />
             Dashboard
           </Link>
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-xl border border-border/40 bg-card/40 px-6 py-2.5 text-sm font-medium text-foreground hover:bg-card/80 transition-colors backdrop-blur-sm"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
+            <FaArrowLeftLong className="h-4 w-4" />
             Home
           </Link>
         </div>

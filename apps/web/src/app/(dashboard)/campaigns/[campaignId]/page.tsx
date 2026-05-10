@@ -100,6 +100,8 @@ export default function CampaignDetailsPage({
 
   const total = campaign.total ?? 0;
   const processed = campaign.sent ?? 0;
+  const basePath = campaign.intent === "BROADCAST" ? "/broadcasts" : "/campaigns";
+  const collectionLabel = campaign.intent === "BROADCAST" ? "Broadcasts" : "Campaigns";
 
   return (
     <div className="container mx-auto">
@@ -108,8 +110,8 @@ export default function CampaignDetailsPage({
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/campaigns" className="text-lg">
-                  Campaigns
+                <Link href={basePath} className="text-lg">
+                  {collectionLabel}
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -117,7 +119,7 @@ export default function CampaignDetailsPage({
             <BreadcrumbItem>
               <BreadcrumbPage className="text-lg ">
                 <div className="flex items-center gap-2">
-                  <div className="max-w-[300px] truncate">{campaign.name}</div>
+                  <div className="max-w-75 truncate">{campaign.name}</div>
                   <CampaignStatusBadge status={campaign.status} />
                 </div>
               </BreadcrumbPage>
@@ -125,7 +127,7 @@ export default function CampaignDetailsPage({
           </BreadcrumbList>
         </Breadcrumb>
         {campaign.status === "SCHEDULED" ? (
-          <Link href={`/campaigns/${campaign.id}/edit`}>
+          <Link href={`${basePath}/${campaign.id}/edit`}>
             <Button>Edit</Button>
           </Link>
         ) : (
@@ -185,7 +187,7 @@ export default function CampaignDetailsPage({
               <CardTitle className="text-sm font-mono">Live activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex h-[300px] flex-col">
+              <div className="flex h-75 flex-col">
                 {latestEmailsLoading ? (
                   <div className="flex flex-1 items-center justify-center">
                     <Spinner className="h-5 w-5 text-foreground" />
@@ -245,15 +247,15 @@ export default function CampaignDetailsPage({
           <div className="p-2 rounded-lg border shadow  flex flex-col gap-4 w-full">
             <div className="flex flex-col gap-3 px-4 py-1">
               <div className=" flex text-sm">
-                <div className="w-[70px] text-muted-foreground">Subject</div>
+                  <div className="w-17.5 text-muted-foreground">Subject</div>
                 <div> {campaign.subject}</div>
               </div>
               <div className="flex  text-sm">
-                <div className="w-[70px] text-muted-foreground">From</div>
+                  <div className="w-17.5 text-muted-foreground">From</div>
                 <div> {campaign.from}</div>
               </div>
               <div className="flex  text-sm items-center">
-                <div className="w-[70px] text-muted-foreground">Contact</div>
+                  <div className="w-17.5 text-muted-foreground">Contact</div>
                 <Link
                   href={`/contacts/${campaign.contactBookId}`}
                   target="_blank"

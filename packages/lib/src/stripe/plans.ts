@@ -22,14 +22,14 @@ export const PLANS: Record<PlanType, PricingTier> = {
       maxTeamMembers: 5,
       maxWebhooks: 3,
       contactsLimit: 100,
-      campaignsLimit: 0, // Marketing emails not available on free plan
+      campaignsLimit: 3, // Limited marketing access on free plan
       prioritySupport: false,
       customBranding: false,
       advancedAnalytics: false,
       apiAccessLevel: "basic",
       concurrentConnections: 1,
-      marketingEmailsIncluded: false,
-      extraMemberRateCents: 0, // Hard cap — upgrade required
+      marketingEmailsIncluded: true,
+      extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -42,12 +42,12 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 500, // CA$5/month in cents
     usageMetering: {
-      marketing: 0.05,    // CA$0.05 per marketing email (overage after 25,000 included)
-      transactional: 0.03, // CA$0.03 per transactional email (overage after 25,000 included)
+      marketing: 0.0009, // CA$0.90 per 1,000 marketing emails (overage)
+      transactional: 0.0004, // CA$0.40 per 1,000 transactional emails (overage)
     },
     limits: {
       monthlyEmailLimit: 25_000,
-      dailyEmailLimit: 12_500,
+      dailyEmailLimit: Number.POSITIVE_INFINITY, // unlimited daily
       maxDomains: 4,
       maxContactBooks: 10,
       maxTeamMembers: 10,
@@ -60,7 +60,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "basic",
       concurrentConnections: 2,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 0, // Hard cap — upgrade required
+      extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -73,12 +73,12 @@ export const PLANS: Record<PlanType, PricingTier> = {
     isLimited: true,
     monthlyPrice: 1000, // CA$10/month in cents
     usageMetering: {
-      marketing: 0.02,    // CA$0.02 per marketing email (overage after 50,000 included)
-      transactional: 0.02, // CA$0.02 per transactional email (overage after 50,000 included)
+      marketing: 0.0008, // CA$0.80 per 1,000 marketing emails (overage)
+      transactional: 0.00035, // CA$0.35 per 1,000 transactional emails (overage)
     },
     limits: {
       monthlyEmailLimit: 50_000,
-      dailyEmailLimit: 25_000,
+      dailyEmailLimit: Number.POSITIVE_INFINITY, // unlimited daily
       maxDomains: 6,
       maxContactBooks: 25,
       maxTeamMembers: 15,
@@ -91,21 +91,21 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "full",
       concurrentConnections: 5,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 0, // Hard cap — upgrade required
+      extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
 
   BASIC: {
     plan: "BASIC",
-    displayName: "Professional",
+    displayName: "Pro",
     description: "For professionals and growing businesses",
     order: 4,
     isLimited: true,
     monthlyPrice: 2000, // CA$20/month in cents
     usageMetering: {
-      marketing: 0.01,    // CA$0.01 per marketing email (overage after 100,000 included)
-      transactional: 0.01, // CA$0.01 per transactional email (overage after 100,000 included)
+      marketing: 0.0007, // CA$0.70 per 1,000 marketing emails (overage)
+      transactional: 0.00025, // CA$0.25 per 1,000 transactional emails (overage)
     },
     limits: {
       monthlyEmailLimit: 100_000,
@@ -122,7 +122,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "full",
       concurrentConnections: 10,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 0, // Hard cap — upgrade required
+      extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },
@@ -151,7 +151,7 @@ export const PLANS: Record<PlanType, PricingTier> = {
       apiAccessLevel: "full",
       concurrentConnections: 20,
       marketingEmailsIncluded: true,
-      extraMemberRateCents: 0,
+      extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },
   },

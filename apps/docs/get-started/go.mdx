@@ -1,147 +1,429 @@
 ---
 title: Go
-description: "The ByteSend Go package lets you interact with the ByteSend API to send emails, manage contacts, and work with domains. This guide covers basic setup and usage."
+description: "The ByteSend Go SDK lets you interact with the ByteSend API to send emails, manage contacts, domains, and campaigns. This guide covers installation, configuration, and common usage patterns."
 icon: golang
 ---
 
 ## Prerequisites
 
-- [ByteSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- Go 1.21+
+- [ByteSend API key](https://bytesend.cloud/settings/api-keys)
 - [Verified domain](https://bytesend.cloud/domains)
 
 ## Installation
 
 Install the ByteSend Go SDK:
+
 ```bash
-go get github.com/NodeByteHosting/bytesend-go
+go get github.com/nodebyteltd/bytesend-go
 ```
 
-## Initialize
+## Quick Start
 
-Create a new client using your API key.
 ```go
 package main
 
 import (
     "context"
+    "fmt"
     "log"
 
-    bytesend "github.com/NodeByteHosting/bytesend-go"
+    bytesend "github.com/nodebyteltd/bytesend-go"
 )
 
 func main() {
-    client, err := bytesend.NewClient("bs_12345")
+    client, err := bytesend.NewClient("bs_your_api_key")
     if err != nil {
+        log.Fatal(err)
+    }
+
+    resp, err := client.Emails.Create(context.Background(), bytesend.SendEmailPayload{
+        From:    "hello@company.com",
+        To:      []string{"user@example.com"},
+        Subject: "Welcome!",
+        HTML:    "<h1>Hello!</h1>",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println("Email sent:", resp.EmailID)
+}
+```
+
+## Configuration
+
+### API Key
+
+The API key can be passed directly or read from the `BYTESEND_API_KEY` environment variable:
+
+```go
+// Explicit API key
+client, err := bytesend.NewClient("bs_your_api_key")
+if err != nil {
+    log.Fatal(err)
+}
+
+// From environment variable
+client, err := bytesend.NewClient("")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### Client Options
+
+Customize the client with options for base URL and HTTP client:
+
+```go
+import (
+    "net/http"
+    "time"
+
+    bytesend "github.com/nodebyteltd/bytesend-go"
+)
+
+client, err := bytesend.NewClient(
+    "bs_your_api_key",
+    // Override the base URL (useful for self-hosting or proxying)
+    bytesend.WithBaseURL("https://your-instance.com/api/v1"),
+
+    // Supply your own HTTP client (custom timeouts, transport, etc.)
+    bytesend.WithHTTPClient(&http.Client{
+        Timeout: 60 * time.Second,
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+<Info>
+The default base URL is `https://bytesend.cloud/api/v1`. For self-hosted deployments, include `/api/v1` in the base URL. The default HTTP client uses a 30-second timeout. All requests include the `User-Agent: bytesend-go` header.
+</Info>
+
+## Error Handling
+
+All service methods return a single `error`. API errors are returned as `*ErrorResponse`. Use `errors.As` to distinguish API errors from network or encoding errors:
+
+```go
+import "errors"
+
+resp, err := client.Emails.Create(ctx, payload)
+if err != nil {
+    var apiErr *bytesend.ErrorResponse
+    if errors.As(err, &apiErr) {
+        // API error (validation, auth, rate limit, etc.)
+        fmt.Printf("API error %s: %s\n", apiErr.Code, apiErr.Message)
+    } else {
+        // Network, timeout, or encoding error
         log.Fatal(err)
     }
 }
 ```
 
-API keys can also be supplied via the `BYTESEND_API_KEY` environment variable.
-
-### Self-Hosted Setup
-
-If you are running a self-hosted version of ByteSend, provide the base URL using `WithBaseURL`.
-```go
-client, err := bytesend.NewClient(
-    "bs_12345",
-    bytesend.WithBaseURL("https://bytesend.cloud"),
-)
-if err != nil {
-    log.Fatal(err)
-}
-```
-
-<Info>
-The base URL should be the root domain only. Do not include `/api/v1`, as the SDK manages API paths internally.
-</Info>
-
-### Options
-
-- `WithBaseURL(url string)`: Override the base API URL (e.g. for self-hosting)
-- `WithHTTPClient(*http.Client)`: Provide a custom HTTP client
-
-<Info>
-The default HTTP client uses a 30s timeout. Requests include a `User-Agent: bytesend-go` header.
-</Info>
-
 ## Sending Emails
-```go
-resp, errResp, err := client.Emails.Send(
-    context.Background(),
-    bytesend.SendEmailPayload{
-        To:      []string{"hello@acme.com"},
-        From:    "hello@company.com",
-        Subject: "ByteSend email",
-        HTML:    "<p>ByteSend is the best way to send emails</p>",
-        Text:    "ByteSend is the best way to send emails",
-        Headers: map[string]string{
-            "X-Campaign": "welcome",
-        },
-    },
-)
 
+### Send a basic email
+
+```go
+resp, err := client.Emails.Create(context.Background(), bytesend.SendEmailPayload{
+    From:    "hello@company.com",
+    To:      []string{"user@example.com"},
+    Subject: "Welcome!",
+    HTML:    "<h1>Hello!</h1>",
+    Text:    "Hello!",
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Email ID:", resp.EmailID)
+```
+
+### Send with an idempotency key
+
+Idempotency keys prevent duplicate sends on retries. The same key + same payload returns the original `emailId`. Keys expire after 24 hours.
+
+```go
+resp, err := client.Emails.Create(ctx, payload, "order-12345-key")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### Send with a template
+
+```go
+resp, err := client.Emails.Create(ctx, bytesend.SendEmailPayload{
+    From:       "hello@company.com",
+    To:         []string{"user@example.com"},
+    TemplateID: "tmpl_abc123",
+    Variables:  map[string]string{"name": "Jane", "plan": "Pro"},
+})
+```
+
+### Send with attachments
+
+```go
+import "os"
+
+content, err := os.ReadFile("invoice.pdf")
 if err != nil {
     log.Fatal(err)
 }
 
-if errResp != nil {
-    log.Fatalf("API error: %s", errResp.Message)
-}
-
-log.Printf("Email queued with ID: %s", resp.EmailID)
+resp, err := client.Emails.Create(ctx, bytesend.SendEmailPayload{
+    From:    "hello@company.com",
+    To:      []string{"user@example.com"},
+    Subject: "Your invoice",
+    HTML:    "<p>Find your invoice attached.</p>",
+    Attachments: []bytesend.Attachment{
+        {Filename: "invoice.pdf", Content: content},
+    },
+})
 ```
 
-<Info>
-Custom headers are forwarded as-is. ByteSend only manages the `X-ByteSend-Email-ID` and `References` headers.
-</Info>
+### Batch send (up to 100 emails)
+
+```go
+resp, err := client.Emails.Batch(ctx, []bytesend.SendEmailPayload{
+    {From: "hello@company.com", To: []string{"a@example.com"}, Subject: "Hi A", HTML: "<p>Hi A</p>"},
+    {From: "hello@company.com", To: []string{"b@example.com"}, Subject: "Hi B", HTML: "<p>Hi B</p>"},
+})
+// resp.Data contains individual email IDs
+```
+
+### List emails
+
+```go
+resp, err := client.Emails.List(ctx, bytesend.ListEmailsParams{
+    Page:   "1",
+    Limit:  "50",
+    DomainID: "123",
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Found %d emails\n", resp.Count)
+```
+
+### Get a single email with delivery events
+
+```go
+email, err := client.Emails.Get(ctx, "em_abc123")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Status: %v\n", email.EmailEvents)
+```
+
+### Reschedule a scheduled email
+
+```go
+resp, err := client.Emails.Update(ctx, "em_abc123", bytesend.UpdateEmailPayload{
+    ScheduledAt: "2026-06-01T09:00:00Z",
+})
+```
+
+### Cancel a scheduled email
+
+```go
+resp, err := client.Emails.Cancel(ctx, "em_abc123")
+```
 
 ## Managing Contacts
 
-### Get Contact Book ID
+### Create a contact
 
-Retrieve the contact book ID from the ByteSend dashboard.
-
-### Create Contacts
 ```go
-contact, apiErr, err := client.Contacts.Create(
-    context.Background(),
-    "contactBook_123",
+subscribed := true
+resp, err := client.Contacts.Create(
+    ctx,
+    "cb_contactbook_id",
     bytesend.CreateContactPayload{
-        Email:     "hey@bobdole.com",
-        FirstName: "Bob",
-        LastName:  "Dole",
+        Email:      "user@example.com",
+        FirstName:  "Jane",
+        LastName:   "Doe",
+        Subscribed: &subscribed,
+        Properties: map[string]string{"plan": "pro"},
     },
 )
-
 if err != nil {
-    log.Fatal(err) // transport error
+    log.Fatal(err)
 }
-
-if apiErr != nil {
-    log.Fatalf("API error: %s", apiErr.Message)
-}
-
-log.Printf("Contact ID: %s", contact.ContactID)
+fmt.Println("Contact ID:", resp.ContactID)
 ```
 
-### Update Contacts
+### List contacts
+
 ```go
-contact, apiErr, err := client.Contacts.Update(
-    context.Background(),
-    "contactBook_123",
-    "contact_456",
+resp, err := client.Contacts.List(ctx, "cb_contactbook_id", bytesend.ListContactsParams{
+    Page:  "1",
+    Limit: "100",
+    // Emails: "a@example.com,b@example.com"  — filter by email addresses
+    // IDs:    "ct_1,ct_2"                     — filter by contact IDs
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### Get a contact
+
+```go
+contact, err := client.Contacts.Get(ctx, "cb_contactbook_id", "ct_contactid")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("%s %s <%s>\n", contact.FirstName, contact.LastName, contact.Email)
+```
+
+### Update a contact
+
+```go
+resp, err := client.Contacts.Update(
+    ctx,
+    "cb_contactbook_id",
+    "ct_contactid",
     bytesend.UpdateContactPayload{
-        FirstName: "Bob",
-        LastName:  "Dold",
+        FirstName: "Janet",
+        Properties: map[string]string{"plan": "enterprise"},
     },
 )
+```
 
+### Bulk create contacts
+
+```go
+payloads := []bytesend.CreateContactPayload{
+    {Email: "alice@example.com", FirstName: "Alice"},
+    {Email: "bob@example.com", FirstName: "Bob"},
+}
+
+resp, err := client.Contacts.BulkCreate(ctx, "cb_contactbook_id", payloads)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Created %d contacts\n", resp.Count)
+```
+
+## Managing Domains
+
+### List domains
+
+```go
+resp, err := client.Domains.List(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+for _, domain := range resp {
+    fmt.Printf("%s — Status: %s\n", domain.Name, domain.Status)
+}
+```
+
+### Create a domain
+
+```go
+resp, err := client.Domains.Create(ctx, bytesend.CreateDomainPayload{
+    Name:   "email.example.com",
+    Region: "us-east-1",
+})
+```
+
+### Verify a domain
+
+After adding DNS records, verify the domain:
+
+```go
+resp, err := client.Domains.Verify(ctx, 123)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(resp.Message)
+```
+
+## Campaigns (Marketing)
+
+### Create a campaign
+
+```go
+resp, err := client.Campaigns.Create(ctx, bytesend.CreateCampaignPayload{
+    Name:          "Q2 Newsletter",
+    From:          "hello@company.com",
+    Subject:       "Q2 Update",
+    ContactBookID: "cb_book123",
+    HTML:          "<h1>Q2 Update</h1><p>Here's what's new...</p>",
+    SendNow:       true,
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### List campaigns
+
+```go
+resp, err := client.Campaigns.List(ctx, bytesend.ListCampaignsParams{
+    Page:   "1",
+    Status: "sent",
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Found %d campaigns\n", len(resp.Campaigns))
+```
+
+### Schedule a campaign
+
+```go
+resp, err := client.Campaigns.Schedule(ctx, "campaign_id", bytesend.ScheduleCampaignPayload{
+    ScheduledAt: "2026-06-01T09:00:00Z",
+    BatchSize:   1000,
+})
+```
+
+### Pause or resume a campaign
+
+```go
+resp, err := client.Campaigns.Pause(ctx, "campaign_id")
+resp, err = client.Campaigns.Resume(ctx, "campaign_id")
+```
+
+## Analytics
+
+### Email time series
+
+Retrieve delivery metrics for a date range:
+
+```go
+resp, err := client.Analytics.EmailTimeSeries(ctx, bytesend.EmailTimeSeriesParams{
+    Days:     "7",  // or "30"
+    DomainID: "optional_domain_id",
+})
 if err != nil {
     log.Fatal(err)
 }
 
-if apiErr != nil {
-    log.Fatalf("API error: %s", apiErr.Message)
+for _, entry := range resp.Result {
+    fmt.Printf("%s: sent=%d, delivered=%d, opened=%d\n",
+        entry.Date, entry.Sent, entry.Delivered, entry.Opened)
 }
 ```
+
+### Reputation metrics
+
+```go
+resp, err := client.Analytics.ReputationMetrics(ctx, bytesend.ReputationMetricsParams{
+    DomainID: "optional_domain_id",
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Bounce rate: %.2f%%\n", resp.BounceRate*100)
+fmt.Printf("Complaint rate: %.2f%%\n", resp.ComplaintRate*100)
+```
+
+## More Information
+
+For complete SDK documentation and examples, see the [GitHub repository](https://github.com/nodebyteltd/bytesend-go).

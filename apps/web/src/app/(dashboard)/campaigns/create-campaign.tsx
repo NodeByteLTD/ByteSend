@@ -40,7 +40,14 @@ const campaignSchema = z.object({
   }),
 });
 
-export default function CreateCampaign() {
+type MarketingIntent = "CAMPAIGN" | "BROADCAST";
+
+interface CreateCampaignProps {
+  intent: MarketingIntent;
+  basePath: "/campaigns" | "/broadcasts";
+}
+
+export default function CreateCampaign({ intent, basePath }: CreateCampaignProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -63,12 +70,17 @@ export default function CreateCampaign() {
         name: values.name,
         from: values.from,
         subject: values.subject,
+        intent,
       },
       {
         onSuccess: async (data) => {
           utils.campaign.getCampaigns.invalidate();
-          router.push(`/campaigns/${data.id}/edit`);
-          toast.success("Campaign created successfully");
+          router.push(`${basePath}/${data.id}/edit`);
+          toast.success(
+            intent === "BROADCAST"
+              ? "Broadcast created successfully"
+              : "Campaign created successfully",
+          );
           setOpen(false);
         },
         onError: async (error) => {
@@ -86,12 +98,14 @@ export default function CreateCampaign() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-1" />
-          Create Campaign
+          {intent === "BROADCAST" ? "Create Broadcast" : "Create Campaign"}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create new campaign</DialogTitle>
+          <DialogTitle>
+            {intent === "BROADCAST" ? "Create new broadcast" : "Create new campaign"}
+          </DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <Form {...campaignForm}>
@@ -106,7 +120,10 @@ export default function CreateCampaign() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Campaign Name" {...field} />
+                      <Input
+                        placeholder={intent === "BROADCAST" ? "Broadcast Name" : "Campaign Name"}
+                        {...field}
+                      />
                     </FormControl>
                     {formState.errors.name ? <FormMessage /> : null}
                   </FormItem>
@@ -135,7 +152,10 @@ export default function CreateCampaign() {
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
                     <FormControl>
-                      <Input placeholder="Campaign Subject" {...field} />
+                      <Input
+                        placeholder={intent === "BROADCAST" ? "Broadcast Subject" : "Campaign Subject"}
+                        {...field}
+                      />
                     </FormControl>
                     {formState.errors.subject ? <FormMessage /> : null}
                   </FormItem>
@@ -145,8 +165,8 @@ export default function CreateCampaign() {
                 Don't worry, you can change it later.
               </p>
               <div className="flex justify-end">
-                <Button
-                  className=" w-[100px]"
+                  <Button
+                    className="w-25"
                   type="submit"
                   disabled={createCampaignMutation.isPending}
                 >

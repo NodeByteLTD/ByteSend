@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [ByteSend API key](https://bytesend.cloud/dev-settings/api-keys)
+- [ByteSend API key](https://bytesend.cloud/settings/api-keys)
 - [Verified domain](https://bytesend.cloud/domains)
 
 ## Installation

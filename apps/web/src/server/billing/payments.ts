@@ -15,6 +15,14 @@ import {
 } from "./stripe-config";
 
 export type CheckoutPlan = Extract<Plan, "LITE" | "HOBBY" | "BASIC" | "LIFETIME">;
+export type CustomBasePlan = Extract<Plan, "LITE" | "HOBBY" | "BASIC">;
+
+export type CustomPlanContract = {
+  basePlan: CustomBasePlan;
+  marketingEmailLimit: number;
+  transactionalEmailLimit: number;
+  monthlyPriceCents: number;
+};
 
 export function getStripe() {
   if (!env.STRIPE_SECRET_KEY) {
@@ -35,6 +43,30 @@ async function createCustomerForTeam(teamId: number) {
   return customer;
 }
 
+async function ensureTeamCustomerId(teamId: number, existingCustomerId?: string | null) {
+  const stripe = getStripe();
+  let customerId = existingCustomerId;
+
+  if (!customerId) {
+    const customer = await createCustomerForTeam(teamId);
+    customerId = customer.id;
+    return customerId;
+  }
+
+  try {
+    await stripe.customers.retrieve(customerId);
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeError && err.code === "resource_missing") {
+      const customer = await createCustomerForTeam(teamId);
+      customerId = customer.id;
+    } else {
+      throw err;
+    }
+  }
+
+  return customerId;
+}
+
 export async function createCheckoutSessionForTeam(
   teamId: number,
   plan: CheckoutPlan = "BASIC",
@@ -44,24 +76,7 @@ export async function createCheckoutSessionForTeam(
   if (team.isActive && team.plan !== "FREE") throw new Error("Team is already active");
 
   const stripe = getStripe();
-
-  let customerId = team.stripeCustomerId;
-  if (!customerId) {
-    const customer = await createCustomerForTeam(teamId);
-    customerId = customer.id;
-  } else {
-    // Verify the stored customer still exists in Stripe (handles DB resets / key switches)
-    try {
-      await stripe.customers.retrieve(customerId);
-    } catch (err) {
-      if (err instanceof Stripe.errors.StripeError && err.code === "resource_missing") {
-        const customer = await createCustomerForTeam(teamId);
-        customerId = customer.id;
-      } else {
-        throw err;
-      }
-    }
-  }
+  const customerId = await ensureTeamCustomerId(teamId, team.stripeCustomerId);
 
   const priceIds = await getPlanPriceIds(plan);
 
@@ -90,12 +105,62 @@ export async function createCheckoutSessionForTeam(
     customer: customerId,
     line_items: [
       { price: priceIds.monthly, quantity: 1 },
-      ...(priceIds.marketingUsage     ? [{ price: priceIds.marketingUsage }]     : []),
+      ...(priceIds.marketingUsage ? [{ price: priceIds.marketingUsage }] : []),
       ...(priceIds.transactionalUsage ? [{ price: priceIds.transactionalUsage }] : []),
     ],
     success_url: `${env.NEXTAUTH_URL}/payments?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
     metadata: { teamId: teamId.toString(), plan },
+    client_reference_id: teamId.toString(),
+  });
+}
+
+/**
+ * Creates a Stripe Checkout session for purchasing additional domain slots.
+ */
+export async function createCustomCheckoutSessionForTeam(
+  teamId: number,
+  contract: CustomPlanContract,
+) {
+  const team = await db.team.findUnique({ where: { id: teamId } });
+  if (!team) throw new Error("Team not found");
+  if (team.isActive && team.plan !== "FREE") throw new Error("Team is already active");
+
+  const customerId = await ensureTeamCustomerId(teamId, team.stripeCustomerId);
+  const stripe = getStripe();
+
+  const metadata = {
+    teamId: teamId.toString(),
+    customPlanEnabled: "true",
+    plan: contract.basePlan,
+    customMarketingEmailLimit: contract.marketingEmailLimit.toString(),
+    customTransactionalEmailLimit: contract.transactionalEmailLimit.toString(),
+    customMonthlyPriceCents: contract.monthlyPriceCents.toString(),
+  };
+
+  return stripe.checkout.sessions.create({
+    mode: "subscription",
+    customer: customerId,
+    line_items: [
+      {
+        price_data: {
+          currency: "cad",
+          recurring: { interval: "month" },
+          unit_amount: contract.monthlyPriceCents,
+          product_data: {
+            name: `ByteSend Custom ${contract.basePlan}`,
+            description: `${contract.marketingEmailLimit.toLocaleString()} marketing + ${contract.transactionalEmailLimit.toLocaleString()} transactional emails per month`,
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: `${env.NEXTAUTH_URL}/payments?success=true&custom=true&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${env.NEXTAUTH_URL}/settings/billing`,
+    metadata,
+    subscription_data: {
+      metadata,
+    },
     client_reference_id: teamId.toString(),
   });
 }
@@ -147,6 +212,20 @@ async function getPlanFromPriceIds(priceIds: string[]): Promise<Plan> {
     if (priceSet.has(priceId)) return plan as Plan;
   }
   return "FREE";
+}
+
+function parsePositiveInt(value: string | undefined): number | null {
+  if (!value) return null;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+function parseCustomBasePlan(value: string | undefined): CustomBasePlan | null {
+  if (value === "HOBBY" || value === "LITE" || value === "BASIC") {
+    return value;
+  }
+  return null;
 }
 
 export async function getManageSessionUrl(teamId: number) {
@@ -202,9 +281,9 @@ export async function syncStripeData(customerId: string) {
     }
   }
 
-  await db.team.update({ 
-    where: { id: team.id }, 
-    data: { extraDomainSlots, extraMemberSlots } 
+  await db.team.update({
+    where: { id: team.id },
+    data: { extraDomainSlots, extraMemberSlots }
   });
   await TeamService.invalidateTeamCache(team.id);
 
@@ -215,11 +294,19 @@ export async function syncStripeData(customerId: string) {
     .map((item) => item.price?.id)
     .filter((id): id is string => Boolean(id));
 
-  const nextPlan = await getPlanFromPriceIds(priceIds);
+  const customPlanEnabled = subscription.metadata?.customPlanEnabled === "true";
+  const customBasePlan = parseCustomBasePlan(subscription.metadata?.plan);
+  const customMarketingEmailLimit = parsePositiveInt(subscription.metadata?.customMarketingEmailLimit);
+  const customTransactionalEmailLimit = parsePositiveInt(subscription.metadata?.customTransactionalEmailLimit);
+  const customMonthlyPriceCents = parsePositiveInt(subscription.metadata?.customMonthlyPriceCents);
+
+  const nextPlan = customPlanEnabled
+    ? (customBasePlan ?? team.plan)
+    : await getPlanFromPriceIds(priceIds);
   const isNowPaid = subscription.status === "active" && nextPlan !== "FREE";
   const shouldSendSubscriptionConfirmation = !wasPaid && isNowPaid;
 
-  const periodEnd   = subscription.items.data[0]?.current_period_end;
+  const periodEnd = subscription.items.data[0]?.current_period_end;
   const periodStart = subscription.items.data[0]?.current_period_start;
 
   await db.subscription.upsert({
@@ -228,7 +315,7 @@ export async function syncStripeData(customerId: string) {
       status: subscription.status,
       priceId: subscription.items.data[0]?.price?.id ?? "",
       priceIds,
-      currentPeriodEnd:   periodEnd   ? new Date(periodEnd   * 1000) : null,
+      currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
       currentPeriodStart: periodStart ? new Date(periodStart * 1000) : null,
       cancelAtPeriodEnd: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
       paymentMethod: JSON.stringify(subscription.default_payment_method),
@@ -239,7 +326,7 @@ export async function syncStripeData(customerId: string) {
       status: subscription.status,
       priceId: subscription.items.data[0]?.price?.id ?? "",
       priceIds,
-      currentPeriodEnd:   periodEnd   ? new Date(periodEnd   * 1000) : null,
+      currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
       currentPeriodStart: periodStart ? new Date(periodStart * 1000) : null,
       cancelAtPeriodEnd: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
       paymentMethod: JSON.stringify(subscription.default_payment_method),
@@ -250,6 +337,22 @@ export async function syncStripeData(customerId: string) {
   await TeamService.updateTeam(team.id, {
     plan: subscription.status === "canceled" ? "FREE" : nextPlan,
     isActive: subscription.status === "active",
+    customPlanEnabled:
+      subscription.status === "active" &&
+      customPlanEnabled &&
+      Boolean(customBasePlan && customMarketingEmailLimit && customTransactionalEmailLimit && customMonthlyPriceCents),
+    customMarketingEmailLimit:
+      subscription.status === "active" && customPlanEnabled
+        ? customMarketingEmailLimit
+        : null,
+    customTransactionalEmailLimit:
+      subscription.status === "active" && customPlanEnabled
+        ? customTransactionalEmailLimit
+        : null,
+    customMonthlyPriceCents:
+      subscription.status === "active" && customPlanEnabled
+        ? customMonthlyPriceCents
+        : null,
   });
 
   logger.info(
@@ -286,7 +389,14 @@ export async function syncLifetimePayment(customerId: string) {
 
   if (team.plan === "LIFETIME") return;
 
-  await TeamService.updateTeam(team.id, { plan: "LIFETIME", isActive: true });
+  await TeamService.updateTeam(team.id, {
+    plan: "LIFETIME",
+    isActive: true,
+    customPlanEnabled: false,
+    customMarketingEmailLimit: null,
+    customTransactionalEmailLimit: null,
+    customMonthlyPriceCents: null,
+  });
 
   try {
     const teamUsers = await TeamService.getTeamUsers(team.id);

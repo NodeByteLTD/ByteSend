@@ -299,11 +299,11 @@ export const adminRouter = createTRPCRouter({
 
       const where: Prisma.UserWhereInput = query
         ? {
-            OR: [
-              { email: { contains: query, mode: "insensitive" } },
-              { name: { contains: query, mode: "insensitive" } },
-            ],
-          }
+          OR: [
+            { email: { contains: query, mode: "insensitive" } },
+            { name: { contains: query, mode: "insensitive" } },
+          ],
+        }
         : {};
 
       const [users, total] = await Promise.all([
@@ -339,9 +339,9 @@ export const adminRouter = createTRPCRouter({
 
       let team = numericId
         ? await db.team.findUnique({
-            where: { id: numericId },
-            select: teamAdminSelection,
-          })
+          where: { id: numericId },
+          select: teamAdminSelection,
+        })
         : null;
 
       if (!team) {
@@ -396,18 +396,18 @@ export const adminRouter = createTRPCRouter({
 
       const where: Prisma.TeamWhereInput = query
         ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { billingEmail: { contains: query, mode: "insensitive" } },
-              {
-                teamUsers: {
-                  some: {
-                    user: { email: { contains: query, mode: "insensitive" } },
-                  },
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { billingEmail: { contains: query, mode: "insensitive" } },
+            {
+              teamUsers: {
+                some: {
+                  user: { email: { contains: query, mode: "insensitive" } },
                 },
               },
-            ],
-          }
+            },
+          ],
+        }
         : {};
 
       const [teams, total] = await Promise.all([
@@ -436,8 +436,26 @@ export const adminRouter = createTRPCRouter({
         plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { teamId, ...data } = input;
+
+      if (isCloud()) {
+        const existingTeam = await db.team.findUnique({
+          where: { id: teamId },
+          select: { plan: true },
+        });
+
+        if (!existingTeam) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
+        }
+
+        if (existingTeam.plan !== data.plan && !ctx.session.user.isEnvAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only founder/admin env accounts can change team plans.",
+          });
+        }
+      }
 
       const updatedTeam = await db.team.update({
         where: { id: teamId },
@@ -462,7 +480,7 @@ export const adminRouter = createTRPCRouter({
         method: z.enum(["complimentary", "checkout_link"]),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { teamId, plan, method } = input;
 
       if (!isCloud()) {
@@ -472,12 +490,23 @@ export const adminRouter = createTRPCRouter({
         });
       }
 
+      if (!ctx.session.user.isEnvAdmin) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only founder/admin env accounts can assign plans or generate payment links.",
+        });
+      }
+
       if (method === "complimentary") {
         const updatedTeam = await db.team.update({
           where: { id: teamId },
           data: {
             plan,
             isActive: plan !== "FREE",
+            customPlanEnabled: false,
+            customMarketingEmailLimit: null,
+            customTransactionalEmailLimit: null,
+            customMonthlyPriceCents: null,
           },
           select: teamAdminSelection,
         });
@@ -518,12 +547,12 @@ export const adminRouter = createTRPCRouter({
 
       const where: Prisma.DomainWhereInput = query
         ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { region: { contains: query, mode: "insensitive" } },
-              { team: { name: { contains: query, mode: "insensitive" } } },
-            ],
-          }
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { region: { contains: query, mode: "insensitive" } },
+            { team: { name: { contains: query, mode: "insensitive" } } },
+          ],
+        }
         : {};
 
       const [domains, total] = await Promise.all([
@@ -554,12 +583,12 @@ export const adminRouter = createTRPCRouter({
 
       const where: Prisma.WebhookWhereInput = query
         ? {
-            OR: [
-              { url: { contains: query, mode: "insensitive" } },
-              { team: { name: { contains: query, mode: "insensitive" } } },
-              { createdBy: { email: { contains: query, mode: "insensitive" } } },
-            ],
-          }
+          OR: [
+            { url: { contains: query, mode: "insensitive" } },
+            { team: { name: { contains: query, mode: "insensitive" } } },
+            { createdBy: { email: { contains: query, mode: "insensitive" } } },
+          ],
+        }
         : {};
 
       const [webhooks, total] = await Promise.all([
@@ -590,19 +619,19 @@ export const adminRouter = createTRPCRouter({
 
       const where: Prisma.TeamWhereInput = query
         ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { billingEmail: { contains: query, mode: "insensitive" } },
-              { stripeCustomerId: { contains: query, mode: "insensitive" } },
-              {
-                subscription: {
-                  some: {
-                    id: { contains: query, mode: "insensitive" },
-                  },
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { billingEmail: { contains: query, mode: "insensitive" } },
+            { stripeCustomerId: { contains: query, mode: "insensitive" } },
+            {
+              subscription: {
+                some: {
+                  id: { contains: query, mode: "insensitive" },
                 },
               },
-            ],
-          }
+            },
+          ],
+        }
         : {};
 
       const [teams, total] = await Promise.all([
@@ -686,10 +715,9 @@ export const adminRouter = createTRPCRouter({
         FROM "DailyEmailUsage" d
         INNER JOIN "Team" t ON t.id = d."teamId"
         WHERE 1 = 1
-        ${
-          timeframe === "today"
-            ? Prisma.sql`AND d."date" = ${today}`
-            : Prisma.sql`AND d."date" >= ${monthStart}`
+        ${timeframe === "today"
+          ? Prisma.sql`AND d."date" = ${today}`
+          : Prisma.sql`AND d."date" >= ${monthStart}`
         }
         ${paidOnly ? Prisma.sql`AND t."plan" = 'BASIC'` : Prisma.sql``}
         GROUP BY d."teamId", t."name", t."plan"

@@ -14,24 +14,35 @@ import {
 import { Input } from "@bytesend/ui/src/input";
 import { Search } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
+import { FaBullhorn } from "react-icons/fa6";
 import CampaignCard from "./campaign-card";
 
-export default function CampaignList() {
+type MarketingIntent = "CAMPAIGN" | "BROADCAST";
+
+interface CampaignListProps {
+  intent: MarketingIntent;
+  basePath: "/campaigns" | "/broadcasts";
+}
+
+export default function CampaignList({ intent, basePath }: CampaignListProps) {
   const [page, setPage] = useUrlState("page", "1");
   const [status, setStatus] = useUrlState("status");
   const [search, setSearch] = useUrlState("search");
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
     setSearch(value);
-  }, 1000);
+  }, 300);
 
   const pageNumber = Number(page);
+  const noun = intent === "BROADCAST" ? "broadcast" : "campaign";
+  const nounPlural = `${noun}s`;
 
   const campaignsQuery = api.campaign.getCampaigns.useQuery(
     {
       page: pageNumber,
       status: status as CampaignStatus | null,
       search,
+      intent,
     },
     {
       refetchInterval: (query) => {
@@ -40,28 +51,26 @@ export default function CampaignList() {
         const shouldPoll = c.some(
           (campaign) =>
             campaign.status === CampaignStatus.RUNNING ||
-            campaign.status === CampaignStatus.SCHEDULED
+            campaign.status === CampaignStatus.SCHEDULED,
         );
         return shouldPoll ? 5000 : false;
       },
-    }
+    },
   );
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        {/* Search input */}
+      <div className="flex flex-col justify-between gap-4 sm:flex-row">
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
           <Input
-            placeholder="Search campaigns..."
+            placeholder={`Search ${nounPlural}...`}
             value={search || ""}
             onChange={(e) => debouncedSearch(e.target.value)}
             className="pl-10"
           />
         </div>
 
-        {/* Status filter */}
         <Select
           value={status ?? "all"}
           onValueChange={(val) => setStatus(val === "all" ? null : val)}
@@ -76,10 +85,7 @@ export default function CampaignList() {
             <SelectItem value={CampaignStatus.DRAFT} className="capitalize">
               Draft
             </SelectItem>
-            <SelectItem
-              value={CampaignStatus.SCHEDULED}
-              className="capitalize"
-            >
+            <SelectItem value={CampaignStatus.SCHEDULED} className="capitalize">
               Scheduled
             </SelectItem>
             <SelectItem value={CampaignStatus.RUNNING} className="capitalize">
@@ -94,40 +100,34 @@ export default function CampaignList() {
           </SelectContent>
         </Select>
       </div>
-      {/* Campaign cards */}
+
       <div className="flex flex-col gap-4">
         {campaignsQuery.isLoading ? (
           <div className="flex justify-center py-12">
-            <Spinner className="w-6 h-6" innerSvgClass="stroke-primary" />
+            <Spinner className="h-6 w-6" innerSvgClass="stroke-primary" />
           </div>
         ) : campaignsQuery.data?.campaigns.length ? (
-          campaignsQuery.data?.campaigns.map((campaign) => (
-            <CampaignCard key={campaign.id} campaign={campaign} />
+          campaignsQuery.data.campaigns.map((campaign) => (
+            <CampaignCard key={campaign.id} campaign={campaign} basePath={basePath} />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border/60 rounded-xl">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-muted-foreground/40 mb-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-            </svg>
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-20 text-center">
+            <FaBullhorn className="mb-3 h-8 w-8 text-muted-foreground/40" />
             <p className="text-sm font-medium text-foreground">
-              {search || status ? "No campaigns match your filters" : "No campaigns yet"}
+              {search || status
+                ? `No ${nounPlural} match your filters`
+                : `No ${nounPlural} yet`}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {search || status
                 ? "Try adjusting your search or status filter"
-                : "Create your first campaign to get started"}
+                : `Create your first ${noun} to get started`}
             </p>
           </div>
         )}
       </div>
-      <div className="flex gap-4 justify-end">
+
+      <div className="flex justify-end gap-4">
         <Button
           size="sm"
           onClick={() => setPage((pageNumber - 1).toString())}

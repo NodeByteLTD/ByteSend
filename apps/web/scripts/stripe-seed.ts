@@ -25,8 +25,84 @@ import {
 import { STRIPE_ADDON_PRODUCTS } from "../../../packages/lib/src/stripe/products.ts";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const DATABASE_URL      = process.env.DATABASE_URL;
-const ENVIRONMENT       = process.argv[2] ?? process.env.NODE_ENV ?? "dev";
+const DATABASE_URL = process.env.DATABASE_URL;
+const ENVIRONMENT = process.argv[2] ?? process.env.NODE_ENV ?? "dev";
+const FORCE_RECREATE_PRODUCTS = true;
+
+async function upsertAddonProductAndPrice(params: {
+  stripe: Stripe;
+  environment: string;
+  addonCode: "ADDITIONAL_DOMAIN" | "EXTRA_MEMBER";
+  productName: string;
+  productDescription: string;
+  priceMonthly: number;
+  priceMetadataType: string;
+  forceRecreateProducts: boolean;
+}): Promise<{ productId: string; priceId: string }> {
+  const {
+    stripe,
+    environment,
+    addonCode,
+    productName,
+    productDescription,
+    priceMonthly,
+    priceMetadataType,
+    forceRecreateProducts,
+  } = params;
+
+  const displayName = `${productName} (${environment})`;
+
+  const existingProducts = await stripe.products.search({
+    query: `name:"${displayName}" AND active:'true'`,
+    limit: 100,
+  });
+
+  if (forceRecreateProducts) {
+    for (const existing of existingProducts.data) {
+      await stripe.products.update(existing.id, { active: false });
+      console.log(`  ✓ Archived existing add-on product: ${existing.id}`);
+    }
+  }
+
+  let product: Stripe.Product;
+  if (!forceRecreateProducts && existingProducts.data.length > 0) {
+    product = existingProducts.data[0];
+    await stripe.products.update(product.id, {
+      description: productDescription,
+      metadata: { bytesend_addon: addonCode, environment },
+    });
+    console.log(`  ✓ Updated add-on product: ${product.id}`);
+  } else {
+    product = await stripe.products.create({
+      name: displayName,
+      description: productDescription,
+      metadata: { bytesend_addon: addonCode, environment },
+    });
+    console.log(`  ✓ Created add-on product: ${product.id}`);
+  }
+
+  const existingPrices = await stripe.prices.search({
+    query: `product:'${product.id}' AND metadata['type']:'${priceMetadataType}'`,
+    limit: 1,
+  });
+
+  let price: Stripe.Price;
+  if (existingPrices.data.length > 0) {
+    price = existingPrices.data[0];
+    console.log(`  ✓ Found add-on price: ${price.id}`);
+  } else {
+    price = await stripe.prices.create({
+      product: product.id,
+      currency: "cad",
+      unit_amount: priceMonthly,
+      recurring: { interval: "month", usage_type: "licensed" },
+      metadata: { type: priceMetadataType, environment },
+    });
+    console.log(`  ✓ Created add-on price: ${price.id}`);
+  }
+
+  return { productId: product.id, priceId: price.id };
+}
 
 async function main() {
   console.log("\n🚀  ByteSend Stripe + DB Seed");
@@ -42,14 +118,17 @@ async function main() {
   }
 
   const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-12-18.acacia" });
-  const db     = new PrismaClient();
+  const db = new PrismaClient();
 
   console.log(`📦  Environment : ${ENVIRONMENT}`);
   console.log(`🔑  Stripe key  : ${STRIPE_SECRET_KEY.slice(0, 20)}...`);
+  console.log(`♻️   Recreate mode: ${FORCE_RECREATE_PRODUCTS ? "enabled" : "disabled"}`);
   console.log("\n📝  Syncing plans to Stripe...\n");
 
   // ── Step 1: Sync core plans ──────────────────────────────────────────────
-  const result = await syncPlansToStripe(stripe, ENVIRONMENT);
+  const result = await syncPlansToStripe(stripe, ENVIRONMENT, {
+    forceRecreateProducts: FORCE_RECREATE_PRODUCTS,
+  });
 
   if (!result.success) {
     console.error("\n❌  Stripe sync failed:");
@@ -60,57 +139,39 @@ async function main() {
 
   console.log(`\n✅  Synced ${result.products.length} core plans`);
 
-  // ── Step 2: Sync additional-domain add-on ────────────────────────────────
-  console.log("\n📎  Syncing add-on: Additional Domain...");
+  // ── Step 2: Sync add-ons (domain + member) ───────────────────────────────
+  console.log("\n📎  Syncing add-ons...");
 
-  const addonConfig = STRIPE_ADDON_PRODUCTS.ADDITIONAL_DOMAIN;
-  const addonProductName = `${addonConfig.name} (${ENVIRONMENT})`;
-
-  const existingAddon = await stripe.products.search({
-    query: `name:"${addonProductName}"`,
-    limit: 1,
+  const domainAddon = await upsertAddonProductAndPrice({
+    stripe,
+    environment: ENVIRONMENT,
+    addonCode: "ADDITIONAL_DOMAIN",
+    productName: STRIPE_ADDON_PRODUCTS.ADDITIONAL_DOMAIN.name,
+    productDescription: STRIPE_ADDON_PRODUCTS.ADDITIONAL_DOMAIN.description,
+    priceMonthly: STRIPE_ADDON_PRODUCTS.ADDITIONAL_DOMAIN.priceMonthly,
+    priceMetadataType: "addon-domain-monthly",
+    forceRecreateProducts: FORCE_RECREATE_PRODUCTS,
   });
 
-  let addonProduct: Stripe.Product;
-  if (existingAddon.data.length > 0) {
-    addonProduct = existingAddon.data[0];
-    await stripe.products.update(addonProduct.id, {
-      description: addonConfig.description,
-      metadata: { bytesend_addon: "ADDITIONAL_DOMAIN", environment: ENVIRONMENT },
-    });
-    console.log(`  ✓ Updated add-on product: ${addonProduct.id}`);
-  } else {
-    addonProduct = await stripe.products.create({
-      name: addonProductName,
-      description: addonConfig.description,
-      metadata: { bytesend_addon: "ADDITIONAL_DOMAIN", environment: ENVIRONMENT },
-    });
-    console.log(`  ✓ Created add-on product: ${addonProduct.id}`);
-  }
-
-  // Find or create the add-on price
-  const existingAddonPrices = await stripe.prices.search({
-    query: `product:'${addonProduct.id}' AND metadata['type']:'addon-domain-monthly'`,
-    limit: 1,
+  const memberAddon = await upsertAddonProductAndPrice({
+    stripe,
+    environment: ENVIRONMENT,
+    addonCode: "EXTRA_MEMBER",
+    productName: STRIPE_ADDON_PRODUCTS.EXTRA_MEMBER.name,
+    productDescription: STRIPE_ADDON_PRODUCTS.EXTRA_MEMBER.description,
+    priceMonthly: STRIPE_ADDON_PRODUCTS.EXTRA_MEMBER.priceMonthly,
+    priceMetadataType: "addon-member-monthly",
+    forceRecreateProducts: FORCE_RECREATE_PRODUCTS,
   });
-
-  let addonPrice: Stripe.Price;
-  if (existingAddonPrices.data.length > 0) {
-    addonPrice = existingAddonPrices.data[0];
-    console.log(`  ✓ Found add-on price: ${addonPrice.id}`);
-  } else {
-    addonPrice = await stripe.prices.create({
-      product: addonProduct.id,
-      currency: "cad",
-      unit_amount: addonConfig.priceMonthly, // CA$1.00/month
-      recurring: { interval: "month" },
-      metadata: { type: "addon-domain-monthly", environment: ENVIRONMENT },
-    });
-    console.log(`  ✓ Created add-on price: ${addonPrice.id}`);
-  }
 
   // ── Step 3: Build DB config map ──────────────────────────────────────────
-  const dbConfig = generateDbConfig(result, addonProduct.id, addonPrice.id);
+  const dbConfig = generateDbConfig(
+    result,
+    domainAddon.productId,
+    domainAddon.priceId,
+    memberAddon.productId,
+    memberAddon.priceId,
+  );
 
   console.log(`\n💾  Writing ${Object.keys(dbConfig).length} config keys to AppSetting...\n`);
 

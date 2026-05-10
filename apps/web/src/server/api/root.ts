@@ -16,6 +16,7 @@ import { feedbackRouter } from "./routers/feedback";
 import { webhookRouter } from "./routers/webhook";
 import { userRouter } from "./routers/user";
 import { notificationProviderRouter } from "./routers/notification-provider";
+import { logsRouter } from "./routers/logs";
 
 /**
  * This is the primary router for your server.
@@ -40,6 +41,7 @@ export const appRouter = createTRPCRouter({
   webhook: webhookRouter,
   user: userRouter,
   notificationProvider: notificationProviderRouter,
+  logs: logsRouter,
 });
 
 // export type definition of API

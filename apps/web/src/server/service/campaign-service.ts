@@ -298,11 +298,11 @@ export async function createCampaignFromApi({
   bcc?: string | string[];
   batchSize?: number;
 }) {
-  const marketingAllowed = await LimitService.checkMarketingAccess(teamId);
-  if (!marketingAllowed) {
+  const campaignLimit = await LimitService.checkCampaignLimit(teamId);
+  if (campaignLimit.isLimitReached) {
     throw new ByteSendApiError({
       code: "FORBIDDEN",
-      message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+      message: `You have reached the campaign limit (${campaignLimit.currentCount}/${campaignLimit.limit}) for your current plan. Upgrade to create more campaigns.`,
     });
   }
 
@@ -516,14 +516,6 @@ export async function scheduleCampaign({
     throw new ByteSendApiError({
       code: "NOT_FOUND",
       message: "Campaign not found",
-    });
-  }
-
-  const marketingAllowed = await LimitService.checkMarketingAccess(teamId);
-  if (!marketingAllowed) {
-    throw new ByteSendApiError({
-      code: "FORBIDDEN",
-      message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
     });
   }
 

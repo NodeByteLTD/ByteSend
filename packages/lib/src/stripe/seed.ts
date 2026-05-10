@@ -82,10 +82,12 @@ async function ensureMeter(
  */
 export async function syncPlansToStripe(
   stripe: Stripe,
-  environment: string = "dev"
+  environment: string = "dev",
+  options?: { forceRecreateProducts?: boolean },
 ): Promise<SyncResult> {
   const products: StripeProductMapping[] = [];
   const errors: string[] = [];
+  const forceRecreateProducts = options?.forceRecreateProducts === true;
 
   try {
     // ── Step 1: Ensure Billing Meters exist ──
@@ -115,15 +117,15 @@ export async function syncPlansToStripe(
 
         console.log(`Syncing plan: ${plan}`);
 
-        // Search for existing product
+        // Search active products only (archived products are ignored)
         const existingProducts = await stripe.products.search({
-          query: `name:"${productName}"`,
-          limit: 1,
+          query: `name:"${productName}" AND active:'true'`,
+          limit: 100,
         });
 
         let product: Stripe.Product;
 
-        if (existingProducts.data.length > 0) {
+        if (existingProducts.data.length > 0 && !forceRecreateProducts) {
           product = existingProducts.data[0];
           await stripe.products.update(product.id, {
             name: productName,
@@ -136,6 +138,13 @@ export async function syncPlansToStripe(
           });
           console.log(`  ✓ Updated product: ${product.id}`);
         } else {
+          if (forceRecreateProducts) {
+            for (const existing of existingProducts.data) {
+              await stripe.products.update(existing.id, { active: false });
+              console.log(`  ✓ Archived existing product: ${existing.id}`);
+            }
+          }
+
           product = await stripe.products.create({
             name: productName,
             description: config.description,
@@ -365,25 +374,29 @@ async function createOrUpdateMeterPrice(
  */
 export const DB_CONFIG_KEYS = {
   price: {
-    hobby:    { monthly: "stripe.price.hobby.monthly", marketingUsage: "stripe.price.hobby.marketing_usage", transactionalUsage: "stripe.price.hobby.transactional_usage" },
-    lite:     { monthly: "stripe.price.lite.monthly",  marketingUsage: "stripe.price.lite.marketing_usage",  transactionalUsage: "stripe.price.lite.transactional_usage"  },
-    basic:    { monthly: "stripe.price.basic.monthly", marketingUsage: "stripe.price.basic.marketing_usage", transactionalUsage: "stripe.price.basic.transactional_usage" },
+    hobby: { monthly: "stripe.price.hobby.monthly", marketingUsage: "stripe.price.hobby.marketing_usage", transactionalUsage: "stripe.price.hobby.transactional_usage" },
+    lite: { monthly: "stripe.price.lite.monthly", marketingUsage: "stripe.price.lite.marketing_usage", transactionalUsage: "stripe.price.lite.transactional_usage" },
+    basic: { monthly: "stripe.price.basic.monthly", marketingUsage: "stripe.price.basic.marketing_usage", transactionalUsage: "stripe.price.basic.transactional_usage" },
     lifetime: { oneTime: "stripe.price.lifetime.one_time" },
-    addon:    { domainMonthly: "stripe.price.addon.domain_monthly" },
+    addon: {
+      domainMonthly: "stripe.price.addon.domain_monthly",
+      memberMonthly: "stripe.price.addon.member_monthly",
+    },
   },
   product: {
     free: "stripe.product.free", hobby: "stripe.product.hobby", lite: "stripe.product.lite",
     basic: "stripe.product.basic", lifetime: "stripe.product.lifetime",
     addonDomain: "stripe.product.addon.domain",
+    addonMember: "stripe.product.addon.member",
   },
   meter: {
-    marketing:    "stripe.meter.marketing",
+    marketing: "stripe.meter.marketing",
     transactional: "stripe.meter.transactional",
-    extraMember:  "stripe.meter.extra_member",
+    extraMember: "stripe.meter.extra_member",
   },
   webhook: {
     endpointId: "stripe.webhook.endpoint_id",
-    secret:     "stripe.webhook.secret",
+    secret: "stripe.webhook.secret",
   },
 } as const;
 
@@ -394,6 +407,8 @@ export function generateDbConfig(
   result: SyncResult,
   addonDomainProductId?: string,
   addonDomainPriceId?: string,
+  addonMemberProductId?: string,
+  addonMemberPriceId?: string,
 ): Record<string, string> {
   const out: Record<string, string> = {};
 
@@ -405,18 +420,20 @@ export function generateDbConfig(
     const priceKeys = DB_CONFIG_KEYS.price[planKey as keyof typeof DB_CONFIG_KEYS.price];
     if (!priceKeys) continue;
     const r = priceKeys as Record<string, string>;
-    if (p.priceIds.monthly && r.monthly)               out[r.monthly] = p.priceIds.monthly;
+    if (p.priceIds.monthly && r.monthly) out[r.monthly] = p.priceIds.monthly;
     if (p.priceIds.marketingUsage && r.marketingUsage) out[r.marketingUsage] = p.priceIds.marketingUsage;
     if (p.priceIds.transactionalUsage && r.transactionalUsage) out[r.transactionalUsage] = p.priceIds.transactionalUsage;
-    if (p.priceIds.oneTime && r.oneTime)               out[r.oneTime] = p.priceIds.oneTime;
+    if (p.priceIds.oneTime && r.oneTime) out[r.oneTime] = p.priceIds.oneTime;
   }
 
   if (addonDomainProductId) out[DB_CONFIG_KEYS.product.addonDomain] = addonDomainProductId;
-  if (addonDomainPriceId)   out[DB_CONFIG_KEYS.price.addon.domainMonthly] = addonDomainPriceId;
+  if (addonDomainPriceId) out[DB_CONFIG_KEYS.price.addon.domainMonthly] = addonDomainPriceId;
+  if (addonMemberProductId) out[DB_CONFIG_KEYS.product.addonMember] = addonMemberProductId;
+  if (addonMemberPriceId) out[DB_CONFIG_KEYS.price.addon.memberMonthly] = addonMemberPriceId;
 
-  if (result.meters.marketing)    out[DB_CONFIG_KEYS.meter.marketing]    = result.meters.marketing;
+  if (result.meters.marketing) out[DB_CONFIG_KEYS.meter.marketing] = result.meters.marketing;
   if (result.meters.transactional) out[DB_CONFIG_KEYS.meter.transactional] = result.meters.transactional;
-  if (result.meters.extraMember)  out[DB_CONFIG_KEYS.meter.extraMember]  = result.meters.extraMember;
+  if (result.meters.extraMember) out[DB_CONFIG_KEYS.meter.extraMember] = result.meters.extraMember;
 
   return out;
 }
