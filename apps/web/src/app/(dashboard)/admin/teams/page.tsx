@@ -427,7 +427,7 @@ export default function AdminTeamsPage() {
                             <SelectItem value="FREE">Free</SelectItem>
                             <SelectItem value="HOBBY">Hobby</SelectItem>
                             <SelectItem value="LITE">Lite</SelectItem>
-                            <SelectItem value="BASIC">Professional</SelectItem>
+                            <SelectItem value="BASIC">Pro</SelectItem>
                             <SelectItem value="LIFETIME">Lifetime</SelectItem>
                           </SelectContent>
                         </Select>
@@ -498,7 +498,7 @@ export default function AdminTeamsPage() {
                             <SelectItem value="FREE">Free</SelectItem>
                             <SelectItem value="HOBBY">Hobby — CA$5/mo</SelectItem>
                             <SelectItem value="LITE">Lite — CA$10/mo</SelectItem>
-                            <SelectItem value="BASIC">Professional — CA$20/mo</SelectItem>
+                            <SelectItem value="BASIC">Pro — CA$30/mo</SelectItem>
                             <SelectItem value="LIFETIME">Lifetime — CA$199 one-time</SelectItem>
                           </SelectContent>
                         </Select>

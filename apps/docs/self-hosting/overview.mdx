@@ -24,7 +24,7 @@ Both methods require:
 
 ## Docker Deployment
 
-Docker is the fastest way to get ByteSend running. The `docker/prod/compose.yml` file in the repository starts the web app, PostgreSQL, Redis, MinIO (S3-compatible storage), and the SMTP relay together.
+Docker is the fastest way to get ByteSend running. The `docker/prod/compose.yml` file in the repository pulls pre-built images from DockerHub and starts the web app, PostgreSQL, Redis, MinIO (S3-compatible storage), and the SMTP relay together.
 
 ### 1. Install Docker
 
@@ -41,14 +41,14 @@ newgrp docker
 
 ```bash
 git clone https://github.com/NodeByteLTD/ByteSend.git
-cd bytesend
+cd ByteSend
 ```
 
 ### 3. Configure environment variables
 
 ```bash
-cp .env.example .env
-nano .env
+cp docker/prod/.env.example docker/prod/.env
+nano docker/prod/.env
 ```
 
 At minimum, set the following variables:
@@ -59,7 +59,8 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=<run: openssl rand -base64 32>
 
 # Database (managed by compose — change password)
-DATABASE_URL=postgresql://bytesend:changeme@postgres:5432/bytesend
+POSTGRES_PASSWORD=<strong-password>
+DATABASE_URL=postgresql://bytesend:<strong-password>@postgres:5432/bytesend
 
 # Redis (managed by compose)
 REDIS_URL=redis://redis:6379
@@ -76,39 +77,35 @@ GITHUB_SECRET=
 # Stripe (optional — enables billing)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
-
-# Release tracking (optional)
-GITLAB_URL=
-GITLAB_REPO_ID=
-GITLAB_RELEASE_TOKEN=
-GITHUB_RELEASE_TOKEN=
 ```
 
 ### 4. Start the stack
 
 ```bash
-docker compose -f docker-compose.web.yml up -d
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env up -d
 ```
 
-This starts three containers:
+This pulls the latest images from DockerHub and starts:
 
-| Container | Description |
-|---|---|
-| `web` | ByteSend Next.js application (port 3000) |
-| `postgres` | PostgreSQL 16 database |
-| `redis` | Redis 7 |
+| Container | Image | Description |
+|---|---|---|
+| `web` | `bytesend/bytesend:latest` | ByteSend Next.js application (port 3000) |
+| `postgres` | `postgres:16` | PostgreSQL 16 database |
+| `redis` | `redis:7` | Redis 7 |
+| `minio` | `minio/minio:latest` | S3-compatible object storage |
+| `smtp` | `bytesend/smtp-proxy:latest` | SMTP relay server |
 
 ### 5. Run database migrations
 
 ```bash
-docker compose -f docker-compose.web.yml exec web pnpm db:migrate-deploy
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env exec web pnpm db:migrate-deploy
 ```
 
 ### 6. Verify
 
 ```bash
-docker compose -f docker-compose.web.yml ps
-docker compose -f docker-compose.web.yml logs -f web
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env ps
+docker compose -f docker/prod/compose.yml --env-file docker/prod/.env logs -f web
 ```
 
 The app is now accessible at **http://your-server-ip:3000**.

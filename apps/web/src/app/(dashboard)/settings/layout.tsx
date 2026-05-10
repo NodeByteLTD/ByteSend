@@ -23,6 +23,8 @@ export default function ApiKeysPage({
       </div>
       <div className="flex flex-wrap gap-1 border-b border-border/60">
         <SettingsNavButton href="/settings">General</SettingsNavButton>
+        <SettingsNavButton href="/settings/api-keys">API Keys</SettingsNavButton>
+        <SettingsNavButton href="/settings/smtp">SMTP</SettingsNavButton>
         {isCloud() ? (
           <SettingsNavButton href="/settings/usage">Usage</SettingsNavButton>
         ) : null}

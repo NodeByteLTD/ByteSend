@@ -24,7 +24,8 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
       "For hobbyists and side projects. " +
       "25,000 emails/month included. " +
       "Transactional and marketing emails included. " +
-      "Overage billed at CA$0.05/marketing email and CA$0.03/transactional email. " +
+      "Overage billed at CA$0.90/1,000 marketing emails and CA$0.40/1,000 transactional emails. " +
+      "No daily send cap on paid plans. " +
       "Extra domains available at CA$1/domain/month.",
     priceMonthly: 500, // CA$5/month
   },
@@ -36,18 +37,19 @@ export const STRIPE_PRODUCTS: Record<PlanType, StripeProductConfig> = {
       "For small teams and growing projects. " +
       "50,000 emails/month included. " +
       "Transactional and marketing emails included. " +
-      "Overage billed at CA$0.02/email (marketing and transactional). " +
+      "Overage billed at CA$0.80/1,000 marketing emails and CA$0.35/1,000 transactional emails. " +
+      "No daily send cap on paid plans. " +
       "Extra domains available at CA$1/domain/month.",
     priceMonthly: 1000, // CA$10/month in cents
   },
 
   BASIC: {
     plan: "BASIC",
-    name: "ByteSend Professional",
+    name: "ByteSend Pro",
     description:
-      "For professionals and growing businesses. " +
+      "For teams with higher volume and tighter delivery requirements. " +
       "100,000 emails/month included with unlimited daily sending. " +
-      "Overage billed at CA$0.01/email (marketing and transactional). " +
+      "Overage billed at CA$0.70/1,000 marketing emails and CA$0.25/1,000 transactional emails. " +
       "Up to 12 domains, 30 team members, 1,000 contacts.",
     priceMonthly: 2000, // CA$20/month
   },
@@ -71,12 +73,9 @@ export const STRIPE_ADDON_PRODUCTS = {
   EXTRA_MEMBER: {
     name: "ByteSend Extra Team Member",
     description:
-      "Metered add-on for team members beyond the included plan limit. " +
-      "Billed at CA$0.25 per additional member per month.",
-    meteringConfig: {
-      eventName: "bytesend_extra_team_members",
-      rateCents: 25, // CA$0.25 per extra member
-    },
+      "Add-on for team members beyond the included plan limit. " +
+      "Billed at CA$2.00 per additional member per month.",
+    priceMonthly: 200, // CA$2.00/month per member
   },
   ADDITIONAL_DOMAIN: {
     name: "ByteSend Additional Domain",
@@ -134,7 +133,7 @@ export const STRIPE_ENV_KEYS = {
   // Add-on products
   EXTRA_MEMBER: {
     productId: "STRIPE_EXTRA_MEMBER_PRODUCT_ID",
-    usagePrice: "STRIPE_EXTRA_MEMBER_USAGE_PRICE_ID",
+    monthlyPrice: "STRIPE_EXTRA_MEMBER_PRICE_ID",
   },
   ADDITIONAL_DOMAIN: {
     productId: "STRIPE_ADDITIONAL_DOMAIN_PRODUCT_ID",

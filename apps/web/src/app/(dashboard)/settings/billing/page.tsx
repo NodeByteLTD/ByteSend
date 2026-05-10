@@ -9,18 +9,16 @@ import { format } from "date-fns";
 import { useTeam } from "~/providers/team-context";
 import { api } from "~/trpc/react";
 import { PlanDetails } from "~/components/payments/PlanDetails";
-import { UpgradeButton } from "~/components/payments/UpgradeButton";
+import {
+  UpgradeButton,
+  type CheckoutPlan,
+} from "~/components/payments/UpgradeButton";
 import { PLANS, getAllPlans } from "@bytesend/lib";
 import { PLAN_PERKS } from "~/lib/constants/payments";
 
-type UpgradePlan = "HOBBY" | "LITE" | "BASIC";
-
-// Plans shown as upgrade options when on FREE plan (exclude FREE and LIFETIME)
-const UPGRADE_PLANS: { plan: UpgradePlan; highlight?: boolean }[] = [
-  { plan: "HOBBY" },
-  { plan: "LITE", highlight: true },
-  { plan: "BASIC" },
-];
+const BILLING_PLAN_OPTIONS = getAllPlans().filter(
+  (plan) => plan.plan !== "FREE",
+);
 
 function formatPlanPrice(plan: (typeof PLANS)[keyof typeof PLANS]): string {
   if (plan.oneTimePrice) return `CA$${plan.oneTimePrice / 100} one-time`;
@@ -102,44 +100,72 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {currentTeam?.plan === "FREE" && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Upgrade Your Plan</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {UPGRADE_PLANS.map(({ plan, highlight }) => {
-              const planData = PLANS[plan];
-              const perks = PLAN_PERKS[plan] ?? [];
-              return (
-                <div
-                  key={plan}
-                  className={`rounded-lg border p-4 flex flex-col gap-3 ${
-                    highlight ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm">{planData.displayName}</span>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {formatPlanPrice(planData)}
-                    </span>
-                  </div>
-                  <ul className="space-y-1.5 flex-1">
-                    {perks.map((perk, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-xs text-muted-foreground"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
-                        {perk}
-                      </li>
-                    ))}
-                  </ul>
-                  <UpgradeButton plan={plan} label={`Choose ${planData.displayName}`} />
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Available Plans</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Plan details and checkout are managed here for consistency. Homepage pricing is estimate-only.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {BILLING_PLAN_OPTIONS.map((planData) => {
+            const plan = planData.plan as CheckoutPlan;
+            const perks = PLAN_PERKS[plan] ?? [];
+            const isCurrent = currentTeam.plan === plan;
+            const highlight = plan === "LITE" || plan === "BASIC";
+
+            return (
+              <div
+                key={plan}
+                className={`rounded-lg border p-4 flex flex-col gap-3 ${
+                  isCurrent
+                    ? "border-primary bg-primary/5"
+                    : highlight
+                      ? "border-primary/40"
+                      : "border-border"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-sm">{planData.displayName}</span>
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    {formatPlanPrice(planData)}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+                <ul className="space-y-1.5 flex-1">
+                  {perks.map((perk, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-xs text-muted-foreground"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 text-green shrink-0 mt-0.5" />
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+
+                {isCurrent ? (
+                  <Button disabled className="w-full" variant="outline">
+                    Current plan
+                  </Button>
+                ) : currentTeam.plan === "FREE" ? (
+                  <UpgradeButton plan={plan} label={`Choose ${planData.displayName}`} />
+                ) : (
+                  <Button
+                    onClick={onManageClick}
+                    className="w-full"
+                    variant="outline"
+                    disabled={manageSessionUrl.isPending}
+                  >
+                    {manageSessionUrl.isPending ? (
+                      <Spinner className="w-4 h-4" />
+                    ) : (
+                      "Change in billing portal"
+                    )}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <Card className="p-6">
           <div>

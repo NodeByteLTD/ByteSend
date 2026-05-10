@@ -1,0 +1,88 @@
+---
+openapi: post /v1/smtp/auth
+---
+
+Authenticate SMTP credentials. This endpoint is called by the SMTP relay server to validate client credentials during authentication.
+
+## Usage
+
+The SMTP relay server calls this endpoint during the `AUTH` phase to verify that the provided username and API key are valid. The username can be a custom team-specific SMTP username or the global default (`bytesend`).
+
+## Authentication
+
+This endpoint **does not require** Bearer token authentication. Instead, it accepts the credentials directly in the request body.
+
+## Request Body
+
+- `username` (string, required): The SMTP username. Can be:
+  - A custom team SMTP username (configured in team settings)
+  - The global default: `bytesend`
+  - Or any username if using an API key for a team with remote auth enabled
+
+- `password` (string, required): The API key to verify. This is used as the password in SMTP `AUTH PLAIN` or `AUTH LOGIN` flows.
+
+## Response
+
+**200 Success:**
+```json
+{
+  "valid": true
+}
+```
+
+**401 Unauthorized:**
+```json
+{
+  "valid": false,
+  "message": "Invalid API key or username"
+}
+```
+
+## Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://bytesend.cloud/api/v1/smtp/auth \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "bytesend",
+    "password": "YOUR_API_KEY"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://bytesend.cloud/api/v1/smtp/auth', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    username: 'bytesend',
+    password: 'YOUR_API_KEY'
+  })
+});
+
+const data = await response.json();
+console.log(data); // { valid: true } or { valid: false, message: "..." }
+```
+
+```python Python
+import requests
+
+response = requests.post(
+  'https://bytesend.cloud/api/v1/smtp/auth',
+  json={
+    'username': 'bytesend',
+    'password': 'YOUR_API_KEY'
+  }
+)
+
+print(response.json())  # { 'valid': True } or { 'valid': False, 'message': '...' }
+```
+
+</CodeGroup>
+
+## Notes
+
+- This endpoint is **fire-and-forget** from the perspective of the SMTP relay. Failures are logged but do not block the SMTP handshake.
+- The endpoint does not perform rate limiting separate from the standard API rate limits.
+- For custom team SMTP usernames, ensure the API key belongs to that team.

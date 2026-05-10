@@ -247,10 +247,7 @@ export class LimitService {
     );
 
     const dailyUsage = usage.day.reduce((acc, curr) => acc + curr.sent, 0);
-    const dailyLimit =
-      activePlan !== "FREE"
-        ? team.dailyEmailLimit
-        : PLAN_LIMITS.FREE.emailsPerDay;
+    const dailyLimit = PLAN_LIMITS[activePlan].emailsPerDay;
 
     logger.info(
       { dailyUsage, dailyLimit, team },

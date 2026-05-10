@@ -51,7 +51,7 @@ export const billingRouter = createTRPCRouter({
     }),
 
   /**
-   * Purchase extra team member slots at CA$5/member/month.
+   * Purchase extra team member slots at CA$2/member/month.
    * Available on all plans including FREE.
    */
   purchaseAddonMemberSlots: teamAdminProcedure

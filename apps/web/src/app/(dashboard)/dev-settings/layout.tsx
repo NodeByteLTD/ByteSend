@@ -18,8 +18,8 @@ export default function ApiKeysPage({
         </p>
       </div>
       <div className="flex flex-wrap gap-1 border-b border-border/60">
-        <SettingsNavButton href="/dev-settings">API Keys</SettingsNavButton>
-        <SettingsNavButton href="/dev-settings/smtp">SMTP</SettingsNavButton>
+        <SettingsNavButton href="/settings/api-keys">API Keys</SettingsNavButton>
+        <SettingsNavButton href="/settings/smtp">SMTP</SettingsNavButton>
       </div>
       <div>{children}</div>
     </div>

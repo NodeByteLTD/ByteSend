@@ -60,35 +60,17 @@ The server supports two TLS configurations:
 - ByteSend instance accessible at a known URL
 - (Optional) SSL certificates if using `SMTP_TLS_MODE=manual`
 
-#### Quick Start
+#### Quick Start with DockerHub Image
 
-1. **Clone the ByteSend repository:**
-   ```bash
-  git clone https://github.com/NodeByteLTD/ByteSend.git
-  cd ByteSend/apps/smtp-server
-   ```
+The official ByteSend SMTP relay image is available on DockerHub as `bytesend/smtp-proxy:latest`.
 
-2. **Set up environment variables:**
-   ```bash
-   # Copy the example config
-   cp .env.example .env
-   
-   # Edit with your values
-   # BYTESEND_BASE_URL=https://your-bytesend-instance.com
-  # SMTP_AUTH_USERNAME=bytesend  # Optional legacy fallback when client omits username
-   # SMTP_TLS_MODE=none  # or 'manual' if you have certs
-   ```
-
-3. **The docker-compose.yml file is pre-configured:**
-   The docker-compose.yml uses environment variable interpolation for easy configuration in platforms like Dokploy:
+1. **Create a docker-compose.yml:**
    ```yaml
    version: '3.8'
 
    services:
      smtp:
-       build:
-         context: .
-         dockerfile: Dockerfile
+       image: bytesend/smtp-proxy:latest  # Pull from DockerHub
        restart: unless-stopped
        ports:
          - "25:25"
@@ -97,31 +79,55 @@ The server supports two TLS configurations:
          - "2465:2465"
          - "2587:2587"
        environment:
-         - NODE_ENV=${NODE_ENV:-production}
-         - SMTP_AUTH_USERNAME=${SMTP_AUTH_USERNAME:-bytesend}
-         - BYTESEND_BASE_URL=${BYTESEND_BASE_URL:-https://bytesend.cloud}
-         - SMTP_TLS_MODE=${SMTP_TLS_MODE:-none}
+         - NODE_ENV=production
+         - SMTP_AUTH_USERNAME=bytesend  # Legacy fallback username
+         - BYTESEND_BASE_URL=https://your-bytesend-instance.com
+         - SMTP_TLS_MODE=none  # or 'manual' if you have certs
          # Uncomment for manual TLS mode:
-         # - SMTP_TLS_CERT_PATH=${SMTP_TLS_CERT_PATH:-/certs/fullchain.pem}
-         # - SMTP_TLS_KEY_PATH=${SMTP_TLS_KEY_PATH:-/certs/privkey.pem}
+         # - SMTP_TLS_CERT_PATH=/certs/fullchain.pem
+         # - SMTP_TLS_KEY_PATH=/certs/privkey.pem
        # volumes:
        #   - /etc/letsencrypt/live/smtp.example.com:/certs:ro
    ```
 
-4. **Start the server:**
+2. **Start the server:**
    ```bash
-   # Load environment variables from .env and start
-   docker compose up -d --build
-   ```
-   
-   Or with explicit environment variables:
-   ```bash
+   # With environment variables
    BYTESEND_BASE_URL=https://your-instance.com \
    SMTP_TLS_MODE=manual \
+   docker compose up -d
+   ```
+   
+   Or edit a `.env` file and run:
+   ```bash
+   docker compose --env-file .env up -d
+   ```
+
+3. **Verify it's running:**
+   ```bash
+   docker compose logs -f smtp
+   ```
+   You should see:
+   ```
+   SMTP server (plain (no TLS)) is listening on port 25
+   ```
+
+#### Building from Source
+
+If you prefer to build the image locally:
+
+1. **Clone the ByteSend repository:**
+   ```bash
+   git clone https://github.com/NodeByteLTD/ByteSend.git
+   cd ByteSend/apps/smtp-server
+   ```
+
+2. **Build and run:**
+   ```bash
    docker compose up -d --build
    ```
 
-5. **Verify it's running:**
+3. **Verify it's running:**
    ```bash
    docker compose logs -f smtp
    ```

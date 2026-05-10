@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@bytesend/ui/src/button";
+import { FaRegCircleDot } from "react-icons/fa6";
 
 type LangItem = {
   key: string;
@@ -41,21 +42,23 @@ export function LangToggle({
   }, [active, containerId]);
 
   return (
-    <div className="flex items-center gap-2 justify-center">
+    <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1 shadow-sm">
       {languages.map((l) => (
         <Button
           key={l.key}
           size="sm"
           variant="outline"
           className={
-            "px-3 bg-transparent hover:bg-transparent hover:text-inherit " +
-            (active === l.key ? "border-primary" : "border-input")
+            "h-8 rounded-full border-transparent px-3.5 text-xs font-medium transition-all " +
+            (active === l.key
+              ? "border-border bg-background text-foreground shadow-sm"
+              : "bg-transparent text-muted-foreground hover:bg-background/70 hover:text-foreground")
           }
           aria-pressed={active === l.key}
           onClick={() => setActive(l.key)}
         >
-          <span className="inline-flex items-center">
-            <LangIcon kind={l.kind} className="h-4 w-4 mr-1" /> {l.label}
+          <span className="inline-flex items-center gap-1.5">
+            <LangIcon kind={l.kind} className="h-3.5 w-3.5" /> {l.label}
           </span>
         </Button>
       ))}
@@ -66,11 +69,7 @@ export function LangToggle({
 function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className={className} role="img">
-        <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2" />
-      </svg>
-    );
+    return <FaRegCircleDot aria-hidden="true" className={className} role="img" />;
   }
 
   const iconMap: Record<string, { src: string; alt: string }> = {
@@ -78,6 +77,8 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
     py: { src: "/python.svg", alt: "Python logo" },
     go: { src: "/go.svg", alt: "Go logo" },
     php: { src: "/php.svg", alt: "PHP logo" },
+    rs: { src: "/rust.svg", alt: "Rust logo" },
+    rb: { src: "/ruby.svg", alt: "Ruby logo" },
   };
 
   const icon = iconMap[kind];
@@ -95,11 +96,7 @@ function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: s
     );
   }
 
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} role="img">
-      <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.2" />
-    </svg>
-  );
+  return <FaRegCircleDot aria-hidden="true" className={className} role="img" />;
 }
 
 export default LangToggle;

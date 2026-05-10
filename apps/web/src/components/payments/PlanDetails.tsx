@@ -1,19 +1,10 @@
-import { Plan } from "@prisma/client";
+import { PLANS } from "@bytesend/lib";
 import { PLAN_PERKS } from "~/lib/constants/payments";
 import { CheckCircle2 } from "lucide-react";
 import { api } from "~/trpc/react";
-import Spinner from "@bytesend/ui/src/spinner";
 import { useTeam } from "~/providers/team-context";
 import { Badge } from "@bytesend/ui/src/badge";
 import { format } from "date-fns";
-
-const PLAN_DISPLAY_NAMES: Record<string, string> = {
-  FREE: "Free",
-  HOBBY: "Hobby",
-  LITE: "Lite",
-  BASIC: "Professional",
-  LIFETIME: "Lifetime",
-};
 
 export const PlanDetails = () => {
   const subscriptionQuery = api.billing.getSubscriptionDetails.useQuery();
@@ -25,7 +16,7 @@ export const PlanDetails = () => {
 
   const planKey = currentTeam.plan as keyof typeof PLAN_PERKS;
   const perks = PLAN_PERKS[planKey] || [];
-  const displayName = PLAN_DISPLAY_NAMES[planKey] || planKey;
+  const displayName = PLANS[planKey]?.displayName ?? planKey;
 
   return (
     <div>

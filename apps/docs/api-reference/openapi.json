@@ -2679,6 +2679,63 @@
           }
         }
       }
+    },
+    "/v1/smtp/auth": {
+      "post": {
+        "description": "Authenticate SMTP credentials (used by SMTP relay server)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "SMTP username (typically the custom team username or default 'bytesend')"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "API key used as password for SMTP authentication"
+                  }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credentials are valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean", "enum": [true] }
+                  },
+                  "required": ["valid"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean", "enum": [false] },
+                    "message": { "type": "string", "description": "Error message explaining why authentication failed" }
+                  },
+                  "required": ["valid", "message"]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

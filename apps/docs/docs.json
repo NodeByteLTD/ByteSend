@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "ByteSend",
   "colors": {
     "primary": "#0066CC",
@@ -31,11 +31,11 @@
             "group": "Getting Started",
             "pages": [
               "introduction",
-              "get-started/smtp",
+              "get-started/go",
               "get-started/nodejs",
               "get-started/python",
               "get-started/local",
-              "get-started/set-up-docker"
+              "get-started/smtp"
             ]
           }
         ]
@@ -47,6 +47,7 @@
             "group": "Basic Setup",
             "pages": [
               "self-hosting/overview",
+              "self-hosting/docker",
               "self-hosting/smtp-server",
               "self-hosting/certificates",
               "self-hosting/firewall",
@@ -162,6 +163,12 @@
               "api-reference/analytics/email-time-series",
               "api-reference/analytics/reputation-metrics"
             ]
+          },
+          {
+            "group": "SMTP",
+            "pages": [
+              "api-reference/smtp/auth"
+            ]
           }
         ]
       }
@@ -175,7 +182,7 @@
           "icon": "github"
         },
         {
-          "anchor": "Community",
+          "anchor": "Discord",
           "href": "https://discord.gg/xqkqzVRC4S",
           "icon": "discord"
         },
@@ -183,11 +190,6 @@
           "anchor": "Twitter",
           "href": "https://twitter.com/TryByteSend",
           "icon": "twitter"
-        },
-        {
-          "anchor": "Dashboard",
-          "href": "https://bytesend.cloud",
-          "type": "button"
         }
       ]
     }
@@ -216,7 +218,7 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
+      "label": "Website",
       "href": "https://bytesend.cloud"
     }
   },

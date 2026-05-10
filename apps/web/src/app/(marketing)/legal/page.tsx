@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { FaArrowRightLong } from "react-icons/fa6";
 import { env } from "~/env";
 
 export const metadata: Metadata = {
@@ -80,9 +81,7 @@ export default function LegalPage() {
                 <p className="text-[13px] text-muted-foreground leading-relaxed">{description}</p>
               </div>
               <div className="shrink-0 flex flex-col items-end gap-1.5 mt-0.5">
-                <svg className="size-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                  <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <FaArrowRightLong className="size-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" aria-hidden />
                 <span className="text-[11px] text-muted-foreground/50">Updated {updated}</span>
               </div>
             </Link>

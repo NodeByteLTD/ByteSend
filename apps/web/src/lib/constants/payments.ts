@@ -5,6 +5,11 @@ function fmt(n: number): string {
   return n.toLocaleString();
 }
 
+function formatOverageRate(rate: number): string {
+  if (!isFinite(rate) || rate <= 0) return "N/A";
+  return `CA$${(rate * 1000).toFixed(2)}/1,000`;
+}
+
 function buildPerks(plan: (typeof PLANS)[keyof typeof PLANS]): string[] {
   const l = plan.limits;
   const perks: string[] = [];
@@ -13,7 +18,6 @@ function buildPerks(plan: (typeof PLANS)[keyof typeof PLANS]): string[] {
   if (!isFinite(l.monthlyEmailLimit)) {
     perks.push("Unlimited emails — no overage charges");
   } else {
-    const isHardCap = !plan.usageMetering && plan.plan !== "FREE";
     const suffix = plan.plan === "FREE" ? " (hard cap)" : " included";
     perks.push(`${fmt(l.monthlyEmailLimit)} emails / month${suffix}`);
 
@@ -29,11 +33,11 @@ function buildPerks(plan: (typeof PLANS)[keyof typeof PLANS]): string[] {
   if (!l.marketingEmailsIncluded) {
     perks.push("Marketing emails not available");
   } else if (plan.usageMetering) {
-    const rate = plan.usageMetering.marketing.toFixed(2);
-    perks.push(`Marketing CA$${rate}/ea (overage)`);
+    perks.push(`Marketing ${formatOverageRate(plan.usageMetering.marketing)} (overage)`);
     if (plan.usageMetering.transactional !== plan.usageMetering.marketing) {
-      const txRate = plan.usageMetering.transactional.toFixed(2);
-      perks.push(`Transactional CA$${txRate}/ea (overage)`);
+      perks.push(
+        `Transactional ${formatOverageRate(plan.usageMetering.transactional)} (overage)`,
+      );
     }
   } else {
     perks.push("Marketing & transactional included");
@@ -50,7 +54,11 @@ function buildPerks(plan: (typeof PLANS)[keyof typeof PLANS]): string[] {
   if (!isFinite(l.maxTeamMembers)) {
     perks.push("Unlimited team members");
   } else {
-    perks.push(`Up to ${l.maxTeamMembers} team members`);
+    const memberAddonSuffix =
+      l.extraMemberRateCents > 0
+        ? ` + CA$${(l.extraMemberRateCents / 100).toFixed(2)}/extra member`
+        : "";
+    perks.push(`Up to ${l.maxTeamMembers} team members${memberAddonSuffix}`);
   }
 
   // Support

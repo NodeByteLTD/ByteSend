@@ -22,3 +22,14 @@ Authorization: Bearer bs_12345
 ```
 
 You can create a new token/API key under your ByteSend [Developer Settings](https://bytesend.cloud/dev-settings/api-keys).
+
+### SMTP Authentication
+
+The SMTP relay server uses a different authentication method. Instead of Bearer tokens, SMTP clients authenticate using:
+
+- **Username**: The team's custom SMTP username (or the default `bytesend`)
+- **Password**: Your API key
+
+The SMTP relay calls the [SMTP Auth endpoint](/api-reference/smtp/auth) to validate these credentials. This endpoint is **public** and does not require Bearer token authentication.
+
+For more details, see the [SMTP relay documentation](/self-hosting/smtp-server).

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@bytesend/ui/src/button";
+import { Menu, X } from "lucide-react";
 
 export function TopNavClient({ isCloud }: { isCloud?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -25,16 +26,12 @@ export function TopNavClient({ isCloud }: { isCloud?: boolean }) {
         className="sm:hidden p-1.5 rounded-lg hover:bg-accent"
         onClick={() => setOpen((v) => !v)}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          {open
-            ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            : <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h18M3 18h18" />}
-        </svg>
+        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       {/* Mobile dropdown */}
       {open && (
-        <div className="sm:hidden fixed top-[53px] inset-x-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl">
+        <div className="sm:hidden fixed top-13.25 inset-x-0 z-50 border-t border-border/40 bg-background/90 backdrop-blur-xl">
           <div className="mx-auto max-w-5xl px-6 py-4 flex flex-col gap-1 text-sm">
             {isCloud && <Link href="/#features" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Features</Link>}
             {isCloud && <Link href="/#pricing" className="py-2.5 hover:text-primary transition-colors" onClick={() => setOpen(false)}>Pricing</Link>}

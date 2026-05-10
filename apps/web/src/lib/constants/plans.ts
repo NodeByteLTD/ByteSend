@@ -38,8 +38,8 @@ export const PLAN_LIMITS: Record<
     marketingEmailsIncluded: PLANS.FREE.limits.marketingEmailsIncluded, // Marketing emails blocked on free plan
   },
   HOBBY: {
-    emailsPerMonth: PLANS.HOBBY.limits.monthlyEmailLimit, // Included; overage billed at CA$0.05 marketing / CA$0.03 transactional
-    emailsPerDay: PLANS.HOBBY.limits.dailyEmailLimit,
+    emailsPerMonth: PLANS.HOBBY.limits.monthlyEmailLimit, // Included; overage billed monthly
+    emailsPerDay: -1, // Unlimited daily on paid plans
     domains: PLANS.HOBBY.limits.maxDomains,
     contactBooks: PLANS.HOBBY.limits.maxContactBooks,
     contacts: PLANS.HOBBY.limits.contactsLimit,
@@ -48,8 +48,8 @@ export const PLAN_LIMITS: Record<
     marketingEmailsIncluded: PLANS.HOBBY.limits.marketingEmailsIncluded,
   },
   LITE: {
-    emailsPerMonth: PLANS.LITE.limits.monthlyEmailLimit, // Included; overage billed at CA$0.02/ea
-    emailsPerDay: PLANS.LITE.limits.dailyEmailLimit,
+    emailsPerMonth: PLANS.LITE.limits.monthlyEmailLimit, // Included; overage billed monthly
+    emailsPerDay: -1, // Unlimited daily on paid plans
     domains: PLANS.LITE.limits.maxDomains,
     contactBooks: PLANS.LITE.limits.maxContactBooks,
     contacts: PLANS.LITE.limits.contactsLimit,

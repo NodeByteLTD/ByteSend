@@ -1,18 +1,5 @@
-import { SmtpSettingsClient } from "./smtp-settings-client";
-import { env } from "~/env";
-import { api } from "~/trpc/server";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function SmtpPage() {
-  const teamDetails = await api.team.getTeamDetails();
-
-  return (
-    <SmtpSettingsClient
-      smtpHost={env.SMTP_HOST}
-      smtpPort="465"
-      smtpDefaultUsername={env.SMTP_USER}
-      currentSmtpUsername={teamDetails.smtpUsername}
-    />
-  );
+export default function DevSettingsSmtpPage() {
+  redirect("/settings/smtp");
 }
