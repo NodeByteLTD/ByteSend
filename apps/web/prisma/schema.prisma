@@ -104,38 +104,42 @@ enum Plan {
 }
 
 model Team {
-  id               Int               @id @default(autoincrement())
-  name             String            @unique
-  image            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  plan             Plan              @default(FREE)
-  stripeCustomerId String?           @unique
-  isActive         Boolean           @default(true)
-  apiRateLimit     Int               @default(2)
-  billingEmail     String?
-  sesTenantId      String?
-  isVerified        Boolean           @default(false)
-  dailyEmailLimit   Int               @default(10000)
-  isBlocked         Boolean           @default(false)
-  extraDomainSlots  Int               @default(0)
-  extraMemberSlots  Int               @default(0)
-  smtpUsername     String?
-  teamUsers        TeamUser[]
-  domains          Domain[]
-  apiKeys          ApiKey[]
-  emails           Email[]
-  contactBooks     ContactBook[]
-  campaigns        Campaign[]
-  templates        Template[]
-  dailyEmailUsages DailyEmailUsage[]
-  subscription     Subscription[]
-  invites          TeamInvite[]
-  suppressionList  SuppressionList[]
-  webhookEndpoints Webhook[]
-  webhookCalls     WebhookCall[]
-  notificationProviders NotificationProvider[]
-  notificationLogs NotificationLog[]
+  id                            Int                    @id @default(autoincrement())
+  name                          String                 @unique
+  image                         String?
+  createdAt                     DateTime               @default(now())
+  updatedAt                     DateTime               @updatedAt
+  plan                          Plan                   @default(FREE)
+  stripeCustomerId              String?                @unique
+  isActive                      Boolean                @default(true)
+  apiRateLimit                  Int                    @default(2)
+  billingEmail                  String?
+  sesTenantId                   String?
+  isVerified                    Boolean                @default(false)
+  dailyEmailLimit               Int                    @default(10000)
+  isBlocked                     Boolean                @default(false)
+  extraDomainSlots              Int                    @default(0)
+  extraMemberSlots              Int                    @default(0)
+  customPlanEnabled             Boolean                @default(false)
+  customMarketingEmailLimit     Int?
+  customTransactionalEmailLimit Int?
+  customMonthlyPriceCents       Int?
+  smtpUsername                  String?
+  teamUsers                     TeamUser[]
+  domains                       Domain[]
+  apiKeys                       ApiKey[]
+  emails                        Email[]
+  contactBooks                  ContactBook[]
+  campaigns                     Campaign[]
+  templates                     Template[]
+  dailyEmailUsages              DailyEmailUsage[]
+  subscription                  Subscription[]
+  invites                       TeamInvite[]
+  suppressionList               SuppressionList[]
+  webhookEndpoints              Webhook[]
+  webhookCalls                  WebhookCall[]
+  notificationProviders         NotificationProvider[]
+  notificationLogs              NotificationLog[]
 }
 
 model TeamInvite {
@@ -360,6 +364,11 @@ enum CampaignStatus {
   SENT
 }
 
+enum CampaignIntent {
+  CAMPAIGN
+  BROADCAST
+}
+
 model Campaign {
   id                 String         @id @default(cuid())
   name               String
@@ -385,6 +394,7 @@ model Campaign {
   hardBounced        Int            @default(0)
   complained         Int            @default(0)
   isApi              Boolean        @default(false)
+  intent             CampaignIntent @default(CAMPAIGN)
   status             CampaignStatus @default(DRAFT)
   batchSize          Int            @default(500)
   batchWindowMinutes Int            @default(0)
@@ -396,6 +406,7 @@ model Campaign {
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@index([createdAt(sort: Desc)])
+  @@index([intent, createdAt(sort: Desc)])
   @@index([status, scheduledAt])
 }
 
@@ -547,40 +558,40 @@ enum NotificationEventType {
 }
 
 model NotificationProvider {
-  id                   String                   @id @default(cuid())
-  teamId               Int
-  type                 NotificationProviderType
-  name                 String
-  description          String?
-  config               Json // Stores provider-specific config (webhookUrl, channelId, token, etc.)
-  eventTypes           NotificationEventType[]  @default([])
-  isActive             Boolean                  @default(true)
-  testMessageSentAt    DateTime?
-  consecutiveFailures  Int                      @default(0)
-  lastFailureAt        DateTime?
-  lastSuccessAt        DateTime?
-  createdAt            DateTime                 @default(now())
-  updatedAt            DateTime                 @updatedAt
-  team                 Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  id                  String                   @id @default(cuid())
+  teamId              Int
+  type                NotificationProviderType
+  name                String
+  description         String?
+  config              Json // Stores provider-specific config (webhookUrl, channelId, token, etc.)
+  eventTypes          NotificationEventType[]  @default([])
+  isActive            Boolean                  @default(true)
+  testMessageSentAt   DateTime?
+  consecutiveFailures Int                      @default(0)
+  lastFailureAt       DateTime?
+  lastSuccessAt       DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  team                Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, type, name])
   @@index([teamId, isActive])
 }
 
 model NotificationLog {
-  id              String                 @id @default(cuid())
-  teamId          Int
-  providerId      String
-  eventType       NotificationEventType
-  payload         Json
-  status          String                 @default("PENDING") // PENDING, SENT, FAILED
-  attempt         Int                    @default(0)
-  lastError       String?
-  responseStatus  Int?
-  responseTimeMs  Int?
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  team            Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  id             String                @id @default(cuid())
+  teamId         Int
+  providerId     String
+  eventType      NotificationEventType
+  payload        Json
+  status         String                @default("PENDING") // PENDING, SENT, FAILED
+  attempt        Int                   @default(0)
+  lastError      String?
+  responseStatus Int?
+  responseTimeMs Int?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  team           Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@index([teamId, providerId, status])
   @@index([createdAt(sort: Desc)])

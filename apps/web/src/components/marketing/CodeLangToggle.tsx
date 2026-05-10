@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Button } from "@bytesend/ui/src/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@bytesend/ui/src/select";
 import { FaRegCircleDot } from "react-icons/fa6";
+import { SiGo, SiPhp, SiPython, SiRuby, SiRust, SiTypescript } from "react-icons/si";
 
 type LangItem = {
   key: string;
@@ -42,61 +48,41 @@ export function LangToggle({
   }, [active, containerId]);
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1 shadow-sm">
-      {languages.map((l) => (
-        <Button
-          key={l.key}
-          size="sm"
-          variant="outline"
-          className={
-            "h-8 rounded-full border-transparent px-3.5 text-xs font-medium transition-all " +
-            (active === l.key
-              ? "border-border bg-background text-foreground shadow-sm"
-              : "bg-transparent text-muted-foreground hover:bg-background/70 hover:text-foreground")
-          }
-          aria-pressed={active === l.key}
-          onClick={() => setActive(l.key)}
-        >
-          <span className="inline-flex items-center gap-1.5">
-            <LangIcon kind={l.kind} className="h-3.5 w-3.5" /> {l.label}
-          </span>
-        </Button>
-      ))}
-    </div>
+    <Select value={active} onValueChange={setActive}>
+      <SelectTrigger className="h-9 min-w-40 rounded-lg border-border/60 bg-background/80 text-xs sm:min-w-44">
+        <SelectValue placeholder="Select language" />
+      </SelectTrigger>
+      <SelectContent align="end" className="min-w-44">
+        {languages.map((l) => (
+          <SelectItem key={l.key} value={l.key} className="text-xs">
+            <span className="inline-flex items-center gap-2">
+              <LangIcon kind={l.kind} className="h-3.5 w-3.5 shrink-0" />
+              {l.label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
 function LangIcon({ kind, className = "h-4 w-4" }: { kind: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
+  const iconMap = {
+    ts: SiTypescript,
+    py: SiPython,
+    go: SiGo,
+    php: SiPhp,
+    rs: SiRust,
+    rb: SiRuby,
+  } as const;
+
+  const Icon = iconMap[kind as keyof typeof iconMap];
+
+  if (!Icon) {
     return <FaRegCircleDot aria-hidden="true" className={className} role="img" />;
   }
 
-  const iconMap: Record<string, { src: string; alt: string }> = {
-    ts: { src: "/typescript.svg", alt: "TypeScript logo" },
-    py: { src: "/python.svg", alt: "Python logo" },
-    go: { src: "/go.svg", alt: "Go logo" },
-    php: { src: "/php.svg", alt: "PHP logo" },
-    rs: { src: "/rust.svg", alt: "Rust logo" },
-    rb: { src: "/ruby.svg", alt: "Ruby logo" },
-  };
-
-  const icon = iconMap[kind];
-  if (icon) {
-    return (
-      <Image
-        src={icon.src}
-        alt={icon.alt}
-        width={16}
-        height={16}
-        className={className}
-        priority={false}
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-
-  return <FaRegCircleDot aria-hidden="true" className={className} role="img" />;
+  return <Icon aria-hidden="true" className={className} role="img" />;
 }
 
 export default LangToggle;

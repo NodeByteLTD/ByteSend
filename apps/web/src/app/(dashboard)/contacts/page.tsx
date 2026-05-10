@@ -9,12 +9,14 @@ import { LimitReason } from "~/lib/constants/plans";
 import { isCloud } from "~/utils/common";
 import { LockIcon } from "lucide-react";
 import { Button } from "@bytesend/ui/src/button";
+import { useSession } from "next-auth/react";
 
 export default function ContactsPage() {
+  const { data: session } = useSession();
   const { currentTeam } = useTeam();
   const openUpgradeModal = useUpgradeModalStore((s) => s.action.openModal);
 
-  if (isCloud() && currentTeam?.plan === "FREE") {
+  if (isCloud() && currentTeam?.plan === "FREE" && !session?.user?.isEnvAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">

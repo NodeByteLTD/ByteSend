@@ -31,6 +31,7 @@ declare module "next-auth" {
       isBetaUser: boolean;
       isAdmin: boolean;
       isFounder: boolean;
+      isEnvAdmin?: boolean;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -42,8 +43,13 @@ declare module "next-auth" {
     isBetaUser: boolean;
     isAdmin: boolean;
     isFounder: boolean;
+    isEnvAdmin?: boolean;
     image?: string | null;
   }
+}
+
+function normalizeEmail(email?: string | null) {
+  return email?.trim().toLowerCase();
 }
 
 /**
@@ -168,10 +174,16 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     session: ({ session, user }) => {
-      const isFounder = !!env.FOUNDER_EMAIL && user.email === env.FOUNDER_EMAIL;
-      const isAdmin =
+      const userEmail = normalizeEmail(user.email);
+      const founderEmail = normalizeEmail(env.FOUNDER_EMAIL);
+      const adminEmail = normalizeEmail(env.ADMIN_EMAIL);
+
+      const isFounder = !!founderEmail && userEmail === founderEmail;
+      const isEnvAdmin =
         isFounder ||
-        (!!env.ADMIN_EMAIL && user.email === env.ADMIN_EMAIL) ||
+        (!!adminEmail && userEmail === adminEmail);
+      const isAdmin =
+        isEnvAdmin ||
         user.isAdmin;
       return {
         ...session,
@@ -181,6 +193,7 @@ export const authOptions: NextAuthOptions = {
           isBetaUser: user.isBetaUser,
           isAdmin,
           isFounder,
+          isEnvAdmin,
           // Explicitly forward the DB image so it always reaches the client,
           // even when session.user was built before the image update above.
           image: user.image ?? session.user.image,

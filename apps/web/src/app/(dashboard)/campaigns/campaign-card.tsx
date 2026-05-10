@@ -31,9 +31,10 @@ interface CampaignCardProps {
     delivered: number;
     unsubscribed: number;
   };
+  basePath: "/campaigns" | "/broadcasts";
 }
 
-export default function CampaignCard({ campaign }: CampaignCardProps) {
+export default function CampaignCard({ campaign, basePath }: CampaignCardProps) {
   const sentPercentage =
     campaign.total > 0 ? Math.round((campaign.sent / campaign.total) * 100) : 0;
   const pendingCount = campaign.total - campaign.sent;
@@ -47,8 +48,8 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
             href={
               campaign.status === CampaignStatus.DRAFT ||
               campaign.status === CampaignStatus.SCHEDULED
-                ? `/campaigns/${campaign.id}/edit`
-                : `/campaigns/${campaign.id}`
+                ? `${basePath}/${campaign.id}/edit`
+                : `${basePath}/${campaign.id}`
             }
             className="text-sm font-medium underline decoration-dashed underline-offset-2 truncate"
           >
@@ -94,8 +95,8 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
             href={
               campaign.status === CampaignStatus.DRAFT ||
               campaign.status === CampaignStatus.SCHEDULED
-                ? `/campaigns/${campaign.id}/edit`
-                : `/campaigns/${campaign.id}`
+                ? `${basePath}/${campaign.id}/edit`
+                : `${basePath}/${campaign.id}`
             }
             className="text-sm font-medium underline decoration-dashed underline-offset-2"
           >

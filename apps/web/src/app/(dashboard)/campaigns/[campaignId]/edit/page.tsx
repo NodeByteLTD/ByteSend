@@ -100,6 +100,7 @@ function CampaignEditor({
 }) {
   const router = useRouter();
   const isApiCampaign = campaign.isApi;
+  const basePath = campaign.intent === "BROADCAST" ? "/broadcasts" : "/campaigns";
   const contactBooksQuery = api.contacts.getContactBooks.useQuery({});
   const utils = api.useUtils();
 
@@ -179,7 +180,7 @@ function CampaignEditor({
       {/* Sticky top bar */}
       <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 sm:px-6 h-12 shrink-0 border-b border-border/60 bg-background/95 backdrop-blur">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/campaigns" className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
+          <Link href={basePath} className="shrink-0 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <Input
@@ -227,7 +228,7 @@ function CampaignEditor({
           <ScheduleCampaign
             campaign={campaign}
             onScheduled={() => {
-              router.push(`/campaigns/${campaign.id}`);
+              router.push(`${basePath}/${campaign.id}`);
             }}
           />
         </div>

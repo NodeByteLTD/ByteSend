@@ -12,10 +12,12 @@ import {
 } from "~/server/api/trpc";
 import {
   createCheckoutSessionForTeam,
+  createCustomCheckoutSessionForTeam,
   createAddonCheckoutSession,
   getManageSessionUrl,
   syncStripeData,
   type CheckoutPlan,
+  type CustomBasePlan,
 } from "~/server/billing/payments";
 import { db } from "~/server/db";
 import { TeamService } from "~/server/service/team-service";
@@ -37,6 +39,25 @@ export const billingRouter = createTRPCRouter({
           input.plan as CheckoutPlan
         )
       ).url;
+    }),
+
+  createCustomCheckoutSession: teamAdminProcedure
+    .input(
+      z.object({
+        plan: z.enum(["LITE", "HOBBY", "BASIC"]),
+        marketingEmailLimit: z.number().int().min(1000).max(3000000),
+        transactionalEmailLimit: z.number().int().min(1000).max(3000000),
+        monthlyPriceCents: z.number().int().min(100).max(50000000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const session = await createCustomCheckoutSessionForTeam(ctx.team.id, {
+        basePlan: input.plan as CustomBasePlan,
+        marketingEmailLimit: input.marketingEmailLimit,
+        transactionalEmailLimit: input.transactionalEmailLimit,
+        monthlyPriceCents: input.monthlyPriceCents,
+      });
+      return session.url;
     }),
 
   /**
@@ -76,6 +97,20 @@ export const billingRouter = createTRPCRouter({
     });
 
     return subscription;
+  }),
+
+  getCustomPlanContract: teamProcedure.query(async ({ ctx }) => {
+    const team = await db.team.findUnique({
+      where: { id: ctx.team.id },
+      select: {
+        customPlanEnabled: true,
+        customMarketingEmailLimit: true,
+        customTransactionalEmailLimit: true,
+        customMonthlyPriceCents: true,
+      },
+    });
+
+    return team;
   }),
 
   updateBillingEmail: teamAdminProcedure

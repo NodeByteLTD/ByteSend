@@ -293,8 +293,8 @@ export function NotificationProviderManager() {
 
       {/* Add/Edit Provider Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex w-[calc(100vw-1rem)] max-h-[90dvh] max-w-lg flex-col gap-0 overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6">
             <DialogTitle>
               {editingId ? "Edit Provider" : "Add Notification Provider"}
             </DialogTitle>
@@ -303,7 +303,7 @@ export function NotificationProviderManager() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
             {/* Provider Type */}
             {!editingId && (
               <div>
@@ -377,11 +377,11 @@ export function NotificationProviderManager() {
               <p className="text-xs text-muted-foreground mb-2">
                 Leave empty to monitor all events
               </p>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-lg p-2">
+              <div className="grid max-h-44 grid-cols-1 gap-2 overflow-y-auto rounded-lg border p-2 sm:grid-cols-2">
                 {EVENT_TYPES.map((event) => (
                   <label
                     key={event.value}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                    className="flex cursor-pointer items-center gap-2 rounded p-1 hover:bg-muted/40"
                   >
                     <input
                       type="checkbox"
@@ -389,14 +389,14 @@ export function NotificationProviderManager() {
                       onChange={() => toggleEventType(event.value)}
                       className="rounded border-gray-300"
                     />
-                    <span className="text-sm">{event.label}</span>
+                    <span className="text-xs sm:text-sm">{event.label}</span>
                   </label>
                 ))}
               </div>
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="shrink-0 gap-2 border-t bg-background px-4 py-3 sm:px-6">
             <Button
               variant="outline"
               onClick={() => {

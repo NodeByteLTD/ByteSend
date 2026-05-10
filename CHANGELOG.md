@@ -11,6 +11,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.6] - 2026-05-10
+
+### Added
+
+#### Marketing Components
+- **Modular homepage architecture** — split the landing page into reusable section components (`Hero`, `TrustStrip`, `Features`, `Comparison`, `PricingSection`, `CallToAction`, `DevSection`) for clearer ownership and easier iteration
+- **Single pricing calculator flow** — promoted the calculator-led pricing experience and removed older card-based pricing composition in favor of a unified pricing section
+
+#### Dashboard Settings
+- **Settings API Keys page** — added first-class `/settings/api-keys` route
+- **Settings SMTP page** — added first-class `/settings/smtp` route
+
+#### SDKs
+- **Go SDK initial package** — introduced `packages/go-sdk` with typed client surfaces for emails, contacts, contact books, campaigns, domains, and analytics
+
+#### Documentation
+- **SMTP auth API reference page** — added `apps/docs/api-reference/smtp/auth.mdx`
+- **Self-hosting Docker doc relocation** — promoted Docker setup docs to `apps/docs/self-hosting/docker.mdx` and aligned navigation
+
+### Changed
+
+#### Marketing Site
+- **Homepage composition refresh** — replaced older section files (`FeatureCard*`, `PricingTiers`, `CodeExample`) with the new component set and updated page assembly
+- **Icon system modernization** — replaced hand-authored inline SVG usage in key marketing and app screens with icon components for consistency and maintainability
+- **Developer section improvements** — expanded dev-focused section behavior and language-toggle handling in `CodeLangToggle` and `DevSection`
+
+#### Settings UX & Navigation
+- **Developer settings consolidation** — aligned developer tooling pages with the canonical Settings area while preserving compatibility flows from legacy dev-settings routes
+
+#### Plans, Billing & Limits
+- **Pricing/plan constant updates** — refreshed shared Stripe plan/product definitions and app-side plan/payment constants to keep UI, checkout, and limits in sync
+- **Billing UI updates** — updated `/settings/billing` presentation and upgrade flows to match current plan structure
+- **Stripe seed updates** — adjusted `stripe-seed.ts` for current product/price setup behavior
+
+#### Documentation & API Spec
+- **OpenAPI refresh** — regenerated and updated API reference spec and intro content
+- **Docs navigation/content refresh** — updated docs navigation and onboarding pages (including Go and self-hosting paths) to match current product structure
+
+### Fixed
+
+#### Dashboard & Routing
+- **Settings route reliability** — removed dead-end developer settings destinations by wiring pages into canonical Settings routes and maintaining redirect compatibility
+
+#### Visual Consistency
+- **Cross-page icon sizing/alignment** — normalized icon rendering across footer, auth, error, not-found, and dashboard surfaces after component migration
+
+---
+
 ## [0.2.5] - 2026-05-09
 
 ### Added
@@ -515,7 +563,8 @@ Initial public beta release of ByteSend — an all-in-one email infrastructure p
 
 ---
 
-[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/nodebyte/bytesend/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/nodebyte/bytesend/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/nodebyte/bytesend/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/nodebyte/bytesend/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/nodebyte/bytesend/compare/v0.2.2...v0.2.3

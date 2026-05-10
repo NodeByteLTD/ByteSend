@@ -1,13 +1,17 @@
 "use client";
 
 import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { BundledLanguage } from "shiki";
+import { codeToHtml } from "shiki";
+import { useTheme } from "@bytesend/ui";
 import { Button } from "@bytesend/ui/src/button";
 import { LangToggle } from "~/components/marketing/CodeLangToggle";
-
 import { CheckIcon } from "~/components/marketing/HomeIcons";
 
 export function DevSection() {
+    const { resolvedTheme } = useTheme();
 
     const APP_URL = "/login";
     const containerId = "dev-lang-snippets";
@@ -26,7 +30,7 @@ await client.emails.send({
 
 // → { id: "em_abc123", success: true }`;
 
-        const PY_SNIPPET = `from bytesend import ByteSend
+    const PY_SNIPPET = `from bytesend import ByteSend
 
 client = ByteSend("bs_••••••••")
 
@@ -40,7 +44,7 @@ data, err = client.emails.send({
 
 print(data or err)`;
 
-        const GO_SNIPPET = `package main
+    const GO_SNIPPET = `package main
 
 import (
     "context"
@@ -66,7 +70,7 @@ func main() {
     log.Println(resp.EmailID)
 }`;
 
-        const PHP_SNIPPET = `<?php
+    const PHP_SNIPPET = `<?php
 
 $ch = curl_init('https://bytesend.cloud/api/v1/emails');
 curl_setopt_array($ch, [
@@ -89,7 +93,7 @@ $response = curl_exec($ch);
 echo $response;
 curl_close($ch);`;
 
-        const RUST_SNIPPET = `use reqwest::Client;
+    const RUST_SNIPPET = `use reqwest::Client;
 use serde_json::json;
 
 #[tokio::main]
@@ -113,7 +117,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }`;
 
-        const RUBY_SNIPPET = `require "net/http"
+    const RUBY_SNIPPET = `require "net/http"
 require "json"
 
 uri = URI("https://bytesend.cloud/api/v1/emails")
@@ -131,14 +135,14 @@ req.body = {
 res = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
 puts res.body`;
 
-        const languages = [
-                { key: "ts", label: "TypeScript", kind: "ts", code: TS_SNIPPET, file: "send-email.ts" },
-                { key: "py", label: "Python", kind: "py", code: PY_SNIPPET, file: "send_email.py" },
-                { key: "go", label: "Go", kind: "go", code: GO_SNIPPET, file: "send_email.go" },
-                { key: "php", label: "PHP", kind: "php", code: PHP_SNIPPET, file: "send-email.php" },
-                { key: "rs", label: "Rust", kind: "rs", code: RUST_SNIPPET, file: "send_email.rs" },
-                { key: "rb", label: "Ruby", kind: "rb", code: RUBY_SNIPPET, file: "send_email.rb" },
-        ];
+    const languages = [
+        { key: "ts", label: "TypeScript", kind: "ts", shikiLang: "ts", code: TS_SNIPPET, file: "send-email.ts" },
+        { key: "py", label: "Python", kind: "py", shikiLang: "python", code: PY_SNIPPET, file: "send_email.py" },
+        { key: "go", label: "Go", kind: "go", shikiLang: "go", code: GO_SNIPPET, file: "send_email.go" },
+        { key: "php", label: "PHP", kind: "php", shikiLang: "php", code: PHP_SNIPPET, file: "send-email.php" },
+        { key: "rs", label: "Rust", kind: "rs", shikiLang: "rust", code: RUST_SNIPPET, file: "send_email.rs" },
+        { key: "rb", label: "Ruby", kind: "rb", shikiLang: "ruby", code: RUBY_SNIPPET, file: "send_email.rb" },
+    ];
 
     return (
         <section className="border-t border-border/30 bg-muted/20 py-20 sm:py-28">
@@ -207,15 +211,67 @@ puts res.body`;
                                 <div className="px-5 pt-3 text-[11px] text-muted-foreground font-mono bg-background/95 border-b border-border/20">
                                     {lang.file}
                                 </div>
-                                <pre className="px-5 py-5 text-[13px] font-mono leading-[1.7] overflow-x-auto text-foreground/85 bg-background">
-                                    <code>{lang.code}</code>
-                                </pre>
+                                <HighlightedSnippet code={lang.code} lang={lang.shikiLang} theme={resolvedTheme} />
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
         </section>
+    );
+}
+
+function HighlightedSnippet({ code, lang, theme }: { code: string; lang: BundledLanguage; theme?: string }) {
+    const [html, setHtml] = useState("");
+    const [loading, setLoading] = useState(true);
+    const shikiTheme = theme === "light" ? "catppuccin-latte" : "catppuccin-mocha";
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function highlight() {
+            try {
+                const highlighted = await codeToHtml(code, {
+                    lang,
+                    theme: shikiTheme,
+                    cssVariablePrefix: "--shiki-",
+                });
+
+                if (mounted) {
+                    setHtml(highlighted);
+                }
+            } catch {
+                if (mounted) {
+                    setHtml("");
+                }
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        setLoading(true);
+        void highlight();
+
+        return () => {
+            mounted = false;
+        };
+    }, [code, lang, shikiTheme]);
+
+    if (loading || !html) {
+        return (
+            <pre className="overflow-x-auto bg-background px-5 py-5 text-[13px] leading-[1.7] text-foreground/85">
+                <code>{code}</code>
+            </pre>
+        );
+    }
+
+    return (
+        <div
+            className="overflow-x-auto bg-background text-[13px] leading-[1.7] [&_pre]:m-0 [&_pre]:bg-transparent [&_pre]:px-5 [&_pre]:py-5"
+            dangerouslySetInnerHTML={{ __html: html }}
+        />
     );
 }
 

@@ -18,6 +18,7 @@ const ROUTE_LABELS: Record<string, string> = {
   suppressions: "Suppressions",
   contacts: "Contacts",
   campaigns: "Campaigns",
+  broadcasts: "Broadcasts",
   domains: "Domains",
   webhooks: "Webhooks",
   "dev-settings": "Developer Settings",

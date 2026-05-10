@@ -21,43 +21,46 @@ export const UpgradeModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Choose a Plan</DialogTitle>
+          <DialogTitle>Upgrade Required</DialogTitle>
           <DialogDescription>
             {(() => {
               const messages: Record<LimitReason, string> = {
                 [LimitReason.DOMAIN]:
-                  "You've reached the domain limit on your current plan.",
+                  "You have reached the domain limit for your current plan.",
                 [LimitReason.CONTACT_BOOK]:
-                  "You've reached the contact book limit on your current plan.",
+                  "You have reached the contact list limit for your current plan.",
                 [LimitReason.TEAM_MEMBER]:
-                  "You've reached the team member limit on your current plan.",
+                  "You have reached the team member limit for your current plan.",
                 [LimitReason.WEBHOOK]:
-                  "You've reached the webhook limit on your current plan.",
+                  "You have reached the webhook limit for your current plan.",
                 [LimitReason.EMAIL_BLOCKED]:
-                  "You've reached the email sending limit on your current plan.",
+                  "Email sending is currently limited on your plan.",
                 [LimitReason.EMAIL_DAILY_LIMIT_REACHED]:
-                  "You've reached the daily email limit on your current plan.",
+                  "You have reached your daily sending limit.",
                 [LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED]:
-                  "You've reached the monthly email limit on your current plan.",
+                  "You have reached your monthly sending limit.",
                 [LimitReason.MARKETING_NOT_AVAILABLE]:
-                  "Marketing features (Contacts & Campaigns) are not available on the Free plan.",
+                  "Contacts, Broadcasts, and Campaigns are not available on the Free plan.",
               };
               return reason
-                ? `${messages[reason] ?? ""} Upgrade to unlock more.`
-                : "Select a plan that fits your needs.";
+                ? `${messages[reason] ?? ""} Upgrade to continue.`
+                : "Your current plan does not include this feature.";
             })()}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-3 rounded-lg border border-border bg-muted/20 p-4">
+        <div className="mt-3 rounded-lg border border-border/60 bg-muted/20 p-4">
           <p className="text-sm text-muted-foreground">
-            To keep pricing and plan details consistent, all plan options and checkout are managed in Billing.
+            Compare plans, review limits, and complete checkout securely from Billing.
           </p>
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={closeModal}>
+              Not now
+            </Button>
             <Button asChild onClick={closeModal}>
-              <Link href="/settings/billing">Open Billing</Link>
+              <Link href="/settings/billing">View plans</Link>
             </Button>
           </div>
         </div>

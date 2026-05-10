@@ -112,9 +112,14 @@ const marketingItems = [
     icon: BookUser,
   },
   {
+    title: "Broadcasts",
+    url: "/broadcasts",
+    icon: Volume2,
+  },
+  {
     title: "Campaigns",
     url: "/campaigns",
-    icon: Volume2,
+    icon: BookOpenText,
   },
 ];
 
@@ -124,7 +129,10 @@ export function AppSidebar() {
   const { currentTeam, teams, setCurrentTeam } = useTeam();
   const openUpgradeModal = useUpgradeModalStore((s) => s.action.openModal);
 
-  const isMarketingLocked = isCloud() && currentTeam?.plan === "FREE";
+  const isMarketingLocked =
+    isCloud() &&
+    currentTeam?.plan === "FREE" &&
+    !session?.user?.isEnvAdmin;
 
   const pathname = usePathname();
 
@@ -343,7 +351,9 @@ export function NavUser({
     avatar?: string | null;
   };
 }) {
+  const { data: session } = useSession();
   const { isMobile } = useSidebar();
+  const canAccessAdminPanel = isSelfHosted() || Boolean(session?.user?.isAdmin);
 
   return (
     <SidebarMenu>
@@ -412,12 +422,14 @@ export function NavUser({
                   Home
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/admin">
-                  <Server />
-                  Admin Panel
-                </Link>
-              </DropdownMenuItem>
+              {canAccessAdminPanel && (
+                <DropdownMenuItem asChild>
+                  <Link href="/admin">
+                    <Server />
+                    Admin Panel
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href="/settings/usage">
                   <GaugeIcon />

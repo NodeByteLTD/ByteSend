@@ -20,6 +20,7 @@ import {
 import { LimitService } from "~/server/service/limit-service";
 
 const statuses = Object.values(CampaignStatus) as [CampaignStatus];
+const intents = ["CAMPAIGN", "BROADCAST"] as const;
 
 export const campaignRouter = createTRPCRouter({
   getCampaigns: teamProcedure
@@ -28,6 +29,7 @@ export const campaignRouter = createTRPCRouter({
         page: z.number().optional(),
         status: z.enum(statuses).optional().nullable(),
         search: z.string().optional().nullable(),
+        intent: z.enum(intents).optional(),
       }),
     )
     .query(async ({ ctx: { db, team }, input }) => {
@@ -41,6 +43,10 @@ export const campaignRouter = createTRPCRouter({
 
       if (input.status) {
         whereConditions.status = input.status;
+      }
+
+      if (input.intent) {
+        whereConditions.intent = input.intent;
       }
 
       if (input.search) {
@@ -77,6 +83,7 @@ export const campaignRouter = createTRPCRouter({
           sent: true,
           delivered: true,
           unsubscribed: true,
+          intent: true,
         },
         orderBy: {
           createdAt: "desc",
@@ -96,6 +103,7 @@ export const campaignRouter = createTRPCRouter({
         name: z.string(),
         from: z.string(),
         subject: z.string(),
+        intent: z.enum(intents).optional(),
       }),
     )
     .mutation(async ({ ctx: { db, team }, input }) => {
@@ -112,6 +120,7 @@ export const campaignRouter = createTRPCRouter({
       const campaign = await db.campaign.create({
         data: {
           ...input,
+          intent: input.intent ?? "CAMPAIGN",
           teamId: team.id,
           domainId: domain.id,
         },
@@ -270,6 +279,7 @@ export const campaignRouter = createTRPCRouter({
           teamId: team.id,
           domainId: campaign.domainId,
           contactBookId: campaign.contactBookId,
+          intent: campaign.intent,
         },
       });
 
