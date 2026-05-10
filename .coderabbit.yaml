@@ -1,0 +1,20 @@
+language: en-US
+early_access: false
+reviews:
+  profile: chill
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  path_filters:
+    - "!**/pnpm-lock.yaml"
+    - "!apps/docs/images/**"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.webp"
+  auto_review:
+    enabled: true
+    drafts: false
+chat:
+  auto_reply: true

@@ -184,6 +184,36 @@ export class LimitService {
     };
   }
 
+  static async checkCampaignLimit(teamId: number): Promise<{
+    isLimitReached: boolean;
+    limit: number;
+    currentCount: number;
+    reason?: LimitReason;
+  }> {
+    if (!env.NEXT_PUBLIC_IS_CLOUD) {
+      return { isLimitReached: false, limit: -1, currentCount: 0 };
+    }
+
+    const team = await TeamService.getTeamCached(teamId);
+    const currentCount = await db.campaign.count({ where: { teamId } });
+    const limit = PLAN_LIMITS[getActivePlan(team)].campaigns;
+
+    if (isLimitExceeded(currentCount, limit)) {
+      return {
+        isLimitReached: true,
+        limit,
+        currentCount,
+        reason: LimitReason.CAMPAIGN,
+      };
+    }
+
+    return {
+      isLimitReached: false,
+      limit,
+      currentCount,
+    };
+  }
+
   static async checkWebhookLimit(teamId: number): Promise<{
     isLimitReached: boolean;
     limit: number;

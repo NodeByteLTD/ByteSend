@@ -107,11 +107,11 @@ export const campaignRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx: { db, team }, input }) => {
-      const allowed = await LimitService.checkMarketingAccess(team.id);
-      if (!allowed) {
+      const limitCheck = await LimitService.checkCampaignLimit(team.id);
+      if (limitCheck.isLimitReached) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+          message: `You have reached the campaign limit (${limitCheck.currentCount}/${limitCheck.limit}) for your current plan. Upgrade to create more campaigns.`,
         });
       }
 
@@ -257,11 +257,11 @@ export const campaignRouter = createTRPCRouter({
 
   duplicateCampaign: campaignProcedure.mutation(
     async ({ ctx: { db, team, campaign } }) => {
-      const allowed = await LimitService.checkMarketingAccess(team.id);
-      if (!allowed) {
+      const limitCheck = await LimitService.checkCampaignLimit(team.id);
+      if (limitCheck.isLimitReached) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Marketing campaigns are not available on the Free plan. Upgrade to a paid plan to access this feature.",
+          message: `You have reached the campaign limit (${limitCheck.currentCount}/${limitCheck.limit}) for your current plan. Upgrade to duplicate more campaigns.`,
         });
       }
 

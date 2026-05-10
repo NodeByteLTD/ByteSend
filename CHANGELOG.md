@@ -19,9 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Modular homepage architecture** — split the landing page into reusable section components (`Hero`, `TrustStrip`, `Features`, `Comparison`, `PricingSection`, `CallToAction`, `DevSection`) for clearer ownership and easier iteration
 - **Single pricing calculator flow** — promoted the calculator-led pricing experience and removed older card-based pricing composition in favor of a unified pricing section
 
+#### Dashboard — Broadcasts
+- **Broadcasts section** — introduced a dedicated `/broadcasts` route and page hierarchy (`/broadcasts`, `/broadcasts/[broadcastId]`, `/broadcasts/[broadcastId]/edit`) for one-off email blasts, separating them from the Campaigns flow which is now focused on recurring/automated sequences
+
 #### Dashboard Settings
 - **Settings API Keys page** — added first-class `/settings/api-keys` route
 - **Settings SMTP page** — added first-class `/settings/smtp` route
+
+#### Billing — Custom Plan Contracts
+- **Slider-based plan selector** — `BillingPlanSelector` component replaces static plan cards at `/settings/billing` with interactive marketing and transactional email limit sliders (1,000 – 3,000,000 each); calculated contract total updates in real time as limits are adjusted
+- **Custom Stripe checkout sessions** — `createCustomCheckoutSession` tRPC mutation creates a Stripe session with `price_data` (unit_amount = exact contract price in CAD) rather than a fixed price ID, locking teams into the exact limit/price combination they selected
+- **Custom plan query** — `getCustomPlanContract` tRPC query lets the billing page and `PlanDetails` component surface the active custom contract (limits + monthly price) for teams already on a custom plan
+- **Custom plan DB fields** — added four optional fields to the `Team` model (`customPlanEnabled`, `customMarketingEmailLimit`, `customTransactionalEmailLimit`, `customMonthlyPriceCents`); populated at checkout completion via the Stripe webhook
+
+#### Campaigns
+- **Campaign intent field** — campaigns now store an `intent` column (migration `20260510120000_add_campaign_intent`) to distinguish campaign purpose at creation time; `create-campaign` dialog captures intent upfront
 
 #### SDKs
 - **Go SDK initial package** — introduced `packages/go-sdk` with typed client surfaces for emails, contacts, contact books, campaigns, domains, and analytics
@@ -29,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Documentation
 - **SMTP auth API reference page** — added `apps/docs/api-reference/smtp/auth.mdx`
 - **Self-hosting Docker doc relocation** — promoted Docker setup docs to `apps/docs/self-hosting/docker.mdx` and aligned navigation
+
+#### CI / Review Automation
+- **CodeRabbit support** — added `.github/workflows/coderabbit.yml` and root `.coderabbit.yaml` to enable automated PR review summaries and inline feedback on pull requests
 
 ### Changed
 
@@ -42,8 +57,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Plans, Billing & Limits
 - **Pricing/plan constant updates** — refreshed shared Stripe plan/product definitions and app-side plan/payment constants to keep UI, checkout, and limits in sync
-- **Billing UI updates** — updated `/settings/billing` presentation and upgrade flows to match current plan structure
+- **Billing page rebuilt around custom plan selector** — `/settings/billing` now surfaces the slider-based `BillingPlanSelector` as the primary upgrade path; `PlanDetails` shows active custom contract details (limits and monthly price) when a custom plan is active
+- **Custom plan limit enforcement** — `LimitService` now reads `customMarketingEmailLimit` and `customTransactionalEmailLimit` from the `Team` record and enforces per-type monthly caps for custom plan teams, bypassing the standard plan-tier daily limits; the daily usage job skips metered overage billing for custom plan teams to avoid double-charging
+- **Admin plan assignment clears custom contract** — `adminAssignPlan` with `method: "complimentary"` now explicitly clears all custom plan fields (`customPlanEnabled`, all limit columns) so stale slider contracts do not persist after a manual admin override
+- **Free-plan marketing access switched to limit-based enforcement** — Contacts, Broadcasts, and Campaigns are no longer hard-locked in the dashboard for Free teams; access is now controlled by enforceable plan limits (including campaign count and monthly sending caps)
+- **Free plan marketing baseline updated** — FREE plan now includes limited marketing capability (`marketingEmailsIncluded: true`) with a capped campaign allowance (`campaignsLimit: 3`) instead of full marketing exclusion
 - **Stripe seed updates** — adjusted `stripe-seed.ts` for current product/price setup behavior
+
+#### Analytics
+- **Analytics detail expansion** — dashboard analytics now includes additional breakdown cards (delivery rate, bounce rate, complaint rate, and total volume) for clearer at-a-glance performance tracking
+- **Paid-only advanced analytics insights** — added a paid-tier insights section for open rate, click rate, click-to-open rate, and average daily volume with an upgrade CTA for free teams
 
 #### Documentation & API Spec
 - **OpenAPI refresh** — regenerated and updated API reference spec and intro content
@@ -54,8 +77,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Dashboard & Routing
 - **Settings route reliability** — removed dead-end developer settings destinations by wiring pages into canonical Settings routes and maintaining redirect compatibility
 
+#### Billing & Limits
+- **Admin bypass email normalization** — `LimitService.isAdminOrFounderTeam` now normalises the environment admin email with `trim()` + `toLowerCase()` and uses a case-insensitive Prisma query, preventing mismatches caused by casing differences in env config
+- **Custom plan Stripe webhook sync** — `syncStripeData` now reads `customPlanEnabled`, `customMarketingEmailLimit`, `customTransactionalEmailLimit`, and `customMonthlyPriceCents` from subscription metadata and persists them back to the `Team` record so contract limits survive server restarts and are always in sync with Stripe
+
 #### Visual Consistency
 - **Cross-page icon sizing/alignment** — normalized icon rendering across footer, auth, error, not-found, and dashboard surfaces after component migration
+- **UpgradeModal scroll** — fixed scroll behavior in the upgrade and notification modals so long plan/feature lists are fully accessible without clipping
 
 ---
 

@@ -13,6 +13,7 @@ import { ChevronRight } from "lucide-react";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Analytics",
+  logs: "Logs",
   emails: "Emails",
   templates: "Templates",
   suppressions: "Suppressions",
@@ -75,11 +76,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
                     )}
                     <span
-                      className={`text-sm capitalize truncate ${
-                        isLast
+                      className={`text-sm capitalize truncate ${isLast
                           ? "text-foreground font-medium"
                           : "text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       {crumb.label}
                     </span>

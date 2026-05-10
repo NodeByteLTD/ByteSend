@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockDb, mockValidateDomainFromEmail, mockCheckMarketingAccess } = vi.hoisted(() => ({
+const { mockDb, mockValidateDomainFromEmail, mockCheckCampaignLimit } = vi.hoisted(() => ({
   mockDb: {
     teamUser: {
       findFirst: vi.fn(),
@@ -15,7 +15,7 @@ const { mockDb, mockValidateDomainFromEmail, mockCheckMarketingAccess } = vi.hoi
     },
   },
   mockValidateDomainFromEmail: vi.fn(),
-  mockCheckMarketingAccess: vi.fn(),
+  mockCheckCampaignLimit: vi.fn(),
 }));
 
 vi.mock("~/server/db", () => ({
@@ -34,7 +34,7 @@ vi.mock("~/server/service/domain-service", () => ({
 
 vi.mock("~/server/service/limit-service", () => ({
   LimitService: {
-    checkMarketingAccess: mockCheckMarketingAccess,
+    checkCampaignLimit: mockCheckCampaignLimit,
   },
 }));
 
@@ -66,8 +66,12 @@ describe("campaignRouter.updateCampaign authorization", () => {
     mockDb.campaign.update.mockReset();
     mockDb.campaign.create.mockReset();
     mockDb.contactBook.findUnique.mockReset();
-    mockCheckMarketingAccess.mockReset();
-    mockCheckMarketingAccess.mockResolvedValue(true);
+    mockCheckCampaignLimit.mockReset();
+    mockCheckCampaignLimit.mockResolvedValue({
+      isLimitReached: false,
+      limit: 3,
+      currentCount: 0,
+    });
 
     mockDb.teamUser.findFirst.mockResolvedValue({
       teamId: 10,
@@ -124,8 +128,12 @@ describe("campaignRouter.duplicateCampaign", () => {
     mockDb.teamUser.findFirst.mockReset();
     mockDb.campaign.findUnique.mockReset();
     mockDb.campaign.create.mockReset();
-    mockCheckMarketingAccess.mockReset();
-    mockCheckMarketingAccess.mockResolvedValue(true);
+    mockCheckCampaignLimit.mockReset();
+    mockCheckCampaignLimit.mockResolvedValue({
+      isLimitReached: false,
+      limit: 3,
+      currentCount: 0,
+    });
 
     mockDb.teamUser.findFirst.mockResolvedValue({
       teamId: 10,

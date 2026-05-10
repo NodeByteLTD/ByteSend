@@ -22,13 +22,13 @@ export const PLANS: Record<PlanType, PricingTier> = {
       maxTeamMembers: 5,
       maxWebhooks: 3,
       contactsLimit: 100,
-      campaignsLimit: 0, // Marketing emails not available on free plan
+      campaignsLimit: 3, // Limited marketing access on free plan
       prioritySupport: false,
       customBranding: false,
       advancedAnalytics: false,
       apiAccessLevel: "basic",
       concurrentConnections: 1,
-      marketingEmailsIncluded: false,
+      marketingEmailsIncluded: true,
       extraMemberRateCents: 200, // CA$2/member add-on
       additionalDomainRateCents: 100, // CA$1/domain add-on
     },

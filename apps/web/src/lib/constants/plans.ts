@@ -5,6 +5,7 @@ export enum LimitReason {
   DOMAIN = "DOMAIN",
   CONTACT_BOOK = "CONTACT_BOOK",
   CONTACTS = "CONTACTS",
+  CAMPAIGN = "CAMPAIGN",
   TEAM_MEMBER = "TEAM_MEMBER",
   WEBHOOK = "WEBHOOK",
   EMAIL_BLOCKED = "EMAIL_BLOCKED",
@@ -23,6 +24,7 @@ export const PLAN_LIMITS: Record<
     contacts: number;
     teamMembers: number;
     webhooks: number;
+    campaigns: number;
     /** Whether marketing/campaign emails are available on this plan. */
     marketingEmailsIncluded: boolean;
   }
@@ -33,9 +35,10 @@ export const PLAN_LIMITS: Record<
     domains: PLANS.FREE.limits.maxDomains,
     contactBooks: PLANS.FREE.limits.maxContactBooks,
     contacts: PLANS.FREE.limits.contactsLimit,         // Hard cap across all contact books
+    campaigns: PLANS.FREE.limits.campaignsLimit,
     teamMembers: PLANS.FREE.limits.maxTeamMembers,        // Hard cap — upgrade required
     webhooks: PLANS.FREE.limits.maxWebhooks,
-    marketingEmailsIncluded: PLANS.FREE.limits.marketingEmailsIncluded, // Marketing emails blocked on free plan
+    marketingEmailsIncluded: PLANS.FREE.limits.marketingEmailsIncluded,
   },
   HOBBY: {
     emailsPerMonth: PLANS.HOBBY.limits.monthlyEmailLimit, // Included; overage billed monthly
@@ -43,6 +46,7 @@ export const PLAN_LIMITS: Record<
     domains: PLANS.HOBBY.limits.maxDomains,
     contactBooks: PLANS.HOBBY.limits.maxContactBooks,
     contacts: PLANS.HOBBY.limits.contactsLimit,
+    campaigns: PLANS.HOBBY.limits.campaignsLimit,
     teamMembers: PLANS.HOBBY.limits.maxTeamMembers,        // Hard cap — upgrade required
     webhooks: PLANS.HOBBY.limits.maxWebhooks,
     marketingEmailsIncluded: PLANS.HOBBY.limits.marketingEmailsIncluded,
@@ -53,6 +57,7 @@ export const PLAN_LIMITS: Record<
     domains: PLANS.LITE.limits.maxDomains,
     contactBooks: PLANS.LITE.limits.maxContactBooks,
     contacts: PLANS.LITE.limits.contactsLimit,
+    campaigns: PLANS.LITE.limits.campaignsLimit,
     teamMembers: PLANS.LITE.limits.maxTeamMembers,        // Hard cap — upgrade required
     webhooks: PLANS.LITE.limits.maxWebhooks,
     marketingEmailsIncluded: PLANS.LITE.limits.marketingEmailsIncluded,
@@ -63,6 +68,7 @@ export const PLAN_LIMITS: Record<
     domains: PLANS.BASIC.limits.maxDomains,
     contactBooks: PLANS.BASIC.limits.maxContactBooks,
     contacts: -1, // Unlimited
+    campaigns: PLANS.BASIC.limits.campaignsLimit,
     teamMembers: -1, // Unlimited
     webhooks: PLANS.BASIC.limits.maxWebhooks,
     marketingEmailsIncluded: PLANS.BASIC.limits.marketingEmailsIncluded,
@@ -73,6 +79,7 @@ export const PLAN_LIMITS: Record<
     domains: PLANS.LIFETIME.limits.maxDomains,
     contactBooks: PLANS.LIFETIME.limits.maxContactBooks,
     contacts: -1, // Unlimited
+    campaigns: PLANS.LIFETIME.limits.campaignsLimit,
     teamMembers: -1, // Unlimited
     webhooks: PLANS.LIFETIME.limits.maxWebhooks,
     marketingEmailsIncluded: PLANS.LIFETIME.limits.marketingEmailsIncluded,

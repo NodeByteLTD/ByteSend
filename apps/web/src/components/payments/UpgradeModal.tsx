@@ -31,6 +31,8 @@ export const UpgradeModal = () => {
                   "You have reached the domain limit for your current plan.",
                 [LimitReason.CONTACT_BOOK]:
                   "You have reached the contact list limit for your current plan.",
+                [LimitReason.CAMPAIGN]:
+                  "You have reached the campaign limit for your current plan.",
                 [LimitReason.TEAM_MEMBER]:
                   "You have reached the team member limit for your current plan.",
                 [LimitReason.WEBHOOK]:
@@ -42,7 +44,7 @@ export const UpgradeModal = () => {
                 [LimitReason.EMAIL_FREE_PLAN_MONTHLY_LIMIT_REACHED]:
                   "You have reached your monthly sending limit.",
                 [LimitReason.MARKETING_NOT_AVAILABLE]:
-                  "Contacts, Broadcasts, and Campaigns are not available on the Free plan.",
+                  "This marketing capability is not available on your current plan.",
               };
               return reason
                 ? `${messages[reason] ?? ""} Upgrade to continue.`

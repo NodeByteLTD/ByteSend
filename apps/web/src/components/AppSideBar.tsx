@@ -23,7 +23,7 @@ import {
   ChevronsUpDown,
   Check,
   PlusIcon,
-  LockIcon,
+  ScrollText,
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { useEffect, useState } from "react";
@@ -62,8 +62,6 @@ import {
 } from "@bytesend/ui/src/dropdown-menu";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { env } from "~/env";
-import { useUpgradeModalStore } from "~/store/upgradeModalStore";
-import { LimitReason } from "~/lib/constants/plans";
 
 // General items
 const generalItems = [
@@ -71,6 +69,11 @@ const generalItems = [
     title: "Emails",
     url: "/emails",
     icon: Mail,
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard",
+    icon: BarChart3,
   },
   {
     title: "Domains",
@@ -93,9 +96,9 @@ const generalItems = [
     icon: UserRoundX,
   },
   {
-    title: "Analytics",
-    url: "/dashboard",
-    icon: BarChart3,
+    title: "Audit Logs",
+    url: "/logs",
+    icon: ScrollText,
   },
   {
     title: "Settings",
@@ -127,12 +130,6 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const showFeedback = isCloud();
   const { currentTeam, teams, setCurrentTeam } = useTeam();
-  const openUpgradeModal = useUpgradeModalStore((s) => s.action.openModal);
-
-  const isMarketingLocked =
-    isCloud() &&
-    currentTeam?.plan === "FREE" &&
-    !session?.user?.isEnvAdmin;
 
   const pathname = usePathname();
 
@@ -256,42 +253,24 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>
             <span>Marketing</span>
-            {isMarketingLocked && (
-              <span className="ml-1.5 inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                Paid
-              </span>
-            )}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {marketingItems.map((item) => {
-                const isActive = !isMarketingLocked && pathname?.startsWith(item.url);
+                const isActive = pathname?.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
-                    {isMarketingLocked ? (
-                      <SidebarMenuButton
-                        tooltip={`${item.title} — upgrade to access`}
-                        isActive={false}
-                        className="text-muted-foreground opacity-60"
-                        onClick={() => openUpgradeModal(LimitReason.MARKETING_NOT_AVAILABLE)}
-                      >
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={isActive}
+                      className="text-sidebar-foreground"
+                    >
+                      <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
-                        <LockIcon className="ml-auto size-3 shrink-0" />
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={item.title}
-                        isActive={isActive}
-                        className="text-sidebar-foreground"
-                      >
-                        <Link href={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    )}
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}

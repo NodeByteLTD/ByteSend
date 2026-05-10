@@ -33,6 +33,57 @@ function ChoosePlanButton() {
 const FREE_PLAN_LIMIT = PLANS.FREE.limits.monthlyEmailLimit;
 const FREE_PLAN_DAILY_LIMIT = PLANS.FREE.limits.dailyEmailLimit;
 
+function getUsageByType(
+  usage: { type: EmailUsageType; sent: number }[],
+  type: EmailUsageType,
+): number {
+  return usage.find((u) => u.type === type)?.sent ?? 0;
+}
+
+function getEffectiveEmailLimits(
+  plan: "FREE" | "BASIC" | "HOBBY" | "LITE" | "LIFETIME",
+  customContract?: {
+    customPlanEnabled: boolean;
+    customMarketingEmailLimit: number | null;
+    customTransactionalEmailLimit: number | null;
+  } | null,
+) {
+  const hasCustom = Boolean(
+    customContract?.customPlanEnabled &&
+    customContract.customMarketingEmailLimit &&
+    customContract.customTransactionalEmailLimit,
+  );
+
+  if (hasCustom) {
+    const marketing = customContract?.customMarketingEmailLimit ?? 0;
+    const transactional = customContract?.customTransactionalEmailLimit ?? 0;
+    return {
+      monthly: marketing + transactional,
+      daily: -1,
+      marketing,
+      transactional,
+      isCustom: true,
+    };
+  }
+
+  const planLimits = PLANS[plan].limits;
+  return {
+    monthly: planLimits.monthlyEmailLimit,
+    daily:
+      Number.isFinite(planLimits.dailyEmailLimit) && planLimits.dailyEmailLimit > 0
+        ? planLimits.dailyEmailLimit
+        : -1,
+    marketing: null,
+    transactional: null,
+    isCustom: false,
+  };
+}
+
+function pct(current: number, limit: number): number {
+  if (limit <= 0) return 0;
+  return Math.min((current / limit) * 100, 100);
+}
+
 /* ────────── Free-tier usage ────────── */
 
 function FreePlanUsage({
@@ -110,6 +161,86 @@ function FreePlanUsage({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function EmailLimitsBreakdown({
+  usage,
+  dayUsage,
+  plan,
+  customContract,
+}: {
+  usage: { type: EmailUsageType; sent: number }[];
+  dayUsage: { type: EmailUsageType; sent: number }[];
+  plan: "FREE" | "BASIC" | "HOBBY" | "LITE" | "LIFETIME";
+  customContract?: {
+    customPlanEnabled: boolean;
+    customMarketingEmailLimit: number | null;
+    customTransactionalEmailLimit: number | null;
+  } | null;
+}) {
+  const limits = getEffectiveEmailLimits(plan, customContract);
+
+  const monthlyTotalSent = usage.reduce((acc, item) => acc + item.sent, 0);
+  const dailyTotalSent = dayUsage.reduce((acc, item) => acc + item.sent, 0);
+  const monthlyMarketingSent = getUsageByType(usage, "MARKETING");
+  const monthlyTransactionalSent = getUsageByType(usage, "TRANSACTIONAL");
+
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Email limits breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <ResourceLimitRow
+          label="Emails this period"
+          currentCount={monthlyTotalSent}
+          limit={limits.monthly}
+        />
+
+        <ResourceLimitRow
+          label="Emails today"
+          currentCount={dailyTotalSent}
+          limit={limits.daily}
+        />
+
+        {limits.marketing !== null ? (
+          <ResourceLimitRow
+            label="Marketing emails"
+            currentCount={monthlyMarketingSent}
+            limit={limits.marketing}
+          />
+        ) : (
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-sm font-medium">Marketing emails</span>
+              <span className="text-sm font-mono text-muted-foreground">
+                {monthlyMarketingSent.toLocaleString()} / shared monthly pool
+              </span>
+            </div>
+            <Progress value={pct(monthlyMarketingSent, limits.monthly)} className="h-1.5" />
+          </div>
+        )}
+
+        {limits.transactional !== null ? (
+          <ResourceLimitRow
+            label="Transactional emails"
+            currentCount={monthlyTransactionalSent}
+            limit={limits.transactional}
+          />
+        ) : (
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-sm font-medium">Transactional emails</span>
+              <span className="text-sm font-mono text-muted-foreground">
+                {monthlyTransactionalSent.toLocaleString()} / shared monthly pool
+              </span>
+            </div>
+            <Progress value={pct(monthlyTransactionalSent, limits.monthly)} className="h-1.5" />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -250,10 +381,13 @@ function ResourceLimitRow({
 
 function ResourceLimits() {
   const { data: domainLimit, isLoading: dl } = api.limits.get.useQuery({ type: LimitReason.DOMAIN });
+  const { data: contactBooksLimit, isLoading: cbl } = api.limits.get.useQuery({ type: LimitReason.CONTACT_BOOK });
+  const { data: contactsLimit, isLoading: cl } = api.limits.get.useQuery({ type: LimitReason.CONTACTS });
+  const { data: campaignLimit, isLoading: cal } = api.limits.get.useQuery({ type: LimitReason.CAMPAIGN });
   const { data: memberLimit, isLoading: ml } = api.limits.get.useQuery({ type: LimitReason.TEAM_MEMBER });
   const { data: webhookLimit, isLoading: wl } = api.limits.get.useQuery({ type: LimitReason.WEBHOOK });
 
-  const isLoading = dl || ml || wl;
+  const isLoading = dl || cbl || cl || cal || ml || wl;
 
   if (isLoading) {
     return (
@@ -266,7 +400,7 @@ function ResourceLimits() {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">Resource limits</CardTitle>
+        <CardTitle className="text-sm font-medium">Resource limits breakdown</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {domainLimit && (
@@ -274,6 +408,27 @@ function ResourceLimits() {
             label="Domains"
             currentCount={domainLimit.currentCount ?? 0}
             limit={domainLimit.limit}
+          />
+        )}
+        {contactBooksLimit && (
+          <ResourceLimitRow
+            label="Contact books"
+            currentCount={contactBooksLimit.currentCount ?? 0}
+            limit={contactBooksLimit.limit}
+          />
+        )}
+        {contactsLimit && (
+          <ResourceLimitRow
+            label="Contacts"
+            currentCount={contactsLimit.currentCount ?? 0}
+            limit={contactsLimit.limit}
+          />
+        )}
+        {campaignLimit && (
+          <ResourceLimitRow
+            label="Campaigns"
+            currentCount={campaignLimit.currentCount ?? 0}
+            limit={campaignLimit.limit}
           />
         )}
         {memberLimit && (
@@ -301,6 +456,7 @@ export default function UsagePage() {
   const { data: usage, isLoading } = api.billing.getThisMonthUsage.useQuery();
   const { currentTeam } = useTeam();
   const { data: subscription } = api.billing.getSubscriptionDetails.useQuery();
+  const { data: customContract } = api.billing.getCustomPlanContract.useQuery();
 
   const today = new Date();
   const billingPeriod =
@@ -316,6 +472,15 @@ export default function UsagePage() {
           <h2 className="text-lg font-semibold">Usage</h2>
           <p className="text-sm text-muted-foreground">{billingPeriod}</p>
         </div>
+
+        {currentTeam?.plan ? (
+          <EmailLimitsBreakdown
+            usage={usage?.month ?? []}
+            dayUsage={usage?.day ?? []}
+            plan={currentTeam.plan}
+            customContract={customContract}
+          />
+        ) : null}
 
         {isLoading ? (
           <div className="flex justify-center py-12">
