@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Dashboard — Broadcasts
 - **Broadcasts section** — introduced a dedicated `/broadcasts` route and page hierarchy (`/broadcasts`, `/broadcasts/[broadcastId]`, `/broadcasts/[broadcastId]/edit`) for one-off email blasts, separating them from the Campaigns flow which is now focused on recurring/automated sequences
 
+#### Dashboard — Logs
+- **Unified logs dashboard** — added a first-class `/logs` dashboard page that merges email events, webhook calls, and notification delivery logs into one searchable audit trail with source and status filtering
+
 #### Dashboard Settings
 - **Settings API Keys page** — added first-class `/settings/api-keys` route
 - **Settings SMTP page** — added first-class `/settings/smtp` route
@@ -67,6 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Analytics
 - **Analytics detail expansion** — dashboard analytics now includes additional breakdown cards (delivery rate, bounce rate, complaint rate, and total volume) for clearer at-a-glance performance tracking
 - **Paid-only advanced analytics insights** — added a paid-tier insights section for open rate, click rate, click-to-open rate, and average daily volume with an upgrade CTA for free teams
+
+#### Usage Breakdown
+- **Full usage limit breakdown** — the `/settings/usage` page now shows a complete limit audit for all tracked resources, including monthly and daily email usage, marketing vs transactional email usage, domains, contact books, contacts, campaigns, team members, and webhooks, so teams can see both current usage and allowed limits in one place
 
 #### Documentation & API Spec
 - **OpenAPI refresh** — regenerated and updated API reference spec and intro content
