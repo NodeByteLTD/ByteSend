@@ -1,4 +1,4 @@
-name: Relase Node SDK
+name: Release Node SDK
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write # Required for OIDC
+  id-token: write
   contents: read
 
 concurrency:
@@ -39,20 +39,11 @@ jobs:
         with:
           version: 9.0.0
 
-      - name: Update npm for OIDC support
-        run: npm install -g npm@latest
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Publish package
         working-directory: packages/sdk
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           pnpm run build
-          if [ -n "$NODE_AUTH_TOKEN" ]; then
-            npm publish --access public --no-git-checks
-          else
-            npm publish --access public --no-git-checks --provenance
-          fi
+          npm publish --access public --no-git-checks --provenance
