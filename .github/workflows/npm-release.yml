@@ -26,23 +26,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      # 1. Install pnpm FIRST
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9.0.0
 
-      # 2. Set up Node SECOND (Now it can find the pnpm executable for caching)
       - name: Set up Node.js 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
-          # Ensure this path is correct relative to the repo root
           cache-dependency-path: pnpm-lock.yaml
 
-      # 3. Only install dependencies required for the SDK
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: pnpm install --filter "./packages/sdk..." --frozen-lockfile
 
