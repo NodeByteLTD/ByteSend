@@ -13,7 +13,7 @@ export function CallToAction() {
             <div className="mx-auto max-w-4xl px-6 text-center">
                 <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background px-4 py-1.5 text-xs text-muted-foreground mb-8">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    Free tier available — no credit card required
+                    Free tier available no credit card required
                 </div>
 
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
