@@ -36,7 +36,7 @@ export function SiteFooter() {
             <a href="https://x.com/TryByteSend" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="X (Twitter)">
               <FaXTwitter className="size-4" />
             </a>
-            <a href="https://bsky.app/profile/nodebyte.host" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Bluesky">
+            <a href="https://bsky.app/profile/bytesend.cloud" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Bluesky">
               <SiBluesky className="size-4" />
             </a>
           </div>
