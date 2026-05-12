@@ -23,19 +23,19 @@ const features = [
         icon: PaintbrushIcon,
         title: "Visual email editor",
         description:
-            "Design beautiful campaigns with a drag-and-drop WYSIWYG editor. No code, no external tools — works for developers and non-technical teams alike.",
+            "Design beautiful campaigns with a drag-and-drop WYSIWYG editor. No code, no external tools works for developers and non-technical teams alike.",
         accent: "bg-purple-500/10 text-purple-500",
     },
     {
         icon: UsersIcon,
         title: "Contact management",
-        description: "Manage subscribers, consent, and lists. Auto-updated from bounce and complaint events.",
+        description: "Manage subscribers, consent, and lists. Auto updated from bounce and complaint events.",
         accent: "bg-emerald-500/10 text-emerald-500",
     },
     {
         icon: ShieldIcon,
         title: "Suppression lists",
-        description: "Block accidental sends. Auto-populated from bounces and spam complaints.",
+        description: "Block accidental sends. Auto populated from bounces and spam complaints.",
         accent: "bg-amber-500/10 text-amber-500",
     },
     {
@@ -63,7 +63,7 @@ export function Features() {
                         Everything you need to send email
                     </h2>
                     <p className="mt-4 text-muted-foreground">
-                        Transactional receipts, marketing campaigns, and everything in between — one platform, one bill.
+                        Transactional receipts, marketing campaigns, and everything in between one platform, one bill.
                     </p>
                 </div>
 
