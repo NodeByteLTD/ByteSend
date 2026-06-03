@@ -35,24 +35,48 @@ const twoFactorCodeSchema = z.object({
 });
 type TwoFactorCodeFormData = z.infer<typeof twoFactorCodeSchema>;
 
+const backupEmailSchema = z.object({
+    email: z.string().trim().toLowerCase().email("Please enter a valid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+});
+type BackupEmailFormData = z.infer<typeof backupEmailSchema>;
+
+const backupEmailVerifySchema = z.object({
+    code: z.string().trim().toUpperCase().length(6, "Enter the 6-character code"),
+});
+type BackupEmailVerifyFormData = z.infer<typeof backupEmailVerifySchema>;
+
 export default function AccountSettings() {
     const utils = api.useUtils();
     const router = useRouter();
     const profileQuery = api.user.getProfile.useQuery();
 
     const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+    const [emailVerificationStep, setEmailVerificationStep] = useState<"old" | "new">("old");
     const [twoFactorSetup, setTwoFactorSetup] = useState<{
         secret: string;
         otpauthUrl: string;
     } | null>(null);
     const [showRecoveryCodes, setShowRecoveryCodes] = useState<string[] | null>(null);
+    const [pendingBackupEmail, setPendingBackupEmail] = useState<string | null>(null);
+    const [backupEmailPasswordHash, setBackupEmailPasswordHash] = useState<string | null>(null);
 
     const requestEmailChangeMutation = api.user.requestEmailChange.useMutation();
-    const confirmEmailChangeMutation = api.user.confirmEmailChange.useMutation();
+    const confirmOldEmailMutation = api.user.confirmOldEmail.useMutation();
+    const confirmNewEmailMutation = api.user.confirmNewEmail.useMutation();
+    const bypassOldEmailWithRecoveryCodeMutation = api.user.bypassOldEmailWithRecoveryCode.useMutation();
     const startTwoFactorSetupMutation = api.user.startTwoFactorSetup.useMutation();
     const confirmTwoFactorSetupMutation = api.user.confirmTwoFactorSetup.useMutation();
     const disableTwoFactorMutation = api.user.disableTwoFactor.useMutation();
     const regenerateRecoveryCodesMutation = api.user.regenerateRecoveryCodes.useMutation();
+    const addBackupEmailMutation = api.user.addBackupEmail.useMutation();
+    const verifyBackupEmailMutation = api.user.verifyBackupEmail.useMutation();
+    const deleteBackupEmailMutation = api.user.deleteBackupEmail.useMutation();
+    const backupEmailsQuery = api.user.getBackupEmails.useQuery();
     const recoveryCodeCountQuery = api.user.getRecoveryCodeCount.useQuery(undefined, {
         enabled: !!profileQuery.data?.twoFactorEnabled,
     });
@@ -77,28 +101,60 @@ export default function AccountSettings() {
         defaultValues: { code: "" },
     });
 
+    const backupEmailForm = useForm<BackupEmailFormData>({
+        resolver: zodResolver(backupEmailSchema),
+        defaultValues: { email: "", password: "", confirmPassword: "" },
+    });
+
+    const backupEmailVerifyForm = useForm<BackupEmailVerifyFormData>({
+        resolver: zodResolver(backupEmailVerifySchema),
+        defaultValues: { code: "" },
+    });
+
     async function onSaveEmail(data: AccountEmailFormData) {
         requestEmailChangeMutation.mutate(
             { email: data.email },
             {
                 onSuccess: (result) => {
-                    setPendingEmail(result.email);
+                    setPendingEmail(result.newEmail);
                     emailVerifyForm.reset({ code: "" });
-                    toast.success("Verification code sent to your new email");
+                    toast.success("Verification code sent to both your current and new email");
                 },
                 onError: (e) => toast.error(e.message),
             },
         );
     }
 
-    async function onConfirmEmail(data: EmailVerificationFormData) {
+    async function onConfirmOldEmail(data: EmailVerificationFormData) {
         if (!pendingEmail) return;
 
-        confirmEmailChangeMutation.mutate(
+        confirmOldEmailMutation.mutate(
+            { email: pendingEmail, code: data.code },
+            {
+                onSuccess: () => {
+                    setEmailVerificationStep("new");
+                    emailVerifyForm.reset({ code: "" });
+                    toast.success("Current email verified. Now confirm your new email.");
+                },
+                onError: (e) => {
+                    toast.error(e.message);
+                    if (e.message.includes("lost access")) {
+                        toast.info("Or use a recovery code to bypass this step");
+                    }
+                },
+            },
+        );
+    }
+
+    async function onConfirmNewEmail(data: EmailVerificationFormData) {
+        if (!pendingEmail) return;
+
+        confirmNewEmailMutation.mutate(
             { email: pendingEmail, code: data.code },
             {
                 onSuccess: (updated) => {
                     setPendingEmail(null);
+                    setEmailVerificationStep("old");
                     emailForm.reset({ email: updated.email ?? "" });
                     emailVerifyForm.reset({ code: "" });
                     utils.user.getProfile.invalidate();
@@ -153,13 +209,60 @@ export default function AccountSettings() {
         );
     }
 
+    async function onAddBackupEmail(data: BackupEmailFormData) {
+        addBackupEmailMutation.mutate(
+            { email: data.email, password: data.password },
+            {
+                onSuccess: (result) => {
+                    setPendingBackupEmail(result.email);
+                    setBackupEmailPasswordHash(result.passwordHash);
+                    backupEmailForm.reset();
+                    backupEmailVerifyForm.reset({ code: "" });
+                    toast.success("Verification code sent to " + result.email);
+                },
+                onError: (e) => toast.error(e.message),
+            },
+        );
+    }
+
+    async function onVerifyBackupEmail(data: BackupEmailVerifyFormData) {
+        if (!pendingBackupEmail || !backupEmailPasswordHash) return;
+
+        verifyBackupEmailMutation.mutate(
+            { email: pendingBackupEmail, code: data.code, passwordHash: backupEmailPasswordHash },
+            {
+                onSuccess: () => {
+                    setPendingBackupEmail(null);
+                    setBackupEmailPasswordHash(null);
+                    backupEmailVerifyForm.reset({ code: "" });
+                    void backupEmailsQuery.refetch();
+                    toast.success("Backup email added successfully!");
+                },
+                onError: (e) => toast.error(e.message),
+            },
+        );
+    }
+
+    async function onDeleteBackupEmail(email: string) {
+        deleteBackupEmailMutation.mutate(
+            { email },
+            {
+                onSuccess: () => {
+                    void backupEmailsQuery.refetch();
+                    toast.success("Backup email removed");
+                },
+                onError: (e) => toast.error(e.message),
+            },
+        );
+    }
+
     return (
         <div className="flex flex-col gap-8 mt-6">
             {/* ── Account email ── */}
             <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
                 <h3 className="text-sm font-semibold mb-1">Email Address</h3>
                 <p className="text-xs text-muted-foreground mb-5">
-                    This email is used for login and account notifications. Changes require email verification.
+                    This email is used for login and account notifications. Changes require verification of both your current and new email.
                 </p>
 
                 {profileQuery.data?.accounts?.some((a) => a.type === "oauth") ? (
@@ -191,39 +294,206 @@ export default function AccountSettings() {
                                     isLoading={requestEmailChangeMutation.isPending}
                                     disabled={!emailForm.formState.isDirty}
                                 >
-                                    Send Code
+                                    Send Codes
                                 </Button>
                             </form>
                         </Form>
 
                         {pendingEmail ? (
-                            <div className="mt-4 rounded-lg border border-border/60 bg-background/40 p-4">
-                                <p className="text-xs text-muted-foreground mb-3">
-                                    Enter the code sent to <span className="font-semibold text-foreground">{pendingEmail}</span>.
-                                </p>
-                                <Form {...emailVerifyForm}>
-                                    <form onSubmit={emailVerifyForm.handleSubmit(onConfirmEmail)} className="flex gap-3">
-                                        <FormField
-                                            control={emailVerifyForm.control}
-                                            name="code"
-                                            render={({ field }) => (
-                                                <FormItem className="flex-1">
-                                                    <FormControl>
-                                                        <Input placeholder="ABC123" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <Button type="submit" isLoading={confirmEmailChangeMutation.isPending}>
-                                            Verify
-                                        </Button>
-                                    </form>
-                                </Form>
+                            <div className="mt-4 space-y-4">
+                                {emailVerificationStep === "old" && (
+                                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                                        <p className="text-xs text-muted-foreground mb-3">
+                                            <span className="font-semibold text-foreground">Step 1:</span> Enter the code sent to your current email.
+                                        </p>
+                                        <Form {...emailVerifyForm}>
+                                            <form onSubmit={emailVerifyForm.handleSubmit(onConfirmOldEmail)} className="flex gap-3">
+                                                <FormField
+                                                    control={emailVerifyForm.control}
+                                                    name="code"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input placeholder="ABC123" {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <Button type="submit" isLoading={confirmOldEmailMutation.isPending}>
+                                                    Verify
+                                                </Button>
+                                            </form>
+                                        </Form>
+                                    </div>
+                                )}
+
+                                {emailVerificationStep === "new" && (
+                                    <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                                        <p className="text-xs text-muted-foreground mb-3">
+                                            <span className="font-semibold text-foreground">Step 2:</span> Enter the code sent to your new email <span className="font-semibold text-foreground">{pendingEmail}</span>.
+                                        </p>
+                                        <Form {...emailVerifyForm}>
+                                            <form onSubmit={emailVerifyForm.handleSubmit(onConfirmNewEmail)} className="flex gap-3">
+                                                <FormField
+                                                    control={emailVerifyForm.control}
+                                                    name="code"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input placeholder="ABC123" {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <Button type="submit" isLoading={confirmNewEmailMutation.isPending}>
+                                                    Complete
+                                                </Button>
+                                            </form>
+                                        </Form>
+                                    </div>
+                                )}
                             </div>
                         ) : null}
                     </>
                 )}
+            </div>
+
+            {/* ── Backup Emails ── */}
+            <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
+                <h3 className="text-sm font-semibold mb-1">Backup Email</h3>
+                <p className="text-xs text-muted-foreground mb-5">
+                    Add a backup email with password for account access if you lose your primary email. You can use this for login.
+                </p>
+
+                {backupEmailsQuery.data && backupEmailsQuery.data.length > 0 ? (
+                    <div className="space-y-3">
+                        {backupEmailsQuery.data.map((backup) => (
+                            <div key={backup.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 px-4 py-3">
+                                <div>
+                                    <p className="text-sm font-medium">{backup.email}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Added {new Date(backup.createdAt).toLocaleDateString()}
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => onDeleteBackupEmail(backup.email)}
+                                    isLoading={deleteBackupEmailMutation.isPending}
+                                    className="text-destructive hover:text-destructive"
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        ))}
+
+                        {!pendingBackupEmail && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    backupEmailForm.reset();
+                                    setPendingBackupEmail("_init");
+                                }}
+                            >
+                                Add Another Backup Email
+                            </Button>
+                        )}
+                    </div>
+                ) : null}
+
+                {pendingBackupEmail !== "_init" && !pendingBackupEmail ? (
+                    <Button
+                        variant="outline"
+                        onClick={() => setPendingBackupEmail("_init")}
+                    >
+                        Add Backup Email
+                    </Button>
+                ) : pendingBackupEmail === "_init" ? (
+                    <div className="space-y-4">
+                        <Form {...backupEmailForm}>
+                            <form onSubmit={backupEmailForm.handleSubmit(onAddBackupEmail)} className="space-y-3">
+                                <FormField
+                                    control={backupEmailForm.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input placeholder="backup@example.com" type="email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={backupEmailForm.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input placeholder="Password" type="password" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={backupEmailForm.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <Input placeholder="Confirm password" type="password" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-3">
+                                    <Button type="submit" isLoading={addBackupEmailMutation.isPending}>
+                                        Send Verification Code
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setPendingBackupEmail(null);
+                                            backupEmailForm.reset();
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
+                    </div>
+                ) : pendingBackupEmail && pendingBackupEmail !== "_init" ? (
+                    <div className="rounded-lg border border-border/60 bg-background/40 p-4 space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                            Enter the code sent to <span className="font-semibold text-foreground">{pendingBackupEmail}</span>.
+                        </p>
+                        <Form {...backupEmailVerifyForm}>
+                            <form onSubmit={backupEmailVerifyForm.handleSubmit(onVerifyBackupEmail)} className="flex gap-3">
+                                <FormField
+                                    control={backupEmailVerifyForm.control}
+                                    name="code"
+                                    render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <FormControl>
+                                                <Input placeholder="ABC123" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" isLoading={verifyBackupEmailMutation.isPending}>
+                                    Verify
+                                </Button>
+                            </form>
+                        </Form>
+                    </div>
+                ) : null}
             </div>
 
             {/* ── Two-factor auth ── */}

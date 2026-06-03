@@ -9,10 +9,12 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import DiscordProvider from "next-auth/providers/discord";
 import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { Provider } from "next-auth/providers/index";
 import { sendSignUpEmail } from "~/server/mailer";
 import { createEmailVerificationAdapter } from "~/server/email-adapter";
 import { sendToDiscord } from "~/server/service/notification-service";
+import { compare } from "bcryptjs";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
@@ -109,6 +111,84 @@ function getProviders() {
       },
       async sendVerificationRequest({ identifier: email, token, url }) {
         await sendSignUpEmail(email, token, url);
+      },
+    })
+  );
+
+  // Credentials provider for backup email + password login
+  providers.push(
+    CredentialsProvider({
+      name: "Backup Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
+
+        const email = credentials.email.trim().toLowerCase();
+        const password = credentials.password;
+
+        // Check primary email first — they should use OAuth or Email OTP
+        const primaryUser = await db.user.findUnique({
+          where: { email },
+          select: { id: true },
+        });
+
+        if (primaryUser) {
+          throw new Error(
+            "Use the email link or sign in with your OAuth provider. Password login is only available for backup emails."
+          );
+        }
+
+        // Check backup email
+        const backupEmail = await db.backupEmail.findUnique({
+          where: { email },
+          select: {
+            userId: true,
+            passwordHash: true,
+            emailVerified: true,
+          },
+        });
+
+        if (!backupEmail) {
+          throw new Error("Invalid email or password");
+        }
+
+        if (!backupEmail.emailVerified) {
+          throw new Error(
+            "This backup email is not verified. Please verify it in your account settings."
+          );
+        }
+
+        // Validate password
+        const isPasswordValid = await compare(password, backupEmail.passwordHash);
+        if (!isPasswordValid) {
+          throw new Error("Invalid email or password");
+        }
+
+        // Get user
+        const user = await db.user.findUnique({
+          where: { id: backupEmail.userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            isBetaUser: true,
+            isAdmin: true,
+            isFounder: true,
+            isEnvAdmin: true,
+          },
+        });
+
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        return user;
       },
     })
   );

@@ -84,25 +84,26 @@ export async function sendSubscriptionConfirmationEmail(email: string) {
 
 export async function sendEmailChangeVerificationEmail(
   email: string,
-  token: string
+  token: string,
+  subject?: string
 ) {
   if (env.NODE_ENV === "development") {
     logger.info({ email, token }, "Sending email change verification code");
     return;
   }
 
-  const subject = "Confirm your new ByteSend email";
-  const text = `Hey,\n\nUse this verification code to confirm your new ByteSend account email:\n\n${token}\n\nThis code expires in 15 minutes.\n\nIf you did not request this change, you can ignore this email.\n\nThanks,\nByteSend Team`;
+  const finalSubject = subject ?? "Confirm your new ByteSend email";
+  const text = `Hey,\n\nUse this verification code to confirm your email address change:\n\n${token}\n\nThis code expires in 15 minutes.\n\nIf you did not request this change, you can ignore this email.\n\nThanks,\nByteSend Team`;
   const html = [
     "<p>Hey,</p>",
-    "<p>Use this verification code to confirm your new ByteSend account email:</p>",
+    "<p>Use this verification code to confirm your email address change:</p>",
     `<p style=\"font-size:24px;font-weight:700;letter-spacing:0.08em;\">${token}</p>`,
     "<p>This code expires in 15 minutes.</p>",
     "<p>If you did not request this change, you can ignore this email.</p>",
     "<p>Thanks,<br/>ByteSend Team</p>",
   ].join("");
 
-  await sendMail(email, subject, text, html);
+  await sendMail(email, finalSubject, text, html);
 }
 
 export async function sendMail(
