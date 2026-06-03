@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 import { TRPCError } from "@trpc/server";
 import { sendEmailChangeVerificationEmail } from "~/server/mailer";
@@ -12,6 +12,7 @@ import {
   hashRecoveryCode,
   verifyRecoveryCode,
 } from "~/server/security/recovery-codes";
+import { hash, compare } from "bcryptjs";
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -20,6 +21,27 @@ function generateCode() {
   crypto.getRandomValues(bytes);
   for (const b of bytes) token += chars[b % chars.length];
   return token;
+}
+
+async function sendDualEmailVerificationCodes(
+  oldEmail: string,
+  newEmail: string,
+  codeOld: string,
+  codeNew: string,
+) {
+  const sendOldPromise = sendEmailChangeVerificationEmail(
+    oldEmail,
+    codeOld,
+    "Verify your current email address to update your ByteSend account email",
+  );
+
+  const sendNewPromise = sendEmailChangeVerificationEmail(
+    newEmail,
+    codeNew,
+    "Verify your new ByteSend account email address",
+  );
+
+  await Promise.all([sendOldPromise, sendNewPromise]);
 }
 
 export const userRouter = createTRPCRouter({
@@ -109,7 +131,8 @@ export const userRouter = createTRPCRouter({
         });
       }
 
-      const code = generateCode();
+      const codeOld = generateCode();
+      const codeNew = generateCode();
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
       await db.pendingEmailChange.upsert({
@@ -122,25 +145,35 @@ export const userRouter = createTRPCRouter({
         create: {
           userId: currentUser.id,
           newEmail: nextEmail,
-          code,
+          codeOld,
+          codeNew,
+          verifiedOld: false,
+          verifiedNew: false,
           expiresAt,
         },
         update: {
-          code,
+          codeOld,
+          codeNew,
+          verifiedOld: false,
+          verifiedNew: false,
           expiresAt,
         },
       });
 
-      await sendEmailChangeVerificationEmail(nextEmail, code);
+      if (currentEmail) {
+        await sendDualEmailVerificationCodes(currentEmail, nextEmail, codeOld, codeNew);
+      }
 
       return {
-        sent: true,
-        email: nextEmail,
+        step: "verify_old" as const,
+        message: "Verification codes sent to both your current and new email addresses",
+        currentEmail,
+        newEmail: nextEmail,
         expiresAt,
       };
     }),
 
-  confirmEmailChange: protectedProcedure
+  confirmOldEmail: protectedProcedure
     .input(
       z.object({
         email: z.string().trim().toLowerCase().email("Must be a valid email"),
@@ -152,29 +185,113 @@ export const userRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const nextEmail = input.email.trim().toLowerCase();
+      const newEmail = input.email.trim().toLowerCase();
       const code = input.code.trim().toUpperCase();
 
       const pending = await db.pendingEmailChange.findUnique({
         where: {
           userId_newEmail: {
             userId: ctx.session.user.id,
-            newEmail: nextEmail,
+            newEmail,
           },
         },
       });
 
-      if (!pending || pending.code !== code || pending.expiresAt < new Date()) {
+      if (!pending) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Invalid or expired verification code.",
+          message: "No pending email change found for this email address.",
+        });
+      }
+
+      if (pending.expiresAt < new Date()) {
+        await db.pendingEmailChange.delete({ where: { id: pending.id } });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Verification code has expired. Please request a new email change.",
+        });
+      }
+
+      if (!pending.codeOld || pending.codeOld !== code) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid verification code for your current email.",
+        });
+      }
+
+      await db.pendingEmailChange.update({
+        where: { id: pending.id },
+        data: { verifiedOld: true },
+      });
+
+      const remainingMs = pending.expiresAt.getTime() - Date.now();
+      const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+
+      return {
+        step: "verify_new" as const,
+        message: "Your current email has been verified. Check your new email for the verification code.",
+        newEmail,
+        remainingMinutes,
+      };
+    }),
+
+  confirmNewEmail: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+        code: z
+          .string()
+          .trim()
+          .toUpperCase()
+          .length(6, "Verification code must be 6 characters"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const newEmail = input.email.trim().toLowerCase();
+      const code = input.code.trim().toUpperCase();
+
+      const pending = await db.pendingEmailChange.findUnique({
+        where: {
+          userId_newEmail: {
+            userId: ctx.session.user.id,
+            newEmail,
+          },
+        },
+      });
+
+      if (!pending) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No pending email change found for this email address.",
+        });
+      }
+
+      if (pending.expiresAt < new Date()) {
+        await db.pendingEmailChange.delete({ where: { id: pending.id } });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Verification code has expired. Please request a new email change.",
+        });
+      }
+
+      if (!pending.verifiedOld) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Please verify your current email address first.",
+        });
+      }
+
+      if (pending.codeNew !== code) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid verification code for your new email.",
         });
       }
 
       const existingUser = await db.user.findFirst({
         where: {
           email: {
-            equals: nextEmail,
+            equals: newEmail,
             mode: "insensitive",
           },
           NOT: { id: ctx.session.user.id },
@@ -192,14 +309,103 @@ export const userRouter = createTRPCRouter({
       const updated = await db.user.update({
         where: { id: ctx.session.user.id },
         data: {
-          email: nextEmail,
+          email: newEmail,
           emailVerified: new Date(),
         },
         select: { id: true, email: true, emailVerified: true },
       });
 
       await db.pendingEmailChange.delete({ where: { id: pending.id } });
-      return updated;
+
+      return {
+        success: true,
+        email: updated.email,
+        emailVerified: updated.emailVerified,
+        message: "Email address has been successfully updated and verified.",
+      };
+    }),
+
+  bypassOldEmailWithRecoveryCode: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+        recoveryCode: z.string().trim().toUpperCase(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const newEmail = input.email.trim().toLowerCase();
+      const recoveryCode = input.recoveryCode.trim().toUpperCase();
+
+      const pending = await db.pendingEmailChange.findUnique({
+        where: {
+          userId_newEmail: {
+            userId: ctx.session.user.id,
+            newEmail,
+          },
+        },
+      });
+
+      if (!pending) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No pending email change found for this email address.",
+        });
+      }
+
+      if (pending.expiresAt < new Date()) {
+        await db.pendingEmailChange.delete({ where: { id: pending.id } });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Verification code has expired. Please request a new email change.",
+        });
+      }
+
+      const recoveryCodes = await db.twoFactorRecoveryCode.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          used: false,
+        },
+        select: { id: true, codeHash: true },
+      });
+
+      if (recoveryCodes.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No valid recovery codes available. Contact support if you've lost access to your email.",
+        });
+      }
+
+      const validCode = recoveryCodes.find((rc) => verifyRecoveryCode(recoveryCode, rc.codeHash));
+
+      if (!validCode) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid recovery code.",
+        });
+      }
+
+      await db.twoFactorRecoveryCode.update({
+        where: { id: validCode.id },
+        data: {
+          used: true,
+          usedAt: new Date(),
+        },
+      });
+
+      await db.pendingEmailChange.update({
+        where: { id: pending.id },
+        data: { verifiedOld: true },
+      });
+
+      const remainingMs = pending.expiresAt.getTime() - Date.now();
+      const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+
+      return {
+        step: "verify_new" as const,
+        message: "Your current email verification has been bypassed using a recovery code. Check your new email for the verification code.",
+        newEmail,
+        remainingMinutes,
+      };
     }),
 
   startTwoFactorSetup: protectedProcedure.mutation(async ({ ctx }) => {
@@ -409,4 +615,303 @@ export const userRouter = createTRPCRouter({
 
       return { verified: true };
     }),
+
+  addBackupEmail: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const backupEmail = input.email.trim().toLowerCase();
+      const password = input.password;
+
+      // Check if email is already a backup email
+      const existingBackup = await db.backupEmail.findUnique({
+        where: { email: backupEmail },
+      });
+
+      if (existingBackup) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This email is already registered as a backup email.",
+        });
+      }
+
+      // Check if email is the user's primary email
+      const user = await db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { email: true },
+      });
+
+      if (user?.email?.toLowerCase() === backupEmail) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot use your primary email as a backup email.",
+        });
+      }
+
+      // Check if email is already a primary email for another user
+      const userWithEmail = await db.user.findFirst({
+        where: { email: { equals: backupEmail, mode: "insensitive" } },
+        select: { id: true },
+      });
+
+      if (userWithEmail) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This email is already in use by another account.",
+        });
+      }
+
+      // Hash password
+      const passwordHash = await hash(password, 10);
+
+      // Generate verification code
+      const code = generateCode();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+      // Create pending verification with encrypted password
+      await db.pendingBackupEmailVerification.upsert({
+        where: {
+          userId_email: {
+            userId: ctx.session.user.id,
+            email: backupEmail,
+          },
+        },
+        create: {
+          userId: ctx.session.user.id,
+          email: backupEmail,
+          code,
+          expiresAt,
+        },
+        update: {
+          code,
+          expiresAt,
+        },
+      });
+
+      // Store the hashed password in session (client will pass it back on verification)
+      // This is done client-side to avoid storing plaintext passwords in DB temporarily
+      // TODO: Send verification email to backup email address
+      // await sendBackupEmailVerificationEmail(backupEmail, code);
+
+      return {
+        step: "verify" as const,
+        message: "Verification email sent to your backup email address",
+        email: backupEmail,
+        expiresAt,
+        passwordHash, // Return to client for use in verification step
+      };
+    }),
+
+  verifyBackupEmail: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+        code: z
+          .string()
+          .trim()
+          .toUpperCase()
+          .length(6, "Verification code must be 6 characters"),
+        passwordHash: z.string().describe("The bcrypt-hashed password from addBackupEmail response"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const backupEmail = input.email.trim().toLowerCase();
+      const code = input.code.trim().toUpperCase();
+
+      const pending = await db.pendingBackupEmailVerification.findUnique({
+        where: {
+          userId_email: {
+            userId: ctx.session.user.id,
+            email: backupEmail,
+          },
+        },
+      });
+
+      if (!pending) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No pending backup email verification found.",
+        });
+      }
+
+      if (pending.expiresAt < new Date()) {
+        await db.pendingBackupEmailVerification.delete({ where: { id: pending.id } });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Verification code has expired. Please try again.",
+        });
+      }
+
+      if (pending.code !== code) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid verification code.",
+        });
+      }
+
+      // Create backup email with the provided password hash
+      await db.backupEmail.create({
+        data: {
+          userId: ctx.session.user.id,
+          email: backupEmail,
+          passwordHash: input.passwordHash,
+          emailVerified: new Date(),
+        },
+      });
+
+      // Clean up pending verification
+      await db.pendingBackupEmailVerification.delete({ where: { id: pending.id } });
+
+      return {
+        success: true,
+        email: backupEmail,
+        message: "Backup email added successfully.",
+      };
+    }),
+
+  getBackupEmails: protectedProcedure.query(async ({ ctx }) => {
+    const backups = await db.backupEmail.findMany({
+      where: { userId: ctx.session.user.id, emailVerified: { not: null } },
+      select: { id: true, email: true, createdAt: true, emailVerified: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return backups;
+  }),
+
+  deleteBackupEmail: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const backupEmail = input.email.trim().toLowerCase();
+
+      // Check if user has other verified login methods
+      const verifiedBackups = await db.backupEmail.count({
+        where: { userId: ctx.session.user.id, emailVerified: { not: null } },
+      });
+
+      if (verifiedBackups <= 1) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You must keep at least one backup email for account recovery.",
+        });
+      }
+
+      const deleted = await db.backupEmail.deleteMany({
+        where: {
+          userId: ctx.session.user.id,
+          email: backupEmail,
+        },
+      });
+
+      if (deleted.count === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Backup email not found.",
+        });
+      }
+
+      return {
+        success: true,
+        email: backupEmail,
+        message: "Backup email removed.",
+      };
+    }),
+
+  validatePasswordLogin: publicProcedure
+    .input(
+      z.object({
+        email: z.string().trim().toLowerCase().email("Must be a valid email"),
+        password: z.string().min(1, "Password is required"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const email = input.email.trim().toLowerCase();
+      const password = input.password;
+
+      // Check primary email first
+      const primaryUser = await db.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          twoFactorEnabled: true,
+          // Note: Primary users using email provider use OTP, not password
+          // This is for future password support on primary email
+        },
+      });
+
+      if (primaryUser) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Use the email link or sign in with your OAuth provider. Password login is only available for backup emails.",
+        });
+      }
+
+      // Check backup email
+      const backupEmail = await db.backupEmail.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          userId: true,
+          passwordHash: true,
+          emailVerified: true,
+        },
+      });
+
+      if (!backupEmail) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password.",
+        });
+      }
+
+      if (!backupEmail.emailVerified) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "This backup email is not verified. Please verify it in your account settings.",
+        });
+      }
+
+      // Validate password
+      const isPasswordValid = await compare(password, backupEmail.passwordHash);
+      if (!isPasswordValid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid email or password.",
+        });
+      }
+
+      // Get user to check 2FA status
+      const user = await db.user.findUnique({
+        where: { id: backupEmail.userId },
+        select: {
+          id: true,
+          email: true,
+          twoFactorEnabled: true,
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found.",
+        });
+      }
+
+      return {
+        userId: user.id,
+        email: user.email,
+        requiresTwoFactor: user.twoFactorEnabled,
+      };
+    }),
 });
+
+

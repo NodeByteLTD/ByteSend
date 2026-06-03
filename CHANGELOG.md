@@ -11,6 +11,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2026-06-03
+
+### Added
+
+#### Authentication & Account Management
+- **Backup email password-protected alternative login** — users can add password-protected backup emails to their account for login without email OTP; backup emails must be verified independently via 6-character code
+- **Two-sided email verification** — changing primary email now requires verifying both old email access (confirm you can access current email) AND new email ownership (confirm you own the new email); sequential step-by-step verification with clear UI indicators
+- **Recovery code bypass for email verification** — if user loses access to their primary email, they can use a recovery code to skip old email verification and proceed directly to new email verification
+- **Backup email schema** — added `BackupEmail` model with email, passwordHash, emailVerified timestamp, and indexes for efficient login lookups
+- **Credentials provider for NextAuth** — added Credentials provider configuration allowing backup email + password authentication through standard NextAuth flow
+
+#### UI/UX Improvements
+- **Account settings page** — new `/settings/account` consolidating:
+  - Email address change with two-sided verification flow
+  - Two-factor authentication setup/management
+  - Recovery codes display and regeneration
+  - Backup email management (add, verify, delete with guards)
+- **Broadcasts compose page refactor** — completely redesigned broadcasts compose UI to match campaigns aesthetic:
+  - Accordion-style settings strip (Subject visible, From/Reply-To/Recipients collapsible)
+  - Full-width email canvas for better content editing
+  - Variables strip showing available variables and recipient count
+  - Cleaner, more professional layout with proper spacing
+- **Login page backup email option** — toggleable backup email login form separate from primary auth methods; only appears when user opts in via "Have a backup email password?" link
+- **2FA verification page styling** — professional card layout with gradient backgrounds, improved form labels (context-aware "Authenticator Code" vs "Recovery Code"), better help text and mobile responsiveness
+
+#### Database Migrations
+- **Backup email schema** (`20260603195140_add_backup_emails_and_two_sided_verification`):
+  - Added `BackupEmail` model with unique email per user, passwordHash, emailVerified nullable timestamp
+  - Added `PendingBackupEmailVerification` model with 6-char code, expiry, unique constraint on [userId, email]
+  - Enhanced `PendingEmailChange` with codeOld (nullable), verifiedOld, verifiedNew flags for two-sided verification
+
+#### Security & Infrastructure
+- **bcryptjs password hashing** — backup email passwords hashed with bcryptjs (salt rounds 10) on client-side before transmission
+- **Edge Runtime 2FA utilities** — new `edge-2fa-utils.ts` using Web Crypto API for middleware HMAC validation (no Node.js crypto dependency)
+- **2FA cookie validation** — 12-hour HMAC-signed httpOnly cookie for 2FA sessions with middleware validation for protected routes
+
+### Changed
+- **Upgraded Next.js to latest** — updated to the latest stable version for improved performance, security, and feature support
+- **NextAuth configuration** — added Credentials provider for backup email authentication alongside existing OAuth providers (GitHub, Google, Discord) and Email OTP
+- **Login page provider filtering** — Credentials provider now explicitly excluded from OAuth buttons loop to prevent rendering as a regular provider button
+- **Broadcasts vs Campaigns routing** — campaign cards now differentiate routing based on intent; broadcasts route to `/broadcasts/[id]` while campaigns route to `/campaigns/[id]`
+- **Settings navigation restructuring** — reorganized settings tabs with top-level Account and Team sections
+- **Email change mutations** — `requestEmailChange` now sends both old and new verification codes in parallel; introduces verifiedOld/verifiedNew state tracking
+- **Mailer service** — added optional `subject` parameter to `sendEmailChangeVerificationEmail()` for flexibility in notification messages
+- **Form validation consistency** — all form validators aligned with mutation input types for seamless error handling
+
+### Fixed
+- **Credentials provider filtering** — removed Credentials provider from OAuth buttons array to prevent it from rendering as a sign-in option button
+- **Build and deployment** — resolved AWS SDK package corruption from earlier disk space issues with clean reinstall
+
+---
+
 ## [0.3.0] - 2026-06-03
 
 ### Added

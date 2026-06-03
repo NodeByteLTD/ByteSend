@@ -80,37 +80,71 @@ model VerificationToken {
 }
 
 model User {
-  id                     Int                     @id @default(autoincrement())
-  name                   String?
-  email                  String?                 @unique
-  emailVerified          DateTime?
-  image                  String?
-  isBetaUser             Boolean                 @default(false)
-  isAdmin                Boolean                 @default(false)
-  isBanned               Boolean                 @default(false)
-  twoFactorEnabled       Boolean                 @default(false)
-  twoFactorSecret        String?
-  twoFactorTempSecret    String?
-  createdAt              DateTime                @default(now())
-  accounts               Account[]
-  sessions               Session[]
-  teamUsers              TeamUser[]
-  webhookEndpoints       Webhook[]
-  pendingEmailChanges    PendingEmailChange[]
-  twoFactorRecoveryCodes TwoFactorRecoveryCode[]
+  id                              Int                              @id @default(autoincrement())
+  name                            String?
+  email                           String?                          @unique
+  emailVerified                   DateTime?
+  image                           String?
+  isBetaUser                      Boolean                          @default(false)
+  isAdmin                         Boolean                          @default(false)
+  isBanned                        Boolean                          @default(false)
+  twoFactorEnabled                Boolean                          @default(false)
+  twoFactorSecret                 String?
+  twoFactorTempSecret             String?
+  createdAt                       DateTime                         @default(now())
+  accounts                        Account[]
+  sessions                        Session[]
+  teamUsers                       TeamUser[]
+  webhookEndpoints                Webhook[]
+  pendingEmailChanges             PendingEmailChange[]
+  twoFactorRecoveryCodes          TwoFactorRecoveryCode[]
+  backupEmails                    BackupEmail[]                    @relation("userBackupEmails")
+  pendingBackupEmailVerifications PendingBackupEmailVerification[]
 }
 
 model PendingEmailChange {
+  id          String   @id @default(cuid())
+  userId      Int
+  newEmail    String
+  codeOld     String?
+  codeNew     String
+  verifiedOld Boolean  @default(false)
+  verifiedNew Boolean  @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, newEmail])
+  @@index([expiresAt])
+}
+
+model BackupEmail {
+  id            String    @id @default(cuid())
+  userId        Int
+  email         String    @unique
+  passwordHash  String
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation("userBackupEmails", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, emailVerified])
+  @@index([userId])
+}
+
+model PendingBackupEmailVerification {
   id        String   @id @default(cuid())
   userId    Int
-  newEmail  String
+  email     String
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, newEmail])
+  @@unique([userId, email])
   @@index([expiresAt])
 }
 

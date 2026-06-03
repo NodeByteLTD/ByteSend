@@ -37,6 +37,13 @@ export default function LoginPage({
   const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60); // 24 hours in seconds
   const [showResend, setShowResend] = useState(false);
 
+  // Backup email password login state
+  const [showBackupEmailLogin, setShowBackupEmailLogin] = useState(false);
+  const [backupEmail, setBackupEmail] = useState("");
+  const [backupPassword, setBackupPassword] = useState("");
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupError, setBackupError] = useState<string | null>(null);
+
   const searchParams = useNextSearchParams();
   const inviteId = searchParams.get("inviteId");
   const isVerifying = searchParams.get("verify") === "1";
@@ -85,6 +92,37 @@ export default function LoginPage({
   const handleOAuthSubmit = (provider: LiteralUnion<BuiltInProviderType>) => {
     setSubmittedProvider(provider);
     signIn(provider, { callbackUrl });
+  };
+
+  const handleBackupEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!backupEmail || !backupPassword) {
+      setBackupError("Email and password are required");
+      return;
+    }
+
+    setBackupLoading(true);
+    setBackupError(null);
+    try {
+      const result = await signIn("credentials", {
+        email: backupEmail,
+        password: backupPassword,
+        callbackUrl,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setBackupError(result.error);
+      } else if (result?.ok) {
+        // Success — NextAuth will handle session creation and redirect
+        // If 2FA is enabled, the middleware/dashboard will redirect to 2FA
+        window.location.href = result.url || callbackUrl;
+      }
+    } catch (err) {
+      setBackupError(err instanceof Error ? err.message : "Sign in failed");
+    } finally {
+      setBackupLoading(false);
+    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -155,7 +193,7 @@ export default function LoginPage({
   };
 
   const hasEmailProvider = providers?.some((p) => p.type === "email");
-  const oauthProviders = providers?.filter((p) => p.type !== "email") ?? [];
+  const oauthProviders = providers?.filter((p) => p.type !== "email" && p.type !== "credentials") ?? [];
 
   return (
     <main className="relative min-h-screen flex items-center justify-center bg-background px-4 py-12 overflow-hidden">
@@ -343,6 +381,59 @@ export default function LoginPage({
                 </Button>
               ))}
             </div>
+
+            {/* Divider before backup email option */}
+            {(hasEmailProvider || oauthProviders.length > 0) && (
+              <button
+                type="button"
+                onClick={() => setShowBackupEmailLogin(!showBackupEmailLogin)}
+                className="w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                {showBackupEmailLogin ? "Hide" : "Have a backup email password?"}
+              </button>
+            )}
+
+            {/* Backup email password login form */}
+            {showBackupEmailLogin && (
+              <div className="rounded-xl border border-border/40 bg-card/40 p-4 space-y-3">
+                <form onSubmit={handleBackupEmailSubmit} className="space-y-3">
+                  {backupError && (
+                    <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive">
+                      {backupError}
+                    </div>
+                  )}
+                  <Input
+                    type="email"
+                    placeholder="backup@example.com"
+                    value={backupEmail}
+                    onChange={(e) => setBackupEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    className="h-10 rounded-lg bg-card/60 border-border/40 text-sm"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={backupPassword}
+                    onChange={(e) => setBackupPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="h-10 rounded-lg bg-card/60 border-border/40 text-sm"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-10 rounded-lg text-sm"
+                    disabled={backupLoading}
+                  >
+                    {backupLoading ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      "Sign in with backup email"
+                    )}
+                  </Button>
+                </form>
+              </div>
+            )}
           </>
         )}
 

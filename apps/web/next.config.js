@@ -10,7 +10,6 @@ const config = {
   serverExternalPackages: ["bullmq"],
   transpilePackages: ["@bytesend/ui", "@bytesend/email-editor"],
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

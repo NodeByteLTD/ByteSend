@@ -19,6 +19,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@bytesend/ui/src/dialog";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@bytesend/ui/src/accordion";
 import { toast } from "@bytesend/ui/src/toaster";
 import { useDebouncedCallback } from "use-debounce";
 import { formatDistanceToNow } from "date-fns";
@@ -275,178 +281,206 @@ function BroadcastComposer({
                 </div>
             </div>
 
-            {/* Body: sidebar + editor */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Left sidebar */}
-                <aside className="w-80 shrink-0 border-r border-border/60 overflow-y-auto p-4 space-y-5">
-                    {/* Recipients section */}
-                    <div>
-                        <p className="text-sm font-semibold mb-2">Recipients</p>
-                        <div className="flex rounded-lg border border-border/60 overflow-hidden mb-3">
-                            <button
-                                type="button"
-                                onClick={() => setRecipientMode("contactBook")}
-                                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${recipientMode === "contactBook"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-transparent text-muted-foreground hover:text-foreground"
-                                    }`}
-                            >
-                                Contact Book
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setRecipientMode("direct")}
-                                className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${recipientMode === "direct"
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-transparent text-muted-foreground hover:text-foreground"
-                                    }`}
-                            >
-                                Direct Recipients
-                            </button>
-                        </div>
-
-                        {recipientMode === "contactBook" ? (
-                            contactBooksQuery.isLoading ? (
-                                <Spinner className="w-4 h-4" />
-                            ) : (
-                                <Select
-                                    value={contactBookId ?? ""}
-                                    onValueChange={(val) => {
-                                        setContactBookId(val);
-                                        updateCampaignMutation.mutate(
-                                            { campaignId: broadcast.id, contactBookId: val },
-                                            { onError: () => setContactBookId(broadcast.contactBookId) },
-                                        );
-                                    }}
-                                >
-                                    <SelectTrigger className="w-full text-xs">
-                                        {contactBook
-                                            ? `${contactBook.emoji} ${contactBook.name}`
-                                            : "Select a contact book"}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {contactBooksQuery.data?.map((book) => (
-                                            <SelectItem key={book.id} value={book.id}>
-                                                {book.emoji} {book.name}
-                                                <span className="text-xs text-muted-foreground ml-2">
-                                                    {book._count.contacts} contacts
-                                                </span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )
-                        ) : (
-                            <div className="space-y-1.5">
-                                <textarea
-                                    placeholder={"One email per line, or comma-separated\nalice@example.com\nbob@example.com"}
-                                    value={directRecipients}
-                                    onChange={(e) => setDirectRecipients(e.target.value)}
-                                    className="w-full h-32 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                                />
-                                {parsedDirectEmails.length > 0 && (
-                                    <p className="text-xs text-muted-foreground">
-                                        {parsedDirectEmails.length} recipient
-                                        {parsedDirectEmails.length !== 1 ? "s" : ""}
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* From / Subject / ReplyTo */}
-                    <div className="space-y-3">
-                        <p className="text-sm font-semibold">Message</p>
-
-                        <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Subject</label>
+            {/* Settings strip (accordion for broadcast fields) */}
+            <Accordion type="single" collapsible>
+                <AccordionItem value="item-1" className="border-0">
+                    <div className="border-b border-border/60 bg-muted/20 px-4 sm:px-6 py-3">
+                        <div className="flex items-center gap-4">
+                            <label className="text-xs text-muted-foreground w-16 shrink-0">Subject</label>
                             <input
                                 type="text"
                                 value={subject}
-                                onChange={(e) => setSubject(e.target.value)}
+                                onChange={(e) => {
+                                    setSubject(e.target.value);
+                                }}
                                 onBlur={() => {
-                                    if (!subject || subject === broadcast.subject) return;
+                                    if (subject === broadcast.subject || !subject) {
+                                        return;
+                                    }
                                     updateCampaignMutation.mutate(
-                                        { campaignId: broadcast.id, subject },
+                                        {
+                                            campaignId: broadcast.id,
+                                            subject,
+                                        },
                                         {
                                             onError: (e) => {
-                                                toast.error(`${e.message}. Reverting.`);
+                                                toast.error(`${e.message}. Reverting changes.`);
                                                 setSubject(broadcast.subject);
                                             },
                                         },
                                     );
                                 }}
-                                className="w-full text-sm outline-none border border-border/60 rounded-lg bg-background px-3 py-1.5 focus:ring-1 focus:ring-primary"
-                                placeholder="What's new this week"
+                                className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5"
                             />
+                            <AccordionTrigger className="py-0 shrink-0" />
                         </div>
+                        <AccordionContent className="pb-0">
+                            <div className="flex flex-col gap-3 pt-3">
+                                <div className="flex items-center gap-4">
+                                    <label className="text-xs text-muted-foreground w-16 shrink-0">From</label>
+                                    <input
+                                        type="text"
+                                        value={from}
+                                        onChange={(e) => {
+                                            setFrom(e.target.value);
+                                        }}
+                                        className="text-sm flex-1 outline-none border-b border-transparent focus:border-border bg-transparent py-0.5"
+                                        placeholder="Friendly name<hello@example.com>"
+                                        onBlur={() => {
+                                            if (from === broadcast.from || !from) {
+                                                return;
+                                            }
+                                            updateCampaignMutation.mutate(
+                                                {
+                                                    campaignId: broadcast.id,
+                                                    from,
+                                                },
+                                                {
+                                                    onError: (e) => {
+                                                        toast.error(`${e.message}. Reverting changes.`);
+                                                        setFrom(broadcast.from);
+                                                    },
+                                                },
+                                            );
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <label className="text-xs text-muted-foreground w-16 shrink-0">Reply To</label>
+                                    <input
+                                        type="text"
+                                        value={replyTo ?? ""}
+                                        onChange={(e) => {
+                                            setReplyTo(e.target.value);
+                                        }}
+                                        className="text-sm flex-1 outline-none border-b border-transparent bg-transparent focus:border-border py-0.5"
+                                        placeholder="hello@example.com"
+                                        onBlur={() => {
+                                            if (replyTo === broadcast.replyTo[0]) {
+                                                return;
+                                            }
+                                            updateCampaignMutation.mutate(
+                                                {
+                                                    campaignId: broadcast.id,
+                                                    replyTo: replyTo ? [replyTo] : [],
+                                                },
+                                                {
+                                                    onError: (e) => {
+                                                        toast.error(`${e.message}. Reverting changes.`);
+                                                        setReplyTo(broadcast.replyTo[0]);
+                                                    },
+                                                },
+                                            );
+                                        }}
+                                    />
+                                </div>
 
-                        <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">From</label>
-                            <input
-                                type="text"
-                                value={from}
-                                onChange={(e) => setFrom(e.target.value)}
-                                onBlur={() => {
-                                    if (!from || from === broadcast.from) return;
-                                    updateCampaignMutation.mutate(
-                                        { campaignId: broadcast.id, from },
-                                        {
-                                            onError: (e) => {
-                                                toast.error(`${e.message}. Reverting.`);
-                                                setFrom(broadcast.from);
-                                            },
-                                        },
-                                    );
-                                }}
-                                className="w-full text-sm outline-none border border-border/60 rounded-lg bg-background px-3 py-1.5 focus:ring-1 focus:ring-primary"
-                                placeholder="Updates <updates@example.com>"
-                            />
-                        </div>
+                                {/* Recipients section in accordion */}
+                                <div className="pt-2 border-t border-border/40">
+                                    <div className="flex items-center gap-4">
+                                        <label className="text-xs text-muted-foreground w-16 shrink-0">Recipients</label>
+                                        <div className="flex-1">
+                                            {recipientMode === "contactBook" ? (
+                                                contactBooksQuery.isLoading ? (
+                                                    <Spinner className="w-4 h-4" />
+                                                ) : (
+                                                    <Select
+                                                        value={contactBookId ?? ""}
+                                                        onValueChange={(val) => {
+                                                            setContactBookId(val);
+                                                            updateCampaignMutation.mutate(
+                                                                { campaignId: broadcast.id, contactBookId: val },
+                                                                { onError: () => setContactBookId(broadcast.contactBookId) },
+                                                            );
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="w-full text-sm h-auto border-0 border-b border-transparent focus:border-border bg-transparent p-0">
+                                                            {contactBook
+                                                                ? `${contactBook.emoji} ${contactBook.name}`
+                                                                : "Select a contact book"}
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {contactBooksQuery.data?.map((book) => (
+                                                                <SelectItem key={book.id} value={book.id}>
+                                                                    {book.emoji} {book.name}
+                                                                    <span className="text-xs text-muted-foreground ml-2">
+                                                                        {book._count.contacts} contacts
+                                                                    </span>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )
+                                            ) : (
+                                                <div className="text-sm text-muted-foreground">
+                                                    {parsedDirectEmails.length} recipient{parsedDirectEmails.length !== 1 ? "s" : ""}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
-                        <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Reply To</label>
-                            <input
-                                type="text"
-                                value={replyTo ?? ""}
-                                onChange={(e) => setReplyTo(e.target.value)}
-                                onBlur={() => {
-                                    if (replyTo === broadcast.replyTo[0]) return;
-                                    updateCampaignMutation.mutate(
-                                        {
-                                            campaignId: broadcast.id,
-                                            replyTo: replyTo ? [replyTo] : [],
-                                        },
-                                        {
-                                            onError: (e) => {
-                                                toast.error(`${e.message}. Reverting.`);
-                                                setReplyTo(broadcast.replyTo[0]);
-                                            },
-                                        },
-                                    );
-                                }}
-                                className="w-full text-sm outline-none border border-border/60 rounded-lg bg-background px-3 py-1.5 focus:ring-1 focus:ring-primary"
-                                placeholder="hello@example.com"
-                            />
-                        </div>
+                                    {/* Toggle between contact book and direct */}
+                                    <div className="flex gap-2 mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRecipientMode("contactBook")}
+                                            className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-colors ${recipientMode === "contactBook"
+                                                ? "bg-primary text-primary-foreground"
+                                                : "bg-muted text-muted-foreground hover:text-foreground"
+                                                }`}
+                                        >
+                                            Contact Book
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setRecipientMode("direct")}
+                                            className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-colors ${recipientMode === "direct"
+                                                ? "bg-primary text-primary-foreground"
+                                                : "bg-muted text-muted-foreground hover:text-foreground"
+                                                }`}
+                                        >
+                                            Direct
+                                        </button>
+                                    </div>
+
+                                    {/* Direct recipients editor */}
+                                    {recipientMode === "direct" && (
+                                        <textarea
+                                            placeholder={"One email per line, or comma-separated\nalice@example.com\nbob@example.com"}
+                                            value={directRecipients}
+                                            onChange={(e) => setDirectRecipients(e.target.value)}
+                                            className="w-full h-24 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-1 focus:ring-primary mt-2"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </AccordionContent>
                     </div>
+                </AccordionItem>
+            </Accordion>
 
-                    {/* Recipient summary */}
-                    {recipientCount > 0 && (
-                        <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
-                            <p className="text-xs text-muted-foreground">
-                                Sending to{" "}
-                                <span className="font-semibold text-foreground">
-                                    {recipientCount.toLocaleString()}
-                                </span>{" "}
-                                recipient{recipientCount !== 1 ? "s" : ""}
-                            </p>
-                        </div>
+            {/* Variables strip */}
+            <div className="border-b border-border/60 bg-background px-4 sm:px-6 py-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground/60">Variables:</span>
+                    {editorVariables.slice(0, 6).map((v) => (
+                        <code key={v} className="font-mono bg-muted px-1.5 py-0.5 rounded border border-border/60 text-[11px]">{`{{${v}}}`}</code>
+                    ))}
+                    {editorVariables.length > 6 && (
+                        <span className="text-muted-foreground/60">+{editorVariables.length - 6} more</span>
                     )}
-                </aside>
+                    {recipientCount > 0 && (
+                        <>
+                            <span className="text-border/60">·</span>
+                            <span className="text-muted-foreground">Sending to {recipientCount.toLocaleString()}</span>
+                        </>
+                    )}
+                </div>
+            </div>
 
-                {/* Editor */}
-                <div className="flex-1 overflow-hidden bg-muted/10">
+            {/* Editor */}
+            <div className="flex-1 bg-muted/10 px-0 pt-0 pb-6">
+                <div className="w-full">
                     <Editor
                         key={`broadcast-editor-${contactBookId ?? "none"}-${recipientMode}`}
                         initialContent={json}
