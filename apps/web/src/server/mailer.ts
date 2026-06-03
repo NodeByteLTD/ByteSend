@@ -106,6 +106,29 @@ export async function sendEmailChangeVerificationEmail(
   await sendMail(email, finalSubject, text, html);
 }
 
+export async function sendBackupEmailVerificationEmail(
+  email: string,
+  token: string
+) {
+  if (env.NODE_ENV === "development") {
+    logger.info({ email, token }, "Sending backup email verification code");
+    return;
+  }
+
+  const subject = "Verify your backup email address";
+  const text = `Hey,\n\nUse this verification code to confirm your backup email address:\n\n${token}\n\nThis code expires in 15 minutes.\n\nIf you did not request this, you can ignore this email.\n\nThanks,\nByteSend Team`;
+  const html = [
+    "<p>Hey,</p>",
+    "<p>Use this verification code to confirm your backup email address:</p>",
+    `<p style=\"font-size:24px;font-weight:700;letter-spacing:0.08em;\">${token}</p>`,
+    "<p>This code expires in 15 minutes.</p>",
+    "<p>If you did not request this, you can ignore this email.</p>",
+    "<p>Thanks,<br/>ByteSend Team</p>",
+  ].join("");
+
+  await sendMail(email, subject, text, html);
+}
+
 export async function sendMail(
   email: string,
   subject: string,

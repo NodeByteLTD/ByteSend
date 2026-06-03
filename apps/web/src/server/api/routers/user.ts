@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 import { TRPCError } from "@trpc/server";
-import { sendEmailChangeVerificationEmail } from "~/server/mailer";
+import { sendEmailChangeVerificationEmail, sendBackupEmailVerificationEmail } from "~/server/mailer";
 import {
   generateTwoFactorSecret,
   verifyTwoFactorToken,
@@ -692,10 +692,8 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      // Store the hashed password in session (client will pass it back on verification)
-      // This is done client-side to avoid storing plaintext passwords in DB temporarily
-      // TODO: Send verification email to backup email address
-      // await sendBackupEmailVerificationEmail(backupEmail, code);
+      // Send verification email to backup email address
+      await sendBackupEmailVerificationEmail(backupEmail, code);
 
       return {
         step: "verify" as const,
