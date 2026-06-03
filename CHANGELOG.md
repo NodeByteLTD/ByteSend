@@ -11,6 +11,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-06-03
+
+### Added
+
+#### Account Security & Management
+- **Email address change with verification** — users can now change their account email via a re-verification flow: request new email → verification code sent → confirm with 6-character code (15-min expiry) → email updated and verified
+- **Account-level two-factor authentication (2FA)** — TOTP-based 2FA using authenticator apps; includes:
+  - Setup wizard with QR code and manual secret fallback
+  - Recovery codes (10 × 10-character hex codes per setup) for account recovery if authenticator is lost
+  - Timing-safe verification with SHA-256 hashing for recovery codes
+  - Single-use recovery code tracking (mark used, count remaining)
+  - Regenerate recovery codes option (requires current TOTP verification)
+- **Server-enforced 2FA** — 2FA verification enforced at the middleware level via HMAC-signed httpOnly cookies (12-hour expiry); users with 2FA enabled are redirected to `/auth/2fa-verify` if cookie is missing/invalid
+- **OAuth account linking safety** — users with OAuth-linked accounts (GitHub, Google, Discord) cannot change email to prevent account takeover via dangerous email account linking
+
+#### Broadcasts
+- **Direct broadcast recipient support** — campaigns with `intent: "BROADCAST"` can now accept direct recipient email lists via `recipientEmails` field; recipients need not be in a contact book
+- **Broadcast batch processing** — `CampaignBatchService.worker` now handles direct broadcasts by:
+  - Iterating recipient email list
+  - Checking suppression/bounce status
+  - Creating Email and CampaignEmail records
+  - Queuing via EmailQueueService (no contact book required)
+  - Deduplicating via CampaignEmail lookup
+- **Dedicated broadcast compose UI** — new `/broadcasts/[broadcastId]/compose` page with:
+  - Toggle between contact book and direct recipient modes
+  - Direct recipient textarea with email parsing and validation
+  - Simplified UX (no campaign automation, direct send or schedule)
+  - Auto-save on field/content changes
+  - Send now vs. schedule workflows
+
+#### Settings Reorganization
+- **Account section** — new `/settings/account` page consolidating:
+  - Email address change (with OAuth provider notice for linked accounts)
+  - Two-factor authentication setup/disable
+  - Recovery codes management (display and regenerate)
+- **Team section** — renamed from "General"; `/settings/team` now contains:
+  - Team image upload/management
+  - Team name editing
+  - Danger zone (delete team)
+
+#### Infrastructure & Build
+- **Docker manifest publishing robustness** — `create_and_publish_manifest` job now waits for platform-specific images (amd64, arm64) to be available before creating multi-platform manifests; prevents "image not found" errors on manifest creation
+- **Edge Runtime compatible 2FA utilities** — new `edge-2fa-utils.ts` using Web Crypto API (no Node.js crypto) for middleware HMAC validation in Edge Runtime
+- **Dynamic rendering for search params** — `/auth/2fa-verify` uses `Suspense` boundary pattern for safe `useSearchParams()` usage in Next.js 15
+
+### Changed
+
+#### User Router
+- **Profile query enrichment** — `user.getProfile` now includes linked OAuth accounts (`type`, `provider`) to allow UI checks for password/email change eligibility
+- **Email change mutations** — `requestEmailChange` validates OAuth account presence and blocks email changes for OAuth-linked users
+
+#### Campaign Router
+- **Campaign update accepts recipient emails** — `updateCampaign` mutation now accepts optional `recipientEmails: string[]` input for direct broadcast editing
+
+#### Broadcast UI Navigation
+- **Campaign card routing logic** — `CampaignCard` now differentiates broadcast vs. campaign routing:
+  - Broadcasts: `/broadcasts/[id]/compose` (DRAFT/SCHEDULED) or `/broadcasts/[id]` (SENT/RUNNING)
+  - Campaigns: `/campaigns/[id]/edit` (DRAFT/SCHEDULED) or `/campaigns/[id]` (SENT/RUNNING)
+- **Broadcasts landing page** — `/broadcasts` now uses `CreateBroadcast` dialog (separate from `CreateCampaign`)
+
+#### Settings Navigation
+- **Settings layout tabs** — updated nav buttons:
+  - Changed "General" → "Team"
+  - Added "Account" tab
+  - Root `/settings` redirects to `/settings/team`
+
+### Fixed
+
+#### Build & Runtime
+- **Next.js 15 prerender error for dynamic routes** — `/auth/2fa-verify` now uses server component + Suspense boundary to avoid prerender failure when using `useSearchParams()`
+- **Edge Runtime crypto import errors** — middleware no longer imports Node.js `crypto` module; uses Web Crypto API for HMAC validation instead
+
+#### Docker CI/CD
+- **Manifest creation timing issue** — workflow no longer fails immediately when platform images haven't finished pushing; `wait_for_remote_image()` now called for both amd64 and arm64 images before manifest creation (18 retry attempts, 10-second intervals = 180-second timeout)
+
+### Database
+
+- **Migration: Email change re-verification** (`20260603032501_email_change_reverification_and_account_2fa`)
+  - Added `emailChangeToken`, `emailChangeTokenExpires`, `twoFactorEnabled`, `twoFactorSecret`, `twoFactorTempSecret` to `User` model
+- **Migration: 2FA recovery codes** (`20260603072201_2factor_recovery_codes`)
+  - Added `TwoFactorRecoveryCode` model with userId FK, codeHash, used, usedAt, createdAt
+  - Added index on `userId, used` for efficient unused code lookup
+- **Migration: Direct broadcast recipients** (`20260603072459_add_recipient_emails_to_campaign`)
+  - Added `recipientEmails String[]` to `Campaign` model for direct broadcast recipient storage
+
+---
+
 ## [0.2.6] - 2026-05-10
 
 ### Added
