@@ -23,6 +23,7 @@ interface CampaignCardProps {
     subject: string;
     from: string;
     status: CampaignStatus;
+    intent: "CAMPAIGN" | "BROADCAST";
     createdAt: Date;
     updatedAt: Date;
     scheduledAt?: Date | null;
@@ -47,8 +48,10 @@ export default function CampaignCard({ campaign, basePath }: CampaignCardProps) 
           <Link
             href={
               campaign.status === CampaignStatus.DRAFT ||
-              campaign.status === CampaignStatus.SCHEDULED
-                ? `${basePath}/${campaign.id}/edit`
+                campaign.status === CampaignStatus.SCHEDULED
+                ? campaign.intent === "BROADCAST"
+                  ? `${basePath}/${campaign.id}/compose`
+                  : `${basePath}/${campaign.id}/edit`
                 : `${basePath}/${campaign.id}`
             }
             className="text-sm font-medium underline decoration-dashed underline-offset-2 truncate"
@@ -80,8 +83,8 @@ export default function CampaignCard({ campaign, basePath }: CampaignCardProps) 
             {(campaign.status === CampaignStatus.SCHEDULED ||
               campaign.status === CampaignStatus.RUNNING ||
               campaign.status === CampaignStatus.PAUSED) && (
-              <TogglePauseCampaign campaign={campaign} />
-            )}
+                <TogglePauseCampaign campaign={campaign} />
+              )}
             <DuplicateCampaign campaign={campaign} />
             <DeleteCampaign campaign={campaign} />
           </div>
@@ -94,15 +97,17 @@ export default function CampaignCard({ campaign, basePath }: CampaignCardProps) 
           <Link
             href={
               campaign.status === CampaignStatus.DRAFT ||
-              campaign.status === CampaignStatus.SCHEDULED
-                ? `${basePath}/${campaign.id}/edit`
+                campaign.status === CampaignStatus.SCHEDULED
+                ? campaign.intent === "BROADCAST"
+                  ? `${basePath}/${campaign.id}/compose`
+                  : `${basePath}/${campaign.id}/edit`
                 : `${basePath}/${campaign.id}`
             }
             className="text-sm font-medium underline decoration-dashed underline-offset-2"
           >
             {campaign.name}
           </Link>
-            <div className="text-xs font-mono text-muted-foreground mt-1.5">
+          <div className="text-xs font-mono text-muted-foreground mt-1.5">
             {campaign.status === CampaignStatus.SCHEDULED ? (
               campaign.scheduledAt && (
                 <span>At <strong>{format(new Date(campaign.scheduledAt), "MMM do, hh:mm a")}</strong></span>
@@ -130,17 +135,17 @@ export default function CampaignCard({ campaign, basePath }: CampaignCardProps) 
             {(campaign.status === CampaignStatus.SCHEDULED ||
               campaign.status === CampaignStatus.RUNNING ||
               campaign.status === CampaignStatus.PAUSED) && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <TogglePauseCampaign campaign={campaign} />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="text-xs">
-                  {campaign.status === CampaignStatus.PAUSED ? "Resume campaign" : "Pause campaign"}
-                </TooltipContent>
-              </Tooltip>
-            )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <TogglePauseCampaign campaign={campaign} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs">
+                    {campaign.status === CampaignStatus.PAUSED ? "Resume campaign" : "Pause campaign"}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">

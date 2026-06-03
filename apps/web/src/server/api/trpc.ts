@@ -11,6 +11,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod";
 import { env } from "~/env";
+import { cookies } from "next/headers";
 
 import { getServerAuthSession } from "~/server/auth";
 import { db } from "~/server/db";
@@ -32,9 +33,29 @@ import { randomUUID } from "crypto";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await getServerAuthSession();
 
+  // Check 2FA cookie
+  let twoFactorVerified = false;
+  if (session?.user?.id) {
+    const cookieStore = await cookies();
+    const cookieVal = cookieStore.get("bytesend_2fa")?.value;
+    if (cookieVal) {
+      const { validateTwoFactorCookie } = await import("~/app/api/auth/2fa/route");
+      twoFactorVerified = validateTwoFactorCookie(cookieVal, session.user.id);
+    }
+    // If user doesn't have 2FA enabled, treat as verified
+    if (!twoFactorVerified) {
+      const userRecord = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { twoFactorEnabled: true },
+      });
+      if (!userRecord?.twoFactorEnabled) twoFactorVerified = true;
+    }
+  }
+
   return {
     db,
     session,
+    twoFactorVerified,
     ...opts,
   };
 };
@@ -116,6 +137,20 @@ export const authedProcedure = t.procedure.use(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = authedProcedure.use(({ ctx, next }) => {
+  return next();
+});
+
+/**
+ * 2FA-protected procedure.
+ * Requires either: user has no 2FA enabled, or the 2FA cookie is valid.
+ */
+export const twoFactorProtectedProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!ctx.twoFactorVerified) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Two-factor authentication required. Please verify your identity.",
+    });
+  }
   return next();
 });
 

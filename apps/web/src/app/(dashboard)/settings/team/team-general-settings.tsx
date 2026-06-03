@@ -14,7 +14,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@bytesend/ui/src/form";
 import { Input } from "@bytesend/ui/src/input";
@@ -27,7 +26,6 @@ import {
   DialogTrigger,
 } from "@bytesend/ui/src/dialog";
 import { toast } from "@bytesend/ui/src/toaster";
-import { Separator } from "@bytesend/ui/src/separator";
 
 import { api } from "~/trpc/react";
 import { useTeam } from "~/providers/team-context";
@@ -139,151 +137,153 @@ export default function TeamGeneralSettings() {
     });
   }
 
-  if (!currentIsAdmin) return null;
-
   return (
     <div className="flex flex-col gap-8 mt-6">
-      {/* ── Team image ── */}
-      <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
-        <h3 className="text-sm font-semibold mb-1">Team Image</h3>
-        <p className="text-xs text-muted-foreground mb-5">
-          Shown in the sidebar and team switcher. Max 2 MB — JPEG, PNG, WebP or GIF.
-        </p>
+      {!currentIsAdmin ? null : (
+        <>
+          {/* ── Team image ── */}
+          <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
+            <h3 className="text-sm font-semibold mb-1">Team Image</h3>
+            <p className="text-xs text-muted-foreground mb-5">
+              Shown in the sidebar and team switcher. Max 2 MB — JPEG, PNG, WebP or GIF.
+            </p>
 
-        <div className="flex items-center gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/40 overflow-hidden">
-            {imagePreview ? (
-              <Image
-                src={imagePreview}
-                alt="Team image"
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <ImageIcon className="size-7 text-muted-foreground" />
-            )}
+            <div className="flex items-center gap-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/40 overflow-hidden">
+                {imagePreview ? (
+                  <Image
+                    src={imagePreview}
+                    alt="Team image"
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <ImageIcon className="size-7 text-muted-foreground" />
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  isLoading={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="size-3.5 mr-1.5" />
+                  {imagePreview ? "Change" : "Upload"}
+                </Button>
+                {imagePreview && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    disabled={updateTeamMutation.isPending}
+                  >
+                    <Trash2 className="size-3.5 mr-1.5 text-destructive" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_IMAGE_TYPES.join(",")}
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              isLoading={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="size-3.5 mr-1.5" />
-              {imagePreview ? "Change" : "Upload"}
-            </Button>
-            {imagePreview && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRemoveImage}
-                disabled={updateTeamMutation.isPending}
-              >
-                <Trash2 className="size-3.5 mr-1.5 text-destructive" />
-                Remove
-              </Button>
-            )}
+          {/* ── Team name ── */}
+          <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
+            <h3 className="text-sm font-semibold mb-1">Team Name</h3>
+            <p className="text-xs text-muted-foreground mb-5">
+              This is the display name for your team.
+            </p>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSaveName)} className="flex gap-3">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input placeholder="My Team" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  isLoading={updateTeamMutation.isPending}
+                >
+                  Save
+                </Button>
+              </form>
+            </Form>
           </div>
-        </div>
-      </div>
 
-      {/* ── Team name ── */}
-      <div className="rounded-xl border border-border/60 bg-card/30 backdrop-blur-sm p-6">
-        <h3 className="text-sm font-semibold mb-1">Team Name</h3>
-        <p className="text-xs text-muted-foreground mb-5">
-          This is the display name for your team.
-        </p>
+          {/* ── Danger zone ── */}
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+            <h3 className="text-sm font-semibold text-destructive mb-1">
+              Danger Zone
+            </h3>
+            <p className="text-xs text-muted-foreground mb-5">
+              Deleting a team is permanent and will remove all associated data including domains,
+              emails, campaigns, and contacts.
+            </p>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSaveName)} className="flex gap-3">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input placeholder="My Team" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type="submit"
-              isLoading={updateTeamMutation.isPending}
-            >
-              Save
-            </Button>
-          </form>
-        </Form>
-      </div>
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="size-3.5 mr-1.5" />
+                  Delete Team
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete team</DialogTitle>
+                  <DialogDescription>
+                    This will permanently delete{" "}
+                    <span className="font-semibold text-foreground">
+                      {currentTeam?.name}
+                    </span>{" "}
+                    and all its data. This cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
 
-      {/* ── Danger zone ── */}
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-        <h3 className="text-sm font-semibold text-destructive mb-1">
-          Danger Zone
-        </h3>
-        <p className="text-xs text-muted-foreground mb-5">
-          Deleting a team is permanent and will remove all associated data including domains,
-          emails, campaigns, and contacts.
-        </p>
+                <div className="mt-2 flex flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Type <span className="font-mono font-semibold text-foreground">{currentTeam?.name}</span> to confirm.
+                  </p>
+                  <Input
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder={currentTeam?.name}
+                  />
+                </div>
 
-        <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-          <DialogTrigger asChild>
-            <Button variant="destructive" size="sm">
-              <Trash2 className="size-3.5 mr-1.5" />
-              Delete Team
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete team</DialogTitle>
-              <DialogDescription>
-                This will permanently delete{" "}
-                <span className="font-semibold text-foreground">
-                  {currentTeam?.name}
-                </span>{" "}
-                and all its data. This cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="mt-2 flex flex-col gap-3">
-              <p className="text-sm text-muted-foreground">
-                Type <span className="font-mono font-semibold text-foreground">{currentTeam?.name}</span> to confirm.
-              </p>
-              <Input
-                value={confirmName}
-                onChange={(e) => setConfirmName(e.target.value)}
-                placeholder={currentTeam?.name}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                disabled={confirmName !== currentTeam?.name}
-                isLoading={deleteTeamMutation.isPending}
-                onClick={handleDeleteTeam}
-              >
-                Delete Team
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div className="flex justify-end gap-3 mt-4">
+                  <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={confirmName !== currentTeam?.name}
+                    isLoading={deleteTeamMutation.isPending}
+                    onClick={handleDeleteTeam}
+                  >
+                    Delete Team
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </>
+      )}
     </div>
   );
 }

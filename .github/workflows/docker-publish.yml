@@ -181,6 +181,10 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              # Wait for both platform images to be available before creating manifest
+              wait_for_remote_image "bytesend/$APP_NAME-amd64:$TAG" || exit 1
+              wait_for_remote_image "bytesend/$APP_NAME-arm64:$TAG" || exit 1
+              
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag bytesend/$APP_NAME:$TAG \
@@ -229,6 +233,10 @@ jobs:
 
           for APP_NAME in bytesend smtp-proxy; do
             for TAG in $TAGS; do
+              # Wait for both platform images to be available before creating manifest
+              wait_for_remote_image "ghcr.io/bytesend/$APP_NAME-amd64:$TAG" || exit 1
+              wait_for_remote_image "ghcr.io/bytesend/$APP_NAME-arm64:$TAG" || exit 1
+              
               # buildx imagetools create is idempotent and updates the target tag in-place.
               docker buildx imagetools create \
                 --tag ghcr.io/bytesend/$APP_NAME:$TAG \

@@ -1,7 +1,7 @@
 "use client";
 
 import CampaignList from "../campaigns/campaign-list";
-import CreateCampaign from "../campaigns/create-campaign";
+import CreateBroadcast from "./create-broadcast";
 import { H1 } from "@bytesend/ui";
 
 export default function BroadcastsPage() {
@@ -14,7 +14,7 @@ export default function BroadcastsPage() {
             Send now or schedule one-off email broadcasts
           </p>
         </div>
-        <CreateCampaign intent="BROADCAST" basePath="/broadcasts" />
+        <CreateBroadcast />
       </div>
       <CampaignList intent="BROADCAST" basePath="/broadcasts" />
     </div>
