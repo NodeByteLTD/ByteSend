@@ -139,6 +139,7 @@ export const campaignRouter = createTRPCRouter({
         content: z.string().optional(),
         html: z.string().optional(),
         contactBookId: z.string().optional(),
+        recipientEmails: z.string().email().array().optional(),
         replyTo: z.string().array().optional(),
       }),
     )

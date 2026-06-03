@@ -1,8 +1,15 @@
 "use client";
 
-import TeamGeneralSettings from "./team/team-general-settings";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function SettingsPage() {
-  return <TeamGeneralSettings />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/settings/team");
+  }, [router]);
+
+  return null;
 }
 

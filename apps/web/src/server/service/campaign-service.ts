@@ -531,10 +531,13 @@ export async function scheduleCampaign({
     });
   }
 
-  if (!campaign.contactBookId) {
+  const isDirectBroadcast =
+    campaign.intent === "BROADCAST" && campaign.recipientEmails.length > 0;
+
+  if (!isDirectBroadcast && !campaign.contactBookId) {
     throw new ByteSendApiError({
       code: "BAD_REQUEST",
-      message: "No contact book found for campaign",
+      message: "No contact book or recipients found for campaign",
     });
   }
 
@@ -545,27 +548,32 @@ export async function scheduleCampaign({
     });
   }
 
-  const unsubPlaceholderFound = campaignHasUnsubscribePlaceholder(
-    campaign.content,
-    html,
-  );
-  if (!unsubPlaceholderFound) {
-    throw new ByteSendApiError({
-      code: "BAD_REQUEST",
-      message: "Campaign must include an unsubscribe link before scheduling",
-    });
+  if (!isDirectBroadcast) {
+    const unsubPlaceholderFound = campaignHasUnsubscribePlaceholder(
+      campaign.content,
+      html,
+    );
+    if (!unsubPlaceholderFound) {
+      throw new ByteSendApiError({
+        code: "BAD_REQUEST",
+        message: "Campaign must include an unsubscribe link before scheduling",
+      });
+    }
   }
 
-  // Count subscribed contacts for total
-  const total = await db.contact.count({
-    where: { contactBookId: campaign.contactBookId, subscribed: true },
-  });
-
-  if (total === 0) {
-    throw new ByteSendApiError({
-      code: "BAD_REQUEST",
-      message: "No subscribed contacts to send",
+  let total: number;
+  if (isDirectBroadcast) {
+    total = campaign.recipientEmails.length;
+  } else {
+    total = await db.contact.count({
+      where: { contactBookId: campaign.contactBookId!, subscribed: true },
     });
+    if (total === 0) {
+      throw new ByteSendApiError({
+        code: "BAD_REQUEST",
+        message: "No subscribed contacts to send",
+      });
+    }
   }
 
   const scheduledAt = scheduledAtInput
@@ -1072,7 +1080,10 @@ export class CampaignBatchService {
         where: { id: campaignId },
       });
       if (!campaign) return;
-      if (!campaign.contactBookId) return;
+
+      const isDirectBroadcast =
+        campaign.intent === "BROADCAST" && campaign.recipientEmails.length > 0;
+      if (!isDirectBroadcast && !campaign.contactBookId) return;
 
       // Skip paused campaigns
       if (campaign.status === "PAUSED") return;
@@ -1087,6 +1098,111 @@ export class CampaignBatchService {
           where: { id: campaignId },
           data: { status: "RUNNING" },
         });
+      }
+
+      if (isDirectBroadcast) {
+        // Fetch domain for region
+        const domain = await db.domain.findUnique({
+          where: { id: campaign.domainId },
+        });
+        if (!domain) return;
+
+        // Suppress already-processed recipients using CampaignEmail
+        const alreadySent = new Set(
+          (
+            await db.campaignEmail.findMany({
+              where: { campaignId: campaign.id },
+              select: { contactId: true },
+            })
+          ).map((r) => r.contactId),
+        );
+
+        const remaining = campaign.recipientEmails.filter(
+          (e) => !alreadySent.has(e),
+        );
+
+        if (remaining.length === 0) {
+          await db.campaign.update({
+            where: { id: campaign.id },
+            data: { status: "SENT" },
+          });
+          return;
+        }
+
+        const batchSize = campaign.batchSize ?? 500;
+        const batch = remaining.slice(0, batchSize);
+
+        for (const recipientEmail of batch) {
+          const suppressed = await SuppressionService.checkMultipleEmails(
+            [recipientEmail],
+            campaign.teamId,
+          );
+          if (suppressed[recipientEmail]) {
+            const email = await db.email.create({
+              data: {
+                to: [recipientEmail],
+                from: campaign.from,
+                subject: campaign.subject,
+                html: campaign.html ?? "",
+                teamId: campaign.teamId,
+                campaignId: campaign.id,
+                domainId: domain.id,
+                latestStatus: "SUPPRESSED",
+              },
+            });
+            await db.campaignEmail
+              .create({
+                data: {
+                  campaignId: campaign.id,
+                  contactId: recipientEmail,
+                  emailId: email.id,
+                },
+              })
+              .catch(() => { });
+            continue;
+          }
+
+          const email = await db.email.create({
+            data: {
+              to: [recipientEmail],
+              replyTo: Array.isArray(campaign.replyTo) ? campaign.replyTo : [],
+              cc: Array.isArray(campaign.cc) ? campaign.cc : [],
+              bcc: Array.isArray(campaign.bcc) ? campaign.bcc : [],
+              from: campaign.from,
+              subject: campaign.subject,
+              html: campaign.html ?? "",
+              text: campaign.previewText ?? undefined,
+              teamId: campaign.teamId,
+              campaignId: campaign.id,
+              domainId: domain.id,
+            },
+          });
+
+          await db.campaignEmail
+            .create({
+              data: {
+                campaignId: campaign.id,
+                contactId: recipientEmail,
+                emailId: email.id,
+              },
+            })
+            .catch(() => { });
+
+          await EmailQueueService.queueEmail(
+            email.id,
+            campaign.teamId,
+            domain.region,
+            false,
+          );
+        }
+
+        // Advance cursor
+        const newCursor = batch[batch.length - 1];
+        await db.campaign.update({
+          where: { id: campaign.id },
+          data: { lastCursor: newCursor ?? null, lastSentAt: new Date() },
+        });
+        return;
       }
 
       const batchSize = campaign.batchSize ?? 500;

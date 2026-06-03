@@ -1,8 +1,8 @@
 "use client";
 
-import { redirect } from "next/navigation";
+import TeamGeneralSettings from "./team-general-settings";
 
-export default function TeamsPage() {
-  redirect("/settings");
+export default function TeamPage() {
+  return <TeamGeneralSettings />;
 }
 

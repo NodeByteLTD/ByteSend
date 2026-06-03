@@ -24,7 +24,9 @@ import {
   Check,
   PlusIcon,
   ScrollText,
+  UserIcon,
 } from "lucide-react";
+import { FaBook } from "react-icons/fa";
 import { SiDiscord } from "react-icons/si";
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
@@ -293,8 +295,16 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ) : null}
               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Documentation">
+                  <Link href="https://docs.bytesend.cloud" target="_blank">
+                    <FaBook className="size-4 shrink-0" />
+                    <span>Documentation</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Discord">
-                  <Link href="https://discord.gg/nodebyte" target="_blank">
+                  <Link href="https://discord.gg/Bg3Sf5fqa4" target="_blank">
                     <SiDiscord className="size-4 shrink-0" />
                     <span>Discord</span>
                   </Link>
@@ -410,15 +420,15 @@ export function NavUser({
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>
-                <Link href="/settings/usage">
-                  <GaugeIcon />
-                  Usage Breakdown
+                <Link href="/settings/account">
+                  <UserIcon />
+                  Account Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="https://docs.bytesend.cloud">
-                  <BookOpenIcon />
-                  Documentation
+                <Link href="/settings/usage">
+                  <GaugeIcon />
+                  Usage Breakdown
                 </Link>
               </DropdownMenuItem>
               <div className="px-2 py-0.5">
