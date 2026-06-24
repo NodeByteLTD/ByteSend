@@ -11,6 +11,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.2] - 2026-06-23
+
+### Added
+
+#### Security & Account Management
+- **Ban enforcement across all layers** — the existing `isBanned` flag on `User` is now fully enforced: login is blocked at the `signIn` callback with a redirect to `/login?error=banned`; the JWT token embeds `isBanned` so middleware can gate all protected routes; every `authedProcedure` tRPC call re-validates against the database; and the public REST API blocks requests where the team's admin is banned
+- **Banned user page** (`/banned`) — dedicated page shown to banned users with account suspension message and a "Join our Discord" link for false-ban appeals
+- **AGENTS.md** — documentation file at the repo root describing project architecture, dev commands, auth layers, conventions, and testing notes for AI coding agents
+
+#### Email Reputation & Deliverability
+- **Bounce/complaint rate enforcement** — 7-day rolling hard-bounce rate > 2% or complaint rate > 0.1% (Google/Yahoo thresholds) auto-blocks a team's sending with a Discord alert; warns at 1.5% / 0.08%; minimum volume of 100 emails required before enforcement kicks in; uses `LimitReason.BOUNCE_RATE_EXCEEDED` / `LimitReason.COMPLAINT_RATE_EXCEEDED`
+- **RFC 8058 one-click unsubscribe compliance** — `List-Unsubscribe` header now lists the POST-capable one-click endpoint first (required by Gmail/Yahoo), with the click-based `/unsubscribe` URL as a fallback for Outlook; `List-Unsubscribe-Post: List-Unsubscribe=One-Click` header added automatically for marketing emails; the one-click route now also accepts GET requests with a 302 redirect to the user-facing unsubscribe page for click-based mail clients
+- **`unsubOneClickUrl` threading** — one-click URL generated per email in `executeEmail()` and passed through `sendRawEmail()` → `buildHeaders()`
+
+#### Notifications
+- **Team-scoped bounce/complaint notifications** — SES hook parser now routes bounce and complaint events through `NotificationProviderService.broadcastNotification()` to the team's own configured providers instead of the platform-level admin Discord; notification content omits raw recipient addresses (count only)
+- **`ADMIN_DISCORD_WEBHOOK_URL` env var** — optional platform-level observer webhook; when set, `broadcastNotification()` fans out a copy of every team event to this URL after dispatching to team providers; teams cannot register this URL as their own provider
+- **Admin webhook collision guard** — `validateConfig()` in `NotificationProviderService` rejects any Discord or Slack webhook URL that matches `ADMIN_DISCORD_WEBHOOK_URL`
+
+#### Admin Panel
+- **Domain force-verify** — admins can set a domain's status to `SUCCESS` directly from the Domains admin page (useful for stuck verifications); shield icon button appears on non-verified domains
+- **Domain delete** — admins can permanently delete any domain from the Domains admin page
+- **Team delete** — permanent team deletion with browser confirmation dialog from the team detail view's new Danger Zone section
+- **Extra domain/member slots** — team settings form now exposes `extraDomainSlots` and `extraMemberSlots` fields so admins can grant bonus capacity without changing a team's plan
+- **Complimentary plan assignment for all admins** — `adminAssignPlan` no longer requires `isEnvAdmin`; any admin can now assign plans complimentarily (no charge) or generate Stripe checkout links; plan assignment UI visible to all `isAdmin` users (previously only `isEnvAdmin`)
+- **Dual plan assignment buttons** — teams page now shows both "Assign complimentary" (immediate, no charge) and "Checkout link" (Stripe) buttons; checkout link button disabled for FREE plan
+
+### Changed
+- **`updateTeamSettings`** — removed `isEnvAdmin` guard for plan changes; all admins can update team settings including plan; added `extraDomainSlots` and `extraMemberSlots` to the mutation input and DB update
+- **`teamAdminSelection`** — now includes `isActive`, `extraDomainSlots`, and `extraMemberSlots` so the admin UI reflects the full team state
+- **`authedProcedure`** — now performs a fresh database ban check on every call rather than relying solely on the JWT token
+
+### Fixed
+- **`UpgradeModal` type error** — added missing `CONTACTS`, `BOUNCE_RATE_EXCEEDED`, and `COMPLAINT_RATE_EXCEEDED` entries to the `Record<LimitReason, string>` messages map
+
+---
+
 ## [0.3.1] - 2026-06-03
 
 ### Added
