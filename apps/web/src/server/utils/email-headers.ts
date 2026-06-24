@@ -64,12 +64,16 @@ export function buildHeaders({
   emailId,
   headers,
   unsubUrl,
+  unsubOneClickUrl,
   isBulk,
   inReplyToMessageId,
 }: {
   emailId?: string | undefined;
   headers?: Record<string, string> | undefined;
+  /** User-facing unsubscribe page URL (GET link in email body / fallback). */
   unsubUrl?: string;
+  /** RFC 8058 one-click endpoint URL (accepts HTTP POST from mailbox providers). */
+  unsubOneClickUrl?: string;
   isBulk?: boolean;
   inReplyToMessageId?: string | undefined;
 }) {
@@ -88,14 +92,18 @@ export function buildHeaders({
     defaultHeaders["X-ByteSend-Email-ID"] = emailId;
   }
 
-  if (unsubUrl) {
-    if (!sanitizedHeaderNames.has("list-unsubscribe")) {
-      defaultHeaders["List-Unsubscribe"] = `<${unsubUrl}>`;
+  if ((unsubUrl ?? unsubOneClickUrl) && !sanitizedHeaderNames.has("list-unsubscribe")) {
+    if (unsubOneClickUrl && unsubUrl) {
+      // RFC 8058: one-click URL first (mailbox providers POST to the first URL),
+      // regular page second (fallback for click-based clients like Outlook).
+      defaultHeaders["List-Unsubscribe"] = `<${unsubOneClickUrl}>, <${unsubUrl}>`;
+    } else {
+      defaultHeaders["List-Unsubscribe"] = `<${unsubOneClickUrl ?? unsubUrl}>`;
     }
+  }
 
-    if (!sanitizedHeaderNames.has("list-unsubscribe-post")) {
-      defaultHeaders["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
-    }
+  if (unsubOneClickUrl && !sanitizedHeaderNames.has("list-unsubscribe-post")) {
+    defaultHeaders["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
 
   if (isBulk && !sanitizedHeaderNames.has("precedence")) {

@@ -6,6 +6,15 @@ import { withCache } from "../redis";
 import { db } from "../db";
 import { logger } from "../logger/log";
 import { Plan, Team } from "@prisma/client";
+import { sendToDiscord } from "./notification-service";
+
+// Thresholds aligned with Google/Yahoo sender requirements
+const BOUNCE_RATE_HARD_LIMIT = 0.02;      // 2%  — block sending
+const BOUNCE_RATE_WARN_LIMIT = 0.015;     // 1.5% — warn only
+const COMPLAINT_RATE_HARD_LIMIT = 0.001;  // 0.1% — block sending
+const COMPLAINT_RATE_WARN_LIMIT = 0.0008; // 0.08% — warn only
+// Only enforce when the team has enough volume to produce a meaningful rate
+const BOUNCE_RATE_MIN_VOLUME = 100;
 
 function isLimitExceeded(current: number, limit: number): boolean {
   if (limit === -1) return false; // unlimited
@@ -247,6 +256,28 @@ export class LimitService {
     };
   }
 
+  private static async getRecentBounceStats(teamId: number): Promise<{
+    delivered: number;
+    hardBounced: number;
+    complained: number;
+  }> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
+    // DailyEmailUsage.date is stored as 'YYYY-MM-DD' string; ISO prefix comparison is correct
+    const cutoffDate = cutoff.toISOString().slice(0, 10);
+
+    const result = await db.dailyEmailUsage.aggregate({
+      where: { teamId, date: { gte: cutoffDate } },
+      _sum: { delivered: true, hardBounced: true, complained: true },
+    });
+
+    return {
+      delivered: result._sum.delivered ?? 0,
+      hardBounced: result._sum.hardBounced ?? 0,
+      complained: result._sum.complained ?? 0,
+    };
+  }
+
   // Checks email sending limits and also triggers usage notifications.
   // Side effects:
   // - Sends "warning" emails when nearing daily/monthly limits (rate-limited in TeamService)
@@ -280,6 +311,54 @@ export class LimitService {
         limit: 0,
         reason: LimitReason.EMAIL_BLOCKED,
       };
+    }
+
+    // Bounce / complaint rate enforcement (7-day rolling window)
+    const recentStats = await LimitService.getRecentBounceStats(teamId);
+    if (recentStats.delivered >= BOUNCE_RATE_MIN_VOLUME) {
+      const bounceRate = recentStats.hardBounced / recentStats.delivered;
+      const complaintRate = recentStats.complained / recentStats.delivered;
+
+      if (bounceRate >= BOUNCE_RATE_HARD_LIMIT) {
+        logger.warn(
+          { teamId, bounceRate, recentStats },
+          "[LimitService]: Team blocked — bounce rate exceeds 2%",
+        );
+        sendToDiscord(
+          `⚠️ **Sending blocked** — team \`${teamId}\` hard-bounce rate: **${(bounceRate * 100).toFixed(2)}%** (7-day). Threshold: 2%.`,
+        ).catch(() => void 0);
+        return {
+          isLimitReached: true,
+          limit: 0,
+          reason: LimitReason.BOUNCE_RATE_EXCEEDED,
+        };
+      }
+
+      if (complaintRate >= COMPLAINT_RATE_HARD_LIMIT) {
+        logger.warn(
+          { teamId, complaintRate, recentStats },
+          "[LimitService]: Team blocked — complaint rate exceeds 0.1%",
+        );
+        sendToDiscord(
+          `⚠️ **Sending blocked** — team \`${teamId}\` complaint rate: **${(complaintRate * 100).toFixed(3)}%** (7-day). Threshold: 0.1%.`,
+        ).catch(() => void 0);
+        return {
+          isLimitReached: true,
+          limit: 0,
+          reason: LimitReason.COMPLAINT_RATE_EXCEEDED,
+        };
+      }
+
+      // Warn when approaching thresholds
+      if (bounceRate >= BOUNCE_RATE_WARN_LIMIT || complaintRate >= COMPLAINT_RATE_WARN_LIMIT) {
+        logger.warn(
+          { teamId, bounceRate, complaintRate, recentStats },
+          "[LimitService]: Team approaching bounce/complaint rate limits",
+        );
+        sendToDiscord(
+          `⚠️ **Reputation warning** — team \`${teamId}\` is approaching limits. Bounce: **${(bounceRate * 100).toFixed(2)}%**, Complaints: **${(complaintRate * 100).toFixed(3)}%** (7-day).`,
+        ).catch(() => void 0);
+      }
     }
 
     const activePlan = getActivePlan(team);

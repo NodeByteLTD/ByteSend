@@ -91,6 +91,8 @@ const updateSchema = z.object({
   // -1 = unlimited override, 0 = use plan default, positive = custom cap
   dailyEmailLimit: z.coerce.number().int().min(-1).max(10_000_000),
   isBlocked: z.boolean(),
+  extraDomainSlots: z.coerce.number().int().min(0).max(1_000),
+  extraMemberSlots: z.coerce.number().int().min(0).max(1_000),
 });
 
 const assignSchema = z.object({
@@ -102,7 +104,7 @@ type AssignInput = z.infer<typeof assignSchema>;
 
 export default function AdminTeamsPage() {
   const { data: session } = useSession();
-  const canAssignPlans = Boolean(session?.user?.isEnvAdmin);
+  const canAssignPlans = Boolean(session?.user?.isAdmin);
   const [team, setTeam] = useState<TeamAdmin | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [teamsPage, setTeamsPage] = useState(1);
@@ -122,6 +124,8 @@ export default function AdminTeamsPage() {
       apiRateLimit: 1,
       dailyEmailLimit: 0,
       isBlocked: false,
+      extraDomainSlots: 0,
+      extraMemberSlots: 0,
     },
   });
 
@@ -140,6 +144,8 @@ export default function AdminTeamsPage() {
         apiRateLimit: team.apiRateLimit,
         dailyEmailLimit: isUnlimited ? -1 : team.dailyEmailLimit,
         isBlocked: team.isBlocked,
+        extraDomainSlots: team.extraDomainSlots,
+        extraMemberSlots: team.extraMemberSlots,
       });
       setGeneratedCheckoutUrl(null);
     }
@@ -189,7 +195,7 @@ export default function AdminTeamsPage() {
     onSuccess: (result) => {
       if (result.method === "complimentary" && result.team) {
         setTeam(result.team);
-        toast.success(`Plan assigned as complimentary`);
+        toast.success("Plan assigned complimentarily");
       } else if (result.method === "checkout_link" && result.url) {
         setGeneratedCheckoutUrl(result.url);
         toast.success("Checkout link generated");
@@ -197,6 +203,17 @@ export default function AdminTeamsPage() {
     },
     onError: (error) => {
       toast.error(error.message ?? "Failed to assign plan");
+    },
+  });
+
+  const deleteTeam = api.admin.adminDeleteTeam.useMutation({
+    onSuccess: () => {
+      setTeam(null);
+      setHasSearched(false);
+      toast.success("Team deleted");
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Failed to delete team");
     },
   });
 
@@ -211,7 +228,13 @@ export default function AdminTeamsPage() {
     updateTeam.mutate({ teamId: team.id, ...values, plan: team.plan });
   };
 
-  const onAssignSubmit = (values: AssignInput) => {
+  const onAssignComplimentary = (values: AssignInput) => {
+    if (!team) return;
+    setGeneratedCheckoutUrl(null);
+    assignPlan.mutate({ teamId: team.id, plan: values.plan, method: "complimentary" });
+  };
+
+  const onAssignCheckout = (values: AssignInput) => {
     if (!team) return;
     setGeneratedCheckoutUrl(null);
     assignPlan.mutate({ teamId: team.id, plan: values.plan, method: "checkout_link" });
@@ -427,6 +450,48 @@ export default function AdminTeamsPage() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={updateForm.control}
+                  name="extraDomainSlots"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Extra domain slots</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={1000}
+                          {...field}
+                          value={Number.isNaN(field.value) ? 0 : field.value}
+                          onChange={(event) => field.onChange(Number(event.target.value))}
+                          disabled={updateTeam.isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={updateForm.control}
+                  name="extraMemberSlots"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Extra member slots</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={1000}
+                          {...field}
+                          value={Number.isNaN(field.value) ? 0 : field.value}
+                          onChange={(event) => field.onChange(Number(event.target.value))}
+                          disabled={updateTeam.isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="lg:col-span-2 flex justify-end">
                   <Button type="submit" disabled={updateTeam.isPending}>
                     {updateTeam.isPending ? (
@@ -447,11 +512,11 @@ export default function AdminTeamsPage() {
               <div>
                 <h3 className="text-sm font-semibold">Assign Plan</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Generate a Stripe checkout link for the selected plan and share it with the team.
+                  Assign a plan directly (complimentary) or generate a Stripe checkout link for the team to pay.
                 </p>
               </div>
               <Form {...assignForm}>
-                <form onSubmit={assignForm.handleSubmit(onAssignSubmit)} className="grid gap-4 lg:grid-cols-2 items-end">
+                <form className="grid gap-4 lg:grid-cols-2 items-end">
                   <FormField
                     control={assignForm.control}
                     name="plan"
@@ -476,9 +541,24 @@ export default function AdminTeamsPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" variant="outline" disabled={assignPlan.isPending}>
-                    {assignPlan.isPending ? <Spinner className="h-4 w-4" /> : "Generate checkout link"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="default"
+                      disabled={assignPlan.isPending}
+                      onClick={assignForm.handleSubmit(onAssignComplimentary)}
+                    >
+                      {assignPlan.isPending ? <Spinner className="h-4 w-4" /> : "Assign complimentary"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={assignPlan.isPending || assignForm.watch("plan") === "FREE"}
+                      onClick={assignForm.handleSubmit(onAssignCheckout)}
+                    >
+                      Checkout link
+                    </Button>
+                  </div>
                 </form>
               </Form>
               {generatedCheckoutUrl && (
@@ -504,6 +584,27 @@ export default function AdminTeamsPage() {
               )}
             </div>
           ) : null}
+
+          <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-6 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-destructive">Danger zone</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permanently delete this team and all its data. This cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleteTeam.isPending}
+              onClick={() => {
+                if (!team) return;
+                if (!window.confirm(`Delete team "${team.name}" (#${team.id})? This is permanent.`)) return;
+                deleteTeam.mutate({ teamId: team.id });
+              }}
+            >
+              {deleteTeam.isPending ? <><Spinner className="mr-2 h-4 w-4" /> Deleting...</> : "Delete team"}
+            </Button>
+          </div>
         </div>
       ) : null}
 

@@ -34,6 +34,7 @@ declare module "next-auth" {
       isAdmin: boolean;
       isFounder: boolean;
       isEnvAdmin?: boolean;
+      isBanned: boolean;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -46,7 +47,15 @@ declare module "next-auth" {
     isAdmin: boolean;
     isFounder: boolean;
     isEnvAdmin?: boolean;
+    isBanned: boolean;
     image?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  // eslint-disable-next-line no-unused-vars
+  interface JWT {
+    isBanned?: boolean;
   }
 }
 
@@ -179,13 +188,16 @@ function getProviders() {
             image: true,
             isBetaUser: true,
             isAdmin: true,
-            isFounder: true,
-            isEnvAdmin: true,
+            isBanned: true,
           },
         });
 
         if (!user) {
           throw new Error("User not found");
+        }
+
+        if (user.isBanned) {
+          throw new Error("BANNED");
         }
 
         return user;
@@ -208,6 +220,18 @@ function getProviders() {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     signIn: async ({ user, account, profile, credentials }) => {
+      // Block banned users from signing in
+      const userId = typeof user.id === "string" ? parseInt(user.id, 10) : user.id;
+      if (userId) {
+        const dbUser = await db.user.findUnique({
+          where: { id: userId },
+          select: { isBanned: true },
+        });
+        if (dbUser?.isBanned) {
+          return "/login?error=banned";
+        }
+      }
+
       // For email provider with code verification
       if (account?.provider === "email" && credentials?.code) {
         try {
@@ -240,7 +264,7 @@ export const authOptions: NextAuthOptions = {
         if (freshImage && freshImage !== user.image) {
           try {
             await db.user.update({
-              where: { id: user.id },
+              where: { id: typeof user.id === "string" ? parseInt(user.id, 10) : user.id },
               data: { image: freshImage },
             });
             // Reflect immediately so the session callback sees the new value
@@ -252,6 +276,12 @@ export const authOptions: NextAuthOptions = {
       }
 
       return true;
+    },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.isBanned = user.isBanned ?? false;
+      }
+      return token;
     },
     session: ({ session, user }) => {
       const userEmail = normalizeEmail(user.email);
@@ -274,6 +304,7 @@ export const authOptions: NextAuthOptions = {
           isAdmin,
           isFounder,
           isEnvAdmin,
+          isBanned: user.isBanned ?? false,
           // Explicitly forward the DB image so it always reaches the client,
           // even when session.user was built before the image update above.
           image: user.image ?? session.user.image,

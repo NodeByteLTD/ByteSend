@@ -7,6 +7,7 @@ import { createHmac, randomUUID } from "crypto";
 import { db } from "../db";
 import { logger } from "../logger/log";
 import { ByteSendApiError } from "../public-api/api-error";
+import { env } from "~/env";
 
 export type DiscordConfig = {
   webhookUrl: string;
@@ -339,10 +340,6 @@ export class NotificationProviderService {
       },
     });
 
-    if (providers.length === 0) {
-      return { sent: 0, failed: 0 };
-    }
-
     let sent = 0;
     let failed = 0;
 
@@ -352,6 +349,32 @@ export class NotificationProviderService {
         sent++;
       } catch (error) {
         failed++;
+      }
+    }
+
+    // Fan-out to admin observer webhook if configured and not already a team provider
+    const adminUrl = env.ADMIN_DISCORD_WEBHOOK_URL;
+    if (adminUrl) {
+      const alreadyCovered = providers.some((p) => {
+        const cfg = p.config as Record<string, unknown>;
+        return cfg?.webhookUrl === adminUrl || cfg?.url === adminUrl;
+      });
+
+      if (!alreadyCovered) {
+        try {
+          await this.sendToDiscord({ webhookUrl: adminUrl }, {
+            ...message,
+            fields: [
+              ...(message.fields ?? []),
+              { name: "Team ID", value: String(teamId), inline: true },
+            ],
+          });
+        } catch (error) {
+          logger.warn(
+            { error: error instanceof Error ? error.message : error },
+            "Failed to send notification to admin webhook"
+          );
+        }
       }
     }
 
@@ -609,6 +632,16 @@ export class NotificationProviderService {
   /**
    * Validate provider configuration
    */
+  private static assertNotAdminWebhook(webhookUrl: string) {
+    const adminUrl = env.ADMIN_DISCORD_WEBHOOK_URL;
+    if (adminUrl && webhookUrl === adminUrl) {
+      throw new ByteSendApiError(
+        "BAD_REQUEST",
+        "This webhook URL is reserved and cannot be used as a team notification provider."
+      );
+    }
+  }
+
   private static validateConfig(
     type: NotificationProviderType,
     config: NotificationProviderConfig
@@ -621,6 +654,7 @@ export class NotificationProviderService {
             "Discord webhook URL is required"
           );
         }
+        this.assertNotAdminWebhook(config.webhookUrl);
         this.assertAllowedWebhookUrl(config.webhookUrl, "Discord", [
           "discord.com",
           "discordapp.com",
@@ -634,6 +668,7 @@ export class NotificationProviderService {
             "Slack webhook URL is required"
           );
         }
+        this.assertNotAdminWebhook(config.webhookUrl);
         this.assertAllowedWebhookUrl(config.webhookUrl, "Slack", [
           "hooks.slack.com",
         ]);
