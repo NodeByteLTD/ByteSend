@@ -45,6 +45,14 @@ export const getTeamFromToken = async (c: Context) => {
     });
   }
 
+  // Block API access if the team is blocked
+  if (team.isBlocked) {
+    throw new ByteSendApiError({
+      code: "FORBIDDEN",
+      message: "This team has been blocked. Please contact support via Discord: https://discord.com/invite/BU8n8pJv8S",
+    });
+  }
+
   // Block API access if any admin on the team is banned
   const bannedAdmin = await db.teamUser.findFirst({
     where: {

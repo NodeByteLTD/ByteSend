@@ -292,7 +292,18 @@ export class LimitService {
     reason?: LimitReason;
     available?: number;
   }> {
-    // Limits only apply in cloud mode
+    // Block flag enforced in all deployment modes
+    const team = await TeamService.getTeamCached(teamId);
+
+    if (team.isBlocked) {
+      return {
+        isLimitReached: true,
+        limit: 0,
+        reason: LimitReason.EMAIL_BLOCKED,
+      };
+    }
+
+    // Remaining limits only apply in cloud mode
     if (!env.NEXT_PUBLIC_IS_CLOUD) {
       return { isLimitReached: false, limit: -1 };
     }
@@ -300,17 +311,6 @@ export class LimitService {
     // Admin/founder teams have no limits
     if (await LimitService.isAdminOrFounderTeam(teamId)) {
       return { isLimitReached: false, limit: -1 };
-    }
-
-    const team = await TeamService.getTeamCached(teamId);
-
-    // In cloud, enforce verification and block flags first
-    if (team.isBlocked) {
-      return {
-        isLimitReached: true,
-        limit: 0,
-        reason: LimitReason.EMAIL_BLOCKED,
-      };
     }
 
     // Bounce / complaint rate enforcement (7-day rolling window)
