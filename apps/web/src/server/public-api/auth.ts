@@ -45,6 +45,23 @@ export const getTeamFromToken = async (c: Context) => {
     });
   }
 
+  // Block API access if any admin on the team is banned
+  const bannedAdmin = await db.teamUser.findFirst({
+    where: {
+      teamId: team.id,
+      role: "ADMIN",
+      user: { isBanned: true },
+    },
+    select: { userId: true },
+  });
+
+  if (bannedAdmin) {
+    throw new ByteSendApiError({
+      code: "FORBIDDEN",
+      message: "Account suspended. Please contact support via Discord: https://discord.com/invite/BU8n8pJv8S",
+    });
+  }
+
   // No await so it won't block the request. Need to be moved to a queue in future
   db.apiKey
     .update({

@@ -45,6 +45,12 @@ export const UpgradeModal = () => {
                   "You have reached your monthly sending limit.",
                 [LimitReason.MARKETING_NOT_AVAILABLE]:
                   "This marketing capability is not available on your current plan.",
+                [LimitReason.CONTACTS]:
+                  "You have reached the contact limit for your current plan.",
+                [LimitReason.BOUNCE_RATE_EXCEEDED]:
+                  "Email sending is paused because your bounce rate is too high.",
+                [LimitReason.COMPLAINT_RATE_EXCEEDED]:
+                  "Email sending is paused because your complaint rate is too high.",
               };
               return reason
                 ? `${messages[reason] ?? ""} Upgrade to continue.`

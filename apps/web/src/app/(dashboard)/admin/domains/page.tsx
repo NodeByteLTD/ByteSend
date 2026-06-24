@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@bytesend/ui/src/button";
 import { Input } from "@bytesend/ui/src/input";
@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@bytesend/ui/src/table";
 import { Badge } from "@bytesend/ui/src/badge";
+import { toast } from "@bytesend/ui/src/toaster";
 import { api } from "~/trpc/react";
 import { isCloud } from "~/utils/common";
 import { DomainStatusBadge } from "../../domains/domain-badge";
@@ -33,6 +34,22 @@ export default function AdminDomainsPage() {
     { page, pageSize: 20, query: query || undefined },
     { placeholderData: (prev) => prev },
   );
+
+  const forceVerify = api.admin.adminForceVerifyDomain.useMutation({
+    onSuccess: () => {
+      toast.success("Domain force-verified");
+      void domainsQuery.refetch();
+    },
+    onError: (error) => toast.error(error.message ?? "Failed to verify domain"),
+  });
+
+  const deleteDomain = api.admin.adminDeleteDomain.useMutation({
+    onSuccess: () => {
+      toast.success("Domain deleted");
+      void domainsQuery.refetch();
+    },
+    onError: (error) => toast.error(error.message ?? "Failed to delete domain"),
+  });
 
   if (!isCloud()) {
     return (
@@ -81,25 +98,26 @@ export default function AdminDomainsPage() {
               <TableHead>Region</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tracking</TableHead>
-              <TableHead className="rounded-tr-xl">Added</TableHead>
+              <TableHead>Added</TableHead>
+              <TableHead className="rounded-tr-xl text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {domainsQuery.isLoading ? (
               <TableRow className="h-32">
-                <TableCell colSpan={6} className="py-4 text-center">
+                <TableCell colSpan={7} className="py-4 text-center">
                   <Spinner className="mx-auto h-6 w-6" innerSvgClass="stroke-primary" />
                 </TableCell>
               </TableRow>
             ) : domainsQuery.isError ? (
               <TableRow className="h-32">
-                <TableCell colSpan={6} className="py-4 text-center text-destructive">
+                <TableCell colSpan={7} className="py-4 text-center text-destructive">
                   Failed to load domains.
                 </TableCell>
               </TableRow>
             ) : !domainsQuery.data?.domains.length ? (
               <TableRow className="h-32">
-                <TableCell colSpan={6} className="py-4 text-center">
+                <TableCell colSpan={7} className="py-4 text-center">
                   No domains found.
                 </TableCell>
               </TableRow>
@@ -136,6 +154,35 @@ export default function AdminDomainsPage() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDistanceToNow(new Date(domain.createdAt), { addSuffix: true })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {domain.status !== "SUCCESS" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                          disabled={forceVerify.isPending}
+                          title="Force verify"
+                          onClick={() => forceVerify.mutate({ domainId: domain.id })}
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        disabled={deleteDomain.isPending}
+                        title="Delete domain"
+                        onClick={() => {
+                          if (!window.confirm(`Delete domain "${domain.name}"? This is permanent.`)) return;
+                          deleteDomain.mutate({ domainId: domain.id });
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

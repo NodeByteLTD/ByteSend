@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { unsubscribeContactFromLink } from "~/server/service/campaign-service";
 import { logger } from "~/server/logger/log";
 
+// Redirect click-based clients (Outlook etc.) to the user-facing unsubscribe page.
+// Mailbox providers that support RFC 8058 one-click will use POST below instead.
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const hash = url.searchParams.get("hash");
+
+  const dest = new URL("/unsubscribe", url.origin);
+  if (id) dest.searchParams.set("id", id);
+  if (hash) dest.searchParams.set("hash", hash);
+
+  return NextResponse.redirect(dest, { status: 302 });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const url = new URL(request.url);

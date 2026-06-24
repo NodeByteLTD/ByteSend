@@ -242,6 +242,7 @@ export async function sendRawEmail({
   region,
   configurationSetName,
   unsubUrl,
+  unsubOneClickUrl,
   isBulk,
   inReplyToMessageId,
   emailId,
@@ -256,6 +257,7 @@ export async function sendRawEmail({
   replyTo?: string[];
   to?: string[];
   unsubUrl?: string;
+  unsubOneClickUrl?: string;
   isBulk?: boolean;
   inReplyToMessageId?: string;
   emailId?: string;
@@ -282,6 +284,7 @@ export async function sendRawEmail({
         emailId,
         headers,
         unsubUrl,
+        unsubOneClickUrl,
         isBulk,
         inReplyToMessageId,
       }),

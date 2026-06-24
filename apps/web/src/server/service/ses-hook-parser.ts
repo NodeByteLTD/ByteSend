@@ -31,7 +31,7 @@ import { getChildLogger, logger, withLogger } from "../logger/log";
 import { randomUUID } from "crypto";
 import { SuppressionService } from "./suppression-service";
 import { WebhookService } from "./webhook-service";
-import { sendToDiscord } from "./notification-service";
+import { NotificationProviderService } from "./notification-provider-service";
 
 export async function parseSesHook(data: SesEvent) {
   const mailStatus = getEmailStatus(data);
@@ -190,12 +190,26 @@ export async function parseSesHook(data: SesEvent) {
       );
     }
 
-    const eventLabel = isHardBounced ? "Hard bounce" : "Complaint";
-    const recipients = isHardBounced
-      ? (data.bounce?.bouncedRecipients?.map((r) => r.emailAddress) ?? [])
-      : (data.complaint?.complainedRecipients?.map((r) => r.emailAddress) ?? []);
-    sendToDiscord(
-      `**⚠️ ${eventLabel} detected**\n**Email ID:** ${email.id}\n**Subject:** ${email.subject ?? "—"}\n**Recipient(s):** ${recipients.join(", ") || email.to}\n**Team ID:** ${email.teamId}`,
+    const eventLabel = isHardBounced ? "Hard Bounce" : "Complaint";
+    const recipientCount = isHardBounced
+      ? (data.bounce?.bouncedRecipients?.length ?? email.to.length)
+      : (data.complaint?.complainedRecipients?.length ?? email.to.length);
+    const eventType = isHardBounced ? "EMAIL_BOUNCED" : "EMAIL_COMPLAINED";
+
+    NotificationProviderService.broadcastNotification(
+      email.teamId,
+      eventType as import("@prisma/client").NotificationEventType,
+      {
+        title: `⚠️ ${eventLabel} Detected`,
+        description: `A ${eventLabel.toLowerCase()} was triggered for an outgoing email.`,
+        color: isHardBounced ? "#EF4444" : "#F97316",
+        fields: [
+          { name: "Email ID", value: email.id, inline: true },
+          { name: "Recipients Affected", value: String(recipientCount), inline: true },
+          { name: "Subject", value: email.subject ?? "—", inline: false },
+        ],
+        timestamp: true,
+      }
     ).catch(() => void 0);
   }
 

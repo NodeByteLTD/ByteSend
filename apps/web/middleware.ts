@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
     const publicPaths = [
         "/login",
         "/signup",
+        "/banned",
         "/api",
         "/auth",
         "/",
@@ -40,6 +41,11 @@ export async function middleware(request: NextRequest) {
         if (!token) {
             // Not authenticated, redirect to login
             return NextResponse.redirect(new URL("/login", request.url));
+        }
+
+        // Redirect banned users before any other checks
+        if (token.isBanned) {
+            return NextResponse.redirect(new URL("/banned", request.url));
         }
 
         // User is authenticated. Check if they have 2FA enabled.

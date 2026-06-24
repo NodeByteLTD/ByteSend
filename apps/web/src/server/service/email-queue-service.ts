@@ -13,6 +13,7 @@ import { LimitService } from "./limit-service";
 import { sanitizeCustomHeaders } from "~/server/utils/email-headers";
 import { getStripe } from "../billing/payments";
 import { METER_EVENT_NAMES } from "@bytesend/lib";
+import { createOneClickUnsubUrl } from "./campaign-service";
 // Notifications about limits are handled inside LimitService.
 
 // SES error names that are transient and should be retried
@@ -407,6 +408,13 @@ async function executeEmail(job: QueueEmailJob) {
   const unsubUrl = job.data.unsubUrl;
   const isBulk = job.data.isBulk;
 
+  // Derive one-click unsubscribe URL for tracked marketing emails (campaign sends).
+  // The regular unsubUrl (HTML link) is kept for click-based clients (Outlook etc.).
+  const unsubOneClickUrl =
+    email.contactId && email.campaignId
+      ? createOneClickUnsubUrl(email.contactId, email.campaignId)
+      : undefined;
+
   const text = email.text
     ? email.text
     : email.campaignId && email.html
@@ -467,6 +475,7 @@ async function executeEmail(job: QueueEmailJob) {
       configurationSetName,
       attachments: attachments.length > 0 ? attachments : undefined,
       unsubUrl,
+      unsubOneClickUrl,
       isBulk,
       inReplyToMessageId,
       emailId: email.id,

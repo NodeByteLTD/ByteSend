@@ -116,9 +116,21 @@ export const publicProcedure = t.procedure;
  *
  * Ensures a session exists. Useful for flows where users need access.
  */
-export const authedProcedure = t.procedure.use(({ ctx, next }) => {
+export const authedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const user = await db.user.findUnique({
+    where: { id: ctx.session.user.id },
+    select: { isBanned: true },
+  });
+
+  if (user?.isBanned) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Your account has been suspended. Please contact support via Discord.",
+    });
   }
 
   return next({

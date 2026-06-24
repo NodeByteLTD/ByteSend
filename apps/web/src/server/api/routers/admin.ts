@@ -43,7 +43,10 @@ const teamAdminSelection = {
   apiRateLimit: true,
   dailyEmailLimit: true,
   isBlocked: true,
+  isActive: true,
   billingEmail: true,
+  extraDomainSlots: true,
+  extraMemberSlots: true,
   createdAt: true,
   teamUsers: {
     select: {
@@ -434,27 +437,20 @@ export const adminRouter = createTRPCRouter({
         dailyEmailLimit: z.number().int().min(-1).max(10_000_000),
         isBlocked: z.boolean(),
         plan: z.enum(["FREE", "HOBBY", "LITE", "BASIC", "LIFETIME"]),
+        extraDomainSlots: z.number().int().min(0).max(1_000).optional(),
+        extraMemberSlots: z.number().int().min(0).max(1_000).optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const { teamId, ...data } = input;
 
-      if (isCloud()) {
-        const existingTeam = await db.team.findUnique({
-          where: { id: teamId },
-          select: { plan: true },
-        });
+      const existingTeam = await db.team.findUnique({
+        where: { id: teamId },
+        select: { id: true },
+      });
 
-        if (!existingTeam) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
-        }
-
-        if (existingTeam.plan !== data.plan && !ctx.session.user.isEnvAdmin) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Only founder/admin env accounts can change team plans.",
-          });
-        }
+      if (!existingTeam) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
       }
 
       const updatedTeam = await db.team.update({
@@ -487,13 +483,6 @@ export const adminRouter = createTRPCRouter({
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Plan assignment is only available in the cloud deployment",
-        });
-      }
-
-      if (!ctx.session.user.isEnvAdmin) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only founder/admin env accounts can assign plans or generate payment links.",
         });
       }
 
@@ -667,6 +656,53 @@ export const adminRouter = createTRPCRouter({
       ]);
 
       return { teams, total, page, pageSize };
+    }),
+
+  adminForceVerifyDomain: adminProcedure
+    .input(z.object({ domainId: z.number() }))
+    .mutation(async ({ input }) => {
+      const domain = await db.domain.findUnique({ where: { id: input.domainId } });
+      if (!domain) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found" });
+      }
+      const updated = await db.domain.update({
+        where: { id: input.domainId },
+        data: {
+          status: "SUCCESS",
+          isVerifying: false,
+          errorMessage: null,
+        },
+        select: adminDomainSelection,
+      });
+      logger.info({ domainId: input.domainId }, "[AdminRouter]: Domain force-verified");
+      return updated;
+    }),
+
+  adminDeleteDomain: adminProcedure
+    .input(z.object({ domainId: z.number() }))
+    .mutation(async ({ input }) => {
+      const domain = await db.domain.findUnique({ where: { id: input.domainId } });
+      if (!domain) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Domain not found" });
+      }
+      await db.domain.delete({ where: { id: input.domainId } });
+      logger.info({ domainId: input.domainId }, "[AdminRouter]: Domain deleted by admin");
+      return { success: true };
+    }),
+
+  adminDeleteTeam: adminProcedure
+    .input(z.object({ teamId: z.number() }))
+    .mutation(async ({ input }) => {
+      const team = await db.team.findUnique({
+        where: { id: input.teamId },
+        select: { id: true, name: true },
+      });
+      if (!team) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
+      }
+      await db.team.delete({ where: { id: input.teamId } });
+      logger.info({ teamId: input.teamId, teamName: team.name }, "[AdminRouter]: Team deleted by admin");
+      return { success: true };
     }),
 
   getEmailAnalytics: adminProcedure
