@@ -1,0 +1,200 @@
+---
+title: Campaigns & Broadcasts
+description: "Send marketing emails and broadcast messages to your contact lists"
+icon: megaphone
+---
+
+## What Is a Campaign?
+
+A campaign is a marketing email sent to a **contact book**: one message, many recipients. Use campaigns for:
+
+- Newsletters and product updates
+- Promotional emails and announcements
+- Onboarding sequences and drip emails
+- Re-engagement campaigns
+
+Campaigns are different from **transactional emails** (which go to a single recipient in response to an action). Campaigns target your subscriber lists and are subject to monthly send limits based on your plan.
+
+---
+
+## Campaigns vs. Transactional Emails
+
+| Feature | Campaigns | Transactional |
+| ------- | --------- | ------------- |
+| Recipients | Contact book | Individual `to` address |
+| Personalization | Contact properties (`{{firstName}}`) | Custom per-request |
+| Scheduling | Yes — schedule ahead | No |
+| Unsubscribe | Automatic opt-out handling | Manual |
+| Use case | Marketing, newsletters | Receipts, alerts, auth codes |
+| Dashboard | Campaign analytics | Email logs |
+
+---
+
+## Creating a Campaign
+
+### Via the dashboard
+
+1. Go to [Campaigns](https://bytesend.cloud/campaigns)
+2. Click **New Campaign**
+3. Fill in:
+   - **Name** — internal label (not visible to recipients)
+   - **Subject** — email subject line
+   - **From address** — must use a [verified domain](https://bytesend.cloud/domains)
+   - **Reply-to** (optional)
+4. Design your email in the built-in editor or paste HTML
+5. Select the **contact book** to send to
+6. Click **Save Draft**
+
+### Via the API
+
+```bash
+curl -X POST https://bytesend.cloud/api/v1/campaigns \
+  -H "Authorization: Bearer bs_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "June Newsletter",
+    "subject": "What'\''s new in June",
+    "from": "hello@example.com",
+    "contactBookId": "clzeydgeygff"
+  }'
+```
+
+---
+
+## Campaign States
+
+| State | Description |
+| ----- | ----------- |
+| `DRAFT` | Saved but not sent or scheduled |
+| `SCHEDULED` | Will send at the specified time |
+| `SENDING` | Currently being delivered |
+| `SENT` | Delivery complete |
+| `PAUSED` | Manually paused mid-send |
+| `CANCELLED` | Cancelled before or during send |
+
+---
+
+## Scheduling a Campaign
+
+Schedule a campaign to send at a future time:
+
+```bash
+curl -X POST https://bytesend.cloud/api/v1/campaigns/{campaignId}/schedule \
+  -H "Authorization: Bearer bs_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"scheduledAt": "2026-07-01T09:00:00Z"}'
+```
+
+Campaigns can be re-scheduled or cancelled at any time before the send starts.
+
+### Cancelling a scheduled campaign
+
+```bash
+curl -X DELETE https://bytesend.cloud/api/v1/campaigns/{campaignId} \
+  -H "Authorization: Bearer bs_your_api_key"
+```
+
+---
+
+## Pausing and Resuming
+
+If a campaign is in progress and you need to stop it (for example, you spotted a typo), you can pause it:
+
+```bash
+# Pause
+curl -X POST https://bytesend.cloud/api/v1/campaigns/{campaignId}/pause \
+  -H "Authorization: Bearer bs_your_api_key"
+
+# Resume
+curl -X POST https://bytesend.cloud/api/v1/campaigns/{campaignId}/resume \
+  -H "Authorization: Bearer bs_your_api_key"
+```
+
+<Note>
+Emails already sent before the pause are not recalled. Pausing stops further sends to remaining recipients.
+</Note>
+
+---
+
+## Personalization
+
+Use `{{variableName}}` syntax in your subject line and email body to inject contact properties:
+
+```
+Subject: Hi {{firstName}}, here's what's new this month
+```
+
+```html
+<p>Hey {{firstName}},</p>
+<p>You're on the <strong>{{plan}}</strong> plan — here's what's new for you.</p>
+```
+
+If a contact doesn't have a value for a variable, it renders as an empty string. See [Campaign Personalization](/guides/campaign-personalization) for advanced usage and fallback values.
+
+---
+
+## Unsubscribe Handling
+
+ByteSend automatically handles unsubscribes:
+
+- Every campaign email includes an unsubscribe link in the footer (added automatically)
+- When a recipient clicks unsubscribe, their contact status is set to **Unsubscribed**
+- Unsubscribed contacts are excluded from all future campaign sends
+- You don't need to handle this manually
+
+---
+
+## Campaign Analytics
+
+After sending, view per-campaign metrics in the dashboard:
+
+- **Delivered** — successfully reached the inbox
+- **Opened** — recipient opened the email
+- **Clicked** — recipient clicked a link
+- **Bounced** — permanently undeliverable addresses
+- **Complained** — marked as spam
+- **Unsubscribed** — opted out via the unsubscribe link
+
+You can also pull these via the [Analytics API](/api-reference/analytics/email-time-series).
+
+---
+
+## Plan Limits
+
+| Plan | Campaigns | Monthly emails |
+| ---- | --------- | -------------- |
+| Free | 3 | 12,500 |
+| Hobby | 30 | 25,000 |
+| Lite | 100 | 50,000 |
+| Pro | 200 | 100,000 |
+| Lifetime | 1,000 | 500,000 |
+
+Marketing emails are included on all plans. Overage billing applies on paid plans when you exceed the monthly limit.
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Test before sending">
+    Send a test email to yourself from the campaign preview screen before scheduling to a full contact book.
+  </Accordion>
+  <Accordion title="Warm up before large sends">
+    If your domain is new or you haven't sent campaigns in a while, start with a smaller segment and ramp up. See the [Deliverability guide](/guides/deliverability) for warm-up recommendations.
+  </Accordion>
+  <Accordion title="Segment your audience">
+    Use multiple contact books to segment by interest, plan, or engagement level. A targeted campaign to 500 engaged users will always outperform a blast to 5,000 cold contacts.
+  </Accordion>
+  <Accordion title="Watch your reputation metrics">
+    After each campaign, check the [Deliverability dashboard](https://bytesend.cloud/dashboard) for bounce and complaint rates. If either spikes, pause campaigns and clean your list before the next send.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Next Steps
+
+- [Set up Contact Books](/guides/contact-books)
+- [Personalize your campaigns](/guides/campaign-personalization)
+- [Monitor deliverability](/guides/deliverability)
+- [API Reference: Campaigns](/api-reference/campaigns/create-campaign)

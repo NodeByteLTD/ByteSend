@@ -1,0 +1,86 @@
+---
+title: Discord OAuth Authentication
+description: "Sign in to ByteSend using your Discord account"
+icon: discord
+---
+
+## Overview
+
+ByteSend supports Discord OAuth, letting you sign in with your Discord account for quick, passwordless access.
+
+## Benefits
+
+- **Single Sign-On**: Use your Discord account to access ByteSend
+- **Automatic avatar sync**: Your Discord profile picture is imported and kept up to date on each sign-in
+- **Community integration**: Same account you use in our [Discord server](https://discord.gg/Bg3Sf5fqa4)
+- **Account linking**: Connect Discord to an existing ByteSend account
+
+## Signing In with Discord
+
+1. Visit [ByteSend](https://bytesend.cloud)
+2. Click **Sign in with Discord** on the login page
+3. Log in to Discord if prompted, then click **Authorize**
+4. You'll be redirected back to the ByteSend dashboard
+
+### First-time sign-in
+
+On your first Discord login, ByteSend will:
+- Create a new account linked to your Discord email
+- Import your Discord avatar as your profile picture
+- Set up a default workspace for your account
+
+### Linking to an existing account
+
+If you already have a ByteSend account using the same email address as your Discord account, OAuth will automatically link them. You can then sign in with either method going forward.
+
+## Permissions Requested
+
+ByteSend requests the minimal Discord scopes:
+
+- **`identify`**: Your Discord username and avatar
+- **`email`**: Your Discord account email address
+
+ByteSend never requests access to your Discord servers, messages, or any guild data.
+
+## Profile Picture Sync
+
+Your Discord avatar is refreshed automatically on every sign-in. If you update your Discord avatar, sign out and back in to ByteSend to sync the latest version.
+
+## Security
+
+- OAuth tokens are encrypted at rest and never exposed in responses or logs
+- Tokens are refreshed automatically on each session
+- Signing out of ByteSend does not affect your Discord session
+
+## Revoking Access
+
+To disconnect ByteSend from your Discord account:
+
+1. Open Discord and go to **User Settings → Authorized Apps**
+2. Find "ByteSend" and click **Deauthorize**
+3. You'll no longer be able to sign in with Discord until you re-authorize
+
+After revoking, you can still sign in via email magic link if your account uses the same email as your Discord account.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="'Sign in with Discord' button isn't visible">
+    Discord OAuth must be enabled by the platform. On self-hosted ByteSend, the administrator needs to set `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`. Contact your instance admin.
+  </Accordion>
+  <Accordion title="Avatar isn't updating">
+    Your avatar is synced from Discord on each sign-in. Sign out and back in to force a refresh.
+  </Accordion>
+  <Accordion title="Authorization failed or callback error">
+    Clear your browser cookies and try again. If you're using a VPN, try disabling it. Discord sometimes blocks OAuth callbacks from certain regions.
+  </Accordion>
+  <Accordion title="Wrong account was linked">
+    Contact [ByteSend Support on Discord](https://discord.gg/Bg3Sf5fqa4) and include both email addresses. We can manually unlink accounts.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- [Create your first API key](/guides/api-authentication)
+- [Add a verified domain](https://bytesend.cloud/domains)
+- [Join the ByteSend Discord community](https://discord.gg/Bg3Sf5fqa4)

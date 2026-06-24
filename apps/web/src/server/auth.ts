@@ -220,11 +220,12 @@ function getProviders() {
 export const authOptions: NextAuthOptions = {
   callbacks: {
     signIn: async ({ user, account, profile, credentials }) => {
-      // Block banned users from signing in
-      const userId = typeof user.id === "string" ? parseInt(user.id, 10) : user.id;
-      if (userId) {
+      // Block banned users from signing in.
+      // Look up by email — user.id is the OAuth provider's ID for OAuth sign-ins
+      // (e.g. a Discord snowflake that overflows INT4), not the database user ID.
+      if (user.email) {
         const dbUser = await db.user.findUnique({
-          where: { id: userId },
+          where: { email: user.email },
           select: { isBanned: true },
         });
         if (dbUser?.isBanned) {

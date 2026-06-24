@@ -37,14 +37,12 @@ curl -X GET https://bytesend.cloud/api/v1/domains \
 #### JavaScript/TypeScript
 
 ```typescript
-import { ByteSend } from '@bytesend/js';
+import { ByteSend } from "bytesend-js";
 
-const client = new ByteSend({
-  apiKey: process.env.BYTESEND_API_KEY,
-});
+const bytesend = new ByteSend(process.env.BYTESEND_API_KEY!);
 
 // Now use the client
-const emails = await client.emails.list();
+const emails = await bytesend.emails.list();
 ```
 
 #### Python
@@ -52,10 +50,10 @@ const emails = await client.emails.list();
 ```python
 from bytesend import ByteSend
 
-client = ByteSend(api_key=os.getenv('BYTESEND_API_KEY'))
+bytesend = ByteSend(api_key=os.getenv("BYTESEND_API_KEY"))
 
 # Now use the client
-emails = client.emails.list()
+emails = bytesend.emails.list()
 ```
 
 ## API Key Management

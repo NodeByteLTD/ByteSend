@@ -1,0 +1,162 @@
+---
+title: Contact Books
+description: "Organize your subscribers and contacts into manageable groups"
+icon: address-book
+---
+
+## What Is a Contact Book?
+
+A contact book is a mailing list. Each contact has an email address, optional name fields, a subscription status, and any number of custom properties you define.
+
+Contact books are the foundation of ByteSend's marketing features. You need at least one contact book before you can:
+- Send broadcast campaigns
+- Use double opt-in confirmation flows
+- Segment your audience for targeted sends
+
+---
+
+## Creating a Contact Book
+
+### Via the dashboard
+
+1. Go to [Contacts](https://bytesend.cloud/contacts)
+2. Click **New Contact Book**
+3. Give it a name (e.g. "Newsletter Subscribers", "Product Updates")
+4. Optionally enable [Double Opt-In](/guides/double-opt-in)
+5. Click **Create**
+
+### Via the API
+
+```bash
+curl -X POST https://bytesend.cloud/api/v1/contactBooks \
+  -H "Authorization: Bearer bs_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Newsletter Subscribers"}'
+```
+
+```typescript
+const book = await bytesend.contactBooks.create({
+  name: "Newsletter Subscribers",
+});
+console.log(book.id); // keep this id for adding contacts
+```
+
+---
+
+## Adding Contacts
+
+Contacts can be added one at a time, in bulk, or imported from a CSV.
+
+### Single contact
+
+```typescript
+await bytesend.contacts.create(contactBookId, {
+  email: "jane@example.com",
+  firstName: "Jane",
+  lastName: "Smith",
+});
+```
+
+### Bulk import (API)
+
+Use the bulk create endpoint to add up to 1,000 contacts in one request:
+
+```typescript
+await bytesend.contacts.bulkCreate(contactBookId, [
+  { email: "alice@example.com", firstName: "Alice" },
+  { email: "bob@example.com", firstName: "Bob" },
+  { email: "carol@example.com", firstName: "Carol" },
+]);
+```
+
+### CSV import (dashboard)
+
+1. Go to your contact book → **Import**
+2. Upload a CSV with columns: `email`, `firstName` (optional), `lastName` (optional)
+3. Map CSV columns to contact fields
+4. Click **Import**
+
+---
+
+## Contact Statuses
+
+Every contact in a contact book has one of these statuses:
+
+| Status | Description |
+| ------ | ----------- |
+| **Subscribed** | Active and will receive campaign emails |
+| **Pending** | Added but awaiting double opt-in confirmation |
+| **Unsubscribed** | Opted out — will not receive campaign emails |
+
+<Warning>
+Contacts with **Pending** or **Unsubscribed** status are excluded from campaign sends. They will not receive any marketing emails from ByteSend.
+</Warning>
+
+---
+
+## Custom Properties
+
+Beyond the standard `email`, `firstName`, and `lastName` fields, contacts support custom key-value properties for anything relevant to your audience: plan tier, signup source, account ID, etc.
+
+```typescript
+await bytesend.contacts.create(contactBookId, {
+  email: "alice@example.com",
+  firstName: "Alice",
+  properties: {
+    plan: "pro",
+    signupSource: "landing-page",
+    userId: "usr_abc123",
+  },
+});
+```
+
+Custom properties can then be used in [campaign personalization](/guides/campaign-personalization) via `{{plan}}`, `{{signupSource}}`, etc.
+
+---
+
+## Upserting Contacts
+
+The upsert endpoint creates a contact if they don't exist, or updates their record if they do. This is ideal for syncing contacts from your app on signup or profile update:
+
+```typescript
+await bytesend.contacts.upsert(contactBookId, {
+  email: "alice@example.com",
+  firstName: "Alice",
+  properties: { plan: "pro" },
+});
+```
+
+---
+
+## Unsubscribing Contacts
+
+When a recipient unsubscribes, update their status immediately:
+
+```typescript
+await bytesend.contacts.update(contactBookId, contactId, {
+  subscribed: false,
+});
+```
+
+If you handle unsubscribes via webhooks (e.g., reading from `email.complained`), do this automatically in your webhook handler so your list stays clean.
+
+---
+
+## Plan Limits
+
+| Plan | Contact Books | Contacts per account |
+| ---- | ------------- | -------------------- |
+| Free | 5 | 100 |
+| Hobby | 10 | 200 |
+| Lite | 25 | 300 |
+| Pro | 50 | 1,000 |
+| Lifetime | 200 | 10,000 |
+
+---
+
+## Next Steps
+
+- [Enable Double Opt-In](/guides/double-opt-in) to verify new subscribers
+- [Send a Campaign](/guides/campaigns) to your contact book
+- [Personalize emails](/guides/campaign-personalization) with contact properties
+- [API Reference: Contact Books](/api-reference/contacts/list-contact-books)
