@@ -7,8 +7,10 @@ const isCloud = env.NEXT_PUBLIC_IS_CLOUD;
 
 export function TopNav() {
   return (
-    <header className="py-3 border-b border-border/40 fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto max-w-5xl px-6 flex items-center justify-between gap-4 text-sm">
+    <header className="py-3 border-b border-border/40 fixed top-0 left-0 right-0 z-50">
+      {/* Blur layer is pointer-events-none to prevent iOS Safari from intercepting touches on page content */}
+      <div className="pointer-events-none absolute inset-0 bg-background/70 backdrop-blur-xl supports-backdrop-filter:bg-background/60" />
+      <div className="relative mx-auto max-w-5xl px-6 flex items-center justify-between gap-4 text-sm">
         {/* Logo — server-rendered, zero client JS */}
         <Link href="/" className="flex items-center gap-2 group">
           <Image src="/logo-squircle.png" alt="ByteSend" width={28} height={28} />

@@ -1,35 +1,141 @@
 ---
-title: Introduction
-description: "Fundamental concepts of ByteSend's API."
+title: API Reference
+description: "Fundamental concepts of ByteSend's REST API"
 ---
 
 ## Base URL
 
-ByteSend's API is built on REST principles and is served over HTTPS. To ensure data privacy, unencrypted HTTP is not supported.
+ByteSend's API is served over HTTPS. All API endpoints are prefixed with:
 
-The Base URL for all API endpoints is:
-
-```sh Terminal
-https://bytesend.cloud/api/
 ```
+https://bytesend.cloud/api/v1
+```
+
+<Note>
+If you're running a self-hosted ByteSend instance, replace `https://bytesend.cloud` with your instance's base URL.
+</Note>
+
+---
 
 ## Authentication
 
-Authentication to ByteSend's API is performed via the Authorization header with a Bearer token. To authenticate, you need to include the Authorization header with the word Bearer followed by your token in your API requests like so:
+All API endpoints (except `/v1/smtp/auth`) require a Bearer token in the `Authorization` header:
 
-```sh Terminal
-Authorization: Bearer bs_12345
+```
+Authorization: Bearer bs_your_api_key
 ```
 
-You can create a new token/API key under your ByteSend [Settings > API Keys](https://bytesend.cloud/settings/api-keys).
+You can create API keys under [Settings → API Keys](https://bytesend.cloud/settings/api-keys). See the [API Authentication guide](/guides/api-authentication) for full details on generating and managing keys.
 
-### SMTP Authentication
+### SMTP authentication
 
-The SMTP relay server uses a different authentication method. Instead of Bearer tokens, SMTP clients authenticate using:
-
-- **Username**: The team's custom SMTP username (or the default `bytesend`)
+The SMTP relay server uses a different scheme. SMTP clients authenticate with:
+- **Username**: Your team's custom SMTP username (default: `bytesend`)
 - **Password**: Your API key
 
-The SMTP relay calls the [SMTP Auth endpoint](/api-reference/smtp/auth) to validate these credentials. This endpoint is **public** and does not require Bearer token authentication.
+---
 
-For more details, see the [SMTP relay documentation](/self-hosting/smtp-server).
+## Request Format
+
+All write requests (`POST`, `PATCH`, `PUT`) expect a JSON body:
+
+```
+Content-Type: application/json
+```
+
+---
+
+## Response Format
+
+Successful responses return JSON with a `2xx` status code. The shape varies by endpoint.
+
+```json
+{
+  "id": "email_abc123",
+  "status": "QUEUED",
+  "createdAt": "2026-06-24T10:00:00.000Z"
+}
+```
+
+---
+
+## Error Format
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Email not found"
+  }
+}
+```
+
+| Field | Description |
+| ----- | ----------- |
+| `error.code` | Machine-readable error code string |
+| `error.message` | Human-readable explanation |
+
+| Code | HTTP | Meaning |
+| ---- | ---- | ------- |
+| `BAD_REQUEST` | 400 | Invalid or missing request parameters |
+| `UNAUTHORIZED` | 401 | Missing or invalid API key |
+| `FORBIDDEN` | 403 | Request not permitted for this team |
+| `NOT_FOUND` | 404 | Resource not found |
+| `METHOD_NOT_ALLOWED` | 405 | Wrong HTTP method |
+| `NOT_UNIQUE` | 409 | Resource already exists |
+| `RATE_LIMITED` | 429 | Rate limit exceeded |
+| `INTERNAL_SERVER_ERROR` | 500 | Unexpected server error |
+
+See the [Error Codes guide](/guides/error-codes) for detailed descriptions and handling examples.
+
+---
+
+## Rate Limiting
+
+API requests are rate-limited per team per second. Rate limit headers are included on every response:
+
+| Header | Description |
+| ------ | ----------- |
+| `X-RateLimit-Limit` | Max requests per second |
+| `X-RateLimit-Remaining` | Requests remaining in current window |
+| `X-RateLimit-Reset` | Unix timestamp when window resets |
+| `Retry-After` | Seconds to wait (only on `429` responses) |
+
+When you exceed the limit, you receive a `429 RATE_LIMITED` response. See the [Rate Limits guide](/guides/rate-limits) for retry strategies.
+
+<Note>
+Rate limiting is disabled on self-hosted ByteSend instances.
+</Note>
+
+---
+
+## Pagination
+
+List endpoints return paginated results. Use the `page` and `limit` query parameters:
+
+```
+GET /v1/emails?page=2&limit=25
+```
+
+Responses include pagination metadata:
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "limit": 25,
+    "total": 150,
+    "hasNextPage": true,
+    "hasPrevPage": true
+  }
+}
+```
+
+---
+
+## Interactive Playground
+
+Every endpoint in the API Reference has a built-in request playground. Click the **Try it** button on any endpoint page to send live requests directly from the docs using your API key.

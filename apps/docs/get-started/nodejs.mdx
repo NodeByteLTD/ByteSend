@@ -1,97 +1,277 @@
 ---
-title: NodeJS
-description: "Send your mail using ByteSend in NodeJS"
+title: Node.js
+description: "Send emails from Node.js and TypeScript using the ByteSend SDK"
 icon: node-js
 ---
 
 ## Prerequisites
 
-- [ByteSend API key](https://bytesend.cloud/settings/api-keys)
-- [Verified domain](https://bytesend.cloud/domains)
+- Node.js 18 or later
+- A [ByteSend API key](https://bytesend.cloud/settings/api-keys)
+- A [verified domain](https://bytesend.cloud/domains) to send from
 
-## Using SDK
+---
 
-<Steps>
-  <Step title="Install SDK">
-    <CodeGroup>
-      ```bash npm
-      npm install bytesend-js
-      ```
+## Installation
 
-      ```bash yarn
-      yarn add bytesend-js
-      ```
+<CodeGroup>
+```bash npm
+npm install bytesend-js
+```
 
-      ```bash pnpm
-      pnpm add bytesend-js
-      ```
+```bash yarn
+yarn add bytesend-js
+```
 
-      ```bash bun
-      bun add bytesend-js
-      ```
-    </CodeGroup>
+```bash pnpm
+pnpm add bytesend-js
+```
 
-  </Step>
-  <Step title="Initialize SDK">
-    Get the API key from the [ByteSend dashboard](https://bytesend.cloud/settings/api-keys) and initialize the SDK
+```bash bun
+bun add bytesend-js
+```
+</CodeGroup>
 
-    ```javascript
-    import { ByteSend } from "bytesend-js";
+---
 
-    const bytesend = new ByteSend("bs_12345");
-    ```
+## Quick Start
 
-    If you are running a self-hosted version of ByteSend, pass the base URL as the
-    second argument:
+```typescript
+import { ByteSend } from "bytesend-js";
 
-    ```javascript
-    const bytesend = new ByteSend("bs_12345", "https://your-bytesend-instance.com");
-    ```
+const bytesend = new ByteSend(process.env.BYTESEND_API_KEY!);
 
-  </Step>
-  <Step title="Send Email">
-    ```javascript
-    bytesend.emails.send({
-      to: "hello@acme.com",
-      from: "hello@company.com",
-      subject: "ByteSend email",
-      html: "<p>ByteSend is the best way to send emails</p>",
-      text: "ByteSend is the best way to send emails",
-      headers: {
-        "X-Campaign": "welcome",
-      },
-    });
-    ```
+const email = await bytesend.emails.send({
+  from: "hello@yourdomain.com",
+  to: "recipient@example.com",
+  subject: "Hello from ByteSend",
+  html: "<p>This email was sent via the ByteSend SDK.</p>",
+  text: "This email was sent via the ByteSend SDK.",
+});
 
-    > Custom headers are forwarded as-is. ByteSend only manages the `X-ByteSend-Email-ID` and `References` headers.
-  </Step>
-</Steps>
+console.log("Sent:", email.id);
+```
 
-## Adding contacts programatically
+Store your API key in an environment variable, not in version control:
 
-<Steps>
-  <Step title="Get the contact book id">
-    Get the contact book id from the [ByteSend dashboard](https://bytesend.cloud/contacts/). Copy the contact book id
-  </Step>
-  <Step title="Add contacts">
+```bash .env
+BYTESEND_API_KEY=bs_your_api_key_here
+```
 
-    ```javascript
-    bytesend.contacts
-      .create("clzeydgeygff", {
-        email: "hey@bobdole.com",
-        firstName: "Bob",
-        lastName: "Dole",
-      })
-    ```
+---
 
-  </Step>
+## Self-Hosted Instances
 
-  <Step title="Update contact">
-    ```javascript
-    bytesend.contacts.update("clzeydgeygff", contactId, {
-      firstName: "Bob",
-      lastName: "Dole",
-    });
-    ```
-  </Step>
-</Steps>
+If you're running a self-hosted ByteSend, pass your instance URL as the second argument:
+
+```typescript
+const bytesend = new ByteSend(
+  process.env.BYTESEND_API_KEY!,
+  "https://your-bytesend-instance.com"
+);
+```
+
+---
+
+## Sending Emails
+
+### Basic send
+
+```typescript
+await bytesend.emails.send({
+  from: "team@yourdomain.com",
+  to: "user@example.com",
+  subject: "Welcome!",
+  html: "<h1>Welcome to our app</h1>",
+});
+```
+
+### Multiple recipients
+
+```typescript
+await bytesend.emails.send({
+  from: "team@yourdomain.com",
+  to: ["alice@example.com", "bob@example.com"],
+  subject: "Team announcement",
+  html: "<p>Something big is happening.</p>",
+});
+```
+
+### With CC, BCC, and Reply-To
+
+```typescript
+await bytesend.emails.send({
+  from: "support@yourdomain.com",
+  to: "customer@example.com",
+  cc: "manager@yourdomain.com",
+  bcc: "archive@yourdomain.com",
+  replyTo: "noreply@yourdomain.com",
+  subject: "Your support ticket",
+  html: "<p>We've received your request.</p>",
+});
+```
+
+### Scheduling an email
+
+```typescript
+await bytesend.emails.send({
+  from: "team@yourdomain.com",
+  to: "user@example.com",
+  subject: "Scheduled message",
+  html: "<p>This was scheduled ahead of time.</p>",
+  scheduledAt: new Date("2026-07-01T09:00:00Z").toISOString(),
+});
+```
+
+### Custom headers and metadata
+
+```typescript
+await bytesend.emails.send({
+  from: "team@yourdomain.com",
+  to: "user@example.com",
+  subject: "Order confirmation",
+  html: "<p>Your order #12345 has been confirmed.</p>",
+  headers: {
+    "X-Order-ID": "12345",
+    "X-Customer-Tier": "premium",
+  },
+  metadata: {
+    orderId: "12345",
+    userId: "usr_abc",
+  },
+});
+```
+
+---
+
+## Batch Sending
+
+Send up to 100 emails in a single API call. Much more efficient than looping individual requests:
+
+```typescript
+await bytesend.emails.sendBatch([
+  {
+    from: "team@yourdomain.com",
+    to: "alice@example.com",
+    subject: "Your invoice",
+    html: "<p>Invoice for Alice</p>",
+  },
+  {
+    from: "team@yourdomain.com",
+    to: "bob@example.com",
+    subject: "Your invoice",
+    html: "<p>Invoice for Bob</p>",
+  },
+]);
+```
+
+---
+
+## Error Handling
+
+The SDK throws errors for failed API calls. Always wrap sends in try/catch in production:
+
+```typescript
+import { ByteSend } from "bytesend-js";
+
+const bytesend = new ByteSend(process.env.BYTESEND_API_KEY!);
+
+try {
+  const email = await bytesend.emails.send({
+    from: "team@yourdomain.com",
+    to: "user@example.com",
+    subject: "Hello",
+    html: "<p>Hello!</p>",
+  });
+  console.log("Email queued:", email.id);
+} catch (error) {
+  if (error instanceof Error) {
+    console.error("Send failed:", error.message);
+  }
+}
+```
+
+See the [Error Codes](/guides/error-codes) guide for the full list of API error codes and how to handle each one.
+
+---
+
+## Working with Contacts
+
+### Add a contact to a contact book
+
+```typescript
+const contact = await bytesend.contacts.create("your_contact_book_id", {
+  email: "jane@example.com",
+  firstName: "Jane",
+  lastName: "Smith",
+  properties: {
+    plan: "pro",
+    signupSource: "landing-page",
+  },
+});
+```
+
+### Upsert (create or update)
+
+```typescript
+await bytesend.contacts.upsert("your_contact_book_id", {
+  email: "jane@example.com",
+  firstName: "Jane",
+  properties: { plan: "enterprise" },
+});
+```
+
+### Unsubscribe a contact
+
+```typescript
+await bytesend.contacts.update("contact_book_id", "contact_id", {
+  subscribed: false,
+});
+```
+
+---
+
+## Webhook Verification
+
+Verify incoming webhook signatures to ensure requests are from ByteSend:
+
+```typescript
+import { ByteSend } from "bytesend-js";
+
+const bytesend = new ByteSend(process.env.BYTESEND_API_KEY!);
+const webhooks = bytesend.webhooks(process.env.BYTESEND_WEBHOOK_SECRET!);
+
+// Next.js App Router example
+export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  const event = webhooks.constructEvent(rawBody, {
+    headers: request.headers,
+  });
+
+  switch (event.type) {
+    case "email.delivered":
+      console.log("Delivered to:", event.data.to);
+      break;
+    case "email.bounced":
+      console.log("Bounced:", event.data.id, event.data.bounce?.type);
+      break;
+    case "email.complained":
+      console.log("Complaint from:", event.data.to);
+      break;
+  }
+
+  return new Response("ok");
+}
+```
+
+See the full [Webhooks guide](/guides/webhooks) for all event types and best practices.
+
+---
+
+## Next Steps
+
+- [Send your first email via the API](/api-reference/emails/send-email)
+- [Set up webhooks](/guides/webhooks)
+- [Work with contact books](/guides/contact-books)
+- [View the full API reference](/api-reference/introduction)

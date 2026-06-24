@@ -1,0 +1,80 @@
+---
+title: Google OAuth Authentication
+description: "Sign in to ByteSend using your Google account"
+icon: google
+---
+
+## Overview
+
+ByteSend supports Google OAuth, allowing you to sign in with your existing Google account. No separate password required.
+
+## Benefits
+
+- **Single Sign-On**: Use your Google account to access ByteSend
+- **Automatic profile sync**: Your name and profile picture are pulled from Google
+- **Account linking**: Connect Google to an existing ByteSend account
+- **Secure**: Backed by Google's authentication infrastructure
+
+## Signing In with Google
+
+1. Visit [ByteSend](https://bytesend.cloud)
+2. Click **Sign in with Google** on the login page
+3. Select your Google account or enter your Google email
+4. Review the permissions and click **Allow**
+5. You'll be redirected back to the ByteSend dashboard
+
+### First-time sign-in
+
+On your first Google OAuth login, ByteSend will:
+- Create a new account linked to your Google email
+- Import your display name and profile picture from Google
+- Set up a default workspace for your account
+
+### Linking to an existing account
+
+If you already have a ByteSend account with the same email address, Google OAuth will automatically link to it. You can then use either your original sign-in method or Google OAuth interchangeably.
+
+## Permissions Requested
+
+ByteSend only requests the minimum permissions needed:
+
+- **Profile**: Your name and profile picture
+- **Email**: Your Google email address to identify your account
+
+ByteSend never requests access to your Gmail messages, Google Drive, or any other Google services.
+
+## Security
+
+- ByteSend stores OAuth tokens securely and never exposes them in API responses or logs
+- Tokens are refreshed automatically, so you stay signed in without re-authorizing
+- Signing out of ByteSend does not sign you out of Google
+
+## Revoking Access
+
+To disconnect ByteSend from your Google account:
+
+1. Go to [Google Account → Security → Third-party apps](https://myaccount.google.com/connections)
+2. Find "ByteSend" and click **Remove access**
+3. You'll no longer be able to sign in with Google until you re-authorize
+
+After revoking, you can still sign in via email magic link if your account has the same email address.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="'Sign in with Google' button isn't visible">
+    Google OAuth must be enabled by the platform. On self-hosted ByteSend instances, the administrator needs to configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` environment variables. Contact your instance admin.
+  </Accordion>
+  <Accordion title="Authorization page shows an error">
+    Clear your browser cookies and try again. If the error persists, make sure the Google account has email verification enabled and is not a Google Workspace account with admin restrictions.
+  </Accordion>
+  <Accordion title="Wrong account was linked">
+    Contact [ByteSend Support on Discord](https://discord.gg/Bg3Sf5fqa4) and include both email addresses. We can manually unlink and re-link accounts.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- [Create your first API key](/guides/api-authentication)
+- [Add a verified domain](https://bytesend.cloud/domains)
+- [Send your first email](/api-reference/emails/send-email)

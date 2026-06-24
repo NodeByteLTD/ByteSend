@@ -1,0 +1,281 @@
+---
+title: Error Codes
+description: "Understand and handle API errors returned by ByteSend"
+icon: triangle-exclamation
+---
+
+## Error Response Format
+
+All API errors return a consistent JSON structure with an HTTP status code:
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Email not found"
+  }
+}
+```
+
+| Field             | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `error.code`      | Machine-readable error code string               |
+| `error.message`   | Human-readable description of what went wrong    |
+
+---
+
+## Error Codes
+
+### `BAD_REQUEST` (400)
+
+The request body or parameters are invalid or missing required fields.
+
+```json
+{
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Invalid email address in 'to' field"
+  }
+}
+```
+
+**Common causes:**
+- Missing required fields (`to`, `from`, `subject`)
+- Invalid email address format
+- Invalid enum value (e.g., a campaign status that doesn't exist)
+- Malformed JSON body
+
+---
+
+### `UNAUTHORIZED` (401)
+
+No API key was provided, or the provided key is invalid.
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Missing or invalid API key"
+  }
+}
+```
+
+**Common causes:**
+- Missing `Authorization` header
+- API key has been revoked
+- Typo in the API key value
+
+**Fix:** Include a valid Bearer token in every request:
+```
+Authorization: Bearer bs_your_api_key
+```
+
+---
+
+### `FORBIDDEN` (403)
+
+The API key is valid but the action is not permitted. This usually happens because the team is blocked, the resource belongs to another team, or the plan doesn't allow it.
+
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "This team has been blocked. Please contact support via Discord: https://discord.gg/Bg3Sf5fqa4"
+  }
+}
+```
+
+**Common causes:**
+- Team is blocked by platform administrators
+- Attempting to access a resource that belongs to another team
+- Action not permitted on the current plan
+
+---
+
+### `NOT_FOUND` (404)
+
+The requested resource does not exist, or it exists but belongs to a different team.
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Email not found"
+  }
+}
+```
+
+**Common causes:**
+- Invalid or deleted email, contact, domain, or campaign ID
+- ID belongs to a different team's resource
+
+---
+
+### `METHOD_NOT_ALLOWED` (405)
+
+The HTTP method used is not supported by this endpoint.
+
+```json
+{
+  "error": {
+    "code": "METHOD_NOT_ALLOWED",
+    "message": "Method not allowed"
+  }
+}
+```
+
+**Fix:** Check the API reference for the correct HTTP method (GET, POST, PATCH, DELETE, etc.).
+
+---
+
+### `NOT_UNIQUE` (409)
+
+A resource with the same unique identifier already exists.
+
+```json
+{
+  "error": {
+    "code": "NOT_UNIQUE",
+    "message": "A domain with this name already exists"
+  }
+}
+```
+
+**Common causes:**
+- Adding a domain that's already registered to your team
+- Creating a contact with an email address that already exists in that contact book
+
+---
+
+### `RATE_LIMITED` (429)
+
+You have exceeded the API rate limit. See [Rate Limits](/guides/rate-limits) for details.
+
+```json
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Rate limit exceeded. Try again in 1 seconds."
+  }
+}
+```
+
+The response also includes a `Retry-After` header indicating how many seconds to wait before retrying.
+
+---
+
+### `INTERNAL_SERVER_ERROR` (500)
+
+An unexpected error occurred on the ByteSend server. These are rare and typically transient.
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "something unexpected happened"
+  }
+}
+```
+
+**What to do:**
+- Retry the request with exponential backoff
+- If the error persists, contact support via [Discord](https://discord.gg/Bg3Sf5fqa4)
+
+---
+
+## Handling Errors in Code
+
+### JavaScript / TypeScript
+
+```typescript
+import { ByteSend } from "bytesend-js";
+
+const bytesend = new ByteSend(process.env.BYTESEND_API_KEY!);
+
+try {
+  const email = await bytesend.emails.send({
+    from: "hello@example.com",
+    to: "recipient@example.com",
+    subject: "Hello",
+    html: "<p>Hello!</p>",
+  });
+  console.log("Sent:", email.id);
+} catch (error) {
+  if (error instanceof Error) {
+    console.error("Failed:", error.message);
+  }
+}
+```
+
+### Handling specific codes (raw fetch)
+
+```typescript
+const response = await fetch("https://bytesend.cloud/api/v1/emails", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.BYTESEND_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ from: "...", to: "...", subject: "...", html: "..." }),
+});
+
+if (!response.ok) {
+  const { error } = await response.json();
+
+  switch (error.code) {
+    case "UNAUTHORIZED":
+      console.error("Check your API key");
+      break;
+    case "RATE_LIMITED":
+      const retryAfter = response.headers.get("Retry-After");
+      console.error(`Rate limited. Retry in ${retryAfter}s`);
+      break;
+    case "BAD_REQUEST":
+      console.error("Invalid request:", error.message);
+      break;
+    default:
+      console.error(`API error ${error.code}: ${error.message}`);
+  }
+}
+```
+
+### Python
+
+```python
+import bytesend
+import time
+
+client = bytesend.ByteSend(api_key=os.environ["BYTESEND_API_KEY"])
+
+try:
+    email = client.emails.send(
+        from_="hello@example.com",
+        to="recipient@example.com",
+        subject="Hello",
+        html="<p>Hello!</p>",
+    )
+    print(f"Sent: {email.id}")
+except bytesend.APIError as e:
+    if e.code == "RATE_LIMITED":
+        retry_after = e.headers.get("Retry-After", 1)
+        time.sleep(int(retry_after))
+    elif e.code == "UNAUTHORIZED":
+        print("Invalid API key")
+    else:
+        print(f"Error {e.code}: {e.message}")
+```
+
+---
+
+## Summary Table
+
+| Code                   | HTTP | When it happens                                          |
+| ---------------------- | ---- | -------------------------------------------------------- |
+| `BAD_REQUEST`          | 400  | Invalid input, missing or malformed fields               |
+| `UNAUTHORIZED`         | 401  | No API key or invalid key                                |
+| `FORBIDDEN`            | 403  | Valid key, but action not permitted                      |
+| `NOT_FOUND`            | 404  | Resource doesn't exist or belongs to another team        |
+| `METHOD_NOT_ALLOWED`   | 405  | Wrong HTTP method for this endpoint                      |
+| `NOT_UNIQUE`           | 409  | Resource with this identifier already exists             |
+| `RATE_LIMITED`         | 429  | Too many requests, check the `Retry-After` header        |
+| `INTERNAL_SERVER_ERROR`| 500  | Unexpected server error, retry with backoff              |

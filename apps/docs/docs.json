@@ -64,6 +64,8 @@
             "group": "Account & Authentication",
             "pages": [
               "guides/github-oauth",
+              "guides/google-oauth",
+              "guides/discord-oauth",
               "guides/api-authentication"
             ]
           },
@@ -72,7 +74,24 @@
             "pages": [
               "guides/plans-and-pricing",
               "guides/plan-management",
-              "guides/admin-operations"
+              "guides/admin-operations",
+              "guides/rate-limits"
+            ]
+          },
+          {
+            "group": "Sending Email",
+            "pages": [
+              "guides/contact-books",
+              "guides/campaigns",
+              "guides/double-opt-in",
+              "guides/campaign-personalization",
+              "guides/use-with-react-email"
+            ]
+          },
+          {
+            "group": "Deliverability",
+            "pages": [
+              "guides/deliverability"
             ]
           },
           {
@@ -87,9 +106,7 @@
             "group": "Integration Guides",
             "pages": [
               "guides/webhooks",
-              "guides/double-opt-in",
-              "guides/campaign-personalization",
-              "guides/use-with-react-email"
+              "guides/error-codes"
             ]
           }
         ]

@@ -92,15 +92,7 @@ The official ByteSend SMTP relay image is available on DockerHub as `bytesend/sm
 
 2. **Start the server:**
    ```bash
-   # With environment variables
-   BYTESEND_BASE_URL=https://your-instance.com \
-   SMTP_TLS_MODE=manual \
    docker compose up -d
-   ```
-   
-   Or edit a `.env` file and run:
-   ```bash
-   docker compose --env-file .env up -d
    ```
 
 3. **Verify it's running:**
@@ -151,8 +143,8 @@ If you prefer to build the image locally:
 
 1. **Clone and install:**
    ```bash
-  git clone https://github.com/NodeByteLTD/ByteSend.git
-  cd ByteSend/apps/smtp-server
+   git clone https://github.com/NodeByteLTD/ByteSend.git
+   cd ByteSend/apps/smtp-server
    npm install
    ```
 
@@ -161,23 +153,10 @@ If you prefer to build the image locally:
    npm run build
    ```
 
-3. **Set environment variables:**
-   Copy and configure the example file:
+3. **Set environment variables** by copying and editing the example file:
    ```bash
    cp .env.example .env
-   # Edit .env with your settings
    nano .env
-   ```
-
-   Or set them in your shell:
-   ```bash
-   export NODE_ENV=production
-  export SMTP_AUTH_USERNAME=bytesend
-   export BYTESEND_BASE_URL=https://bytesend.cloud
-   export SMTP_TLS_MODE=none
-   # For manual TLS:
-   # export SMTP_TLS_CERT_PATH=/path/to/fullchain.pem
-   # export SMTP_TLS_KEY_PATH=/path/to/privkey.pem
    ```
 
 4. **Run:**
@@ -311,7 +290,9 @@ transporter.sendMail({
 
 To run the ByteSend SMTP Server as a systemd service on Linux (without Docker):
 
-<Warning>**If using `SMTP_TLS_MODE=manual`:** Before proceeding with this setup, ensure your certificate files exist and that the `smtp` user will have read access (see **step 4** below). The service will fail to start if it can't read the certificate.</Warning>
+<Warning>
+**If using `SMTP_TLS_MODE=manual`:** Before proceeding with this setup, ensure your certificate files exist and that the `smtp` user will have read access (see **step 4** below). The service will fail to start if it can't read the certificate.
+</Warning>
 
 ### 1. Create a systemd service file
 
@@ -379,7 +360,9 @@ sudo -u smtp cp /opt/bytesend-smtp/apps/smtp-server/.env.example /opt/bytesend-s
 sudo nano /opt/bytesend-smtp/apps/smtp-server/.env  # Edit with your settings
 ```
 
-<Note>The `HOME=/opt/bytesend-smtp` prefix is needed if Node.js is installed via snap, which restricts home directory access to `/home`. If you get "home directories outside of /home needs configuration", use this workaround or install Node.js via `apt` or `nvm` instead.</Note>
+<Note>
+The `HOME=/opt/bytesend-smtp` prefix is needed if Node.js is installed via snap, which restricts home directory access to `/home`. If you get "home directories outside of /home needs configuration", use this workaround or install Node.js via `apt` or `nvm` instead.
+</Note>
 
 Alternatively, you can set environment variables directly in the systemd service file (see step 1). Using `.env` is cleaner for configuration management.
 
