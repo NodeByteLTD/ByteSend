@@ -14,6 +14,7 @@ import { isCloud } from "~/utils/common";
 import { toPlainHtml } from "~/server/utils/email-content";
 import { Target } from "lucide-react";
 import { createCheckoutSessionForTeam, type CheckoutPlan } from "~/server/billing/payments";
+import { TeamService } from "~/server/service/team-service";
 
 const userAdminSelection = {
   id: true,
@@ -459,6 +460,8 @@ export const adminRouter = createTRPCRouter({
         select: teamAdminSelection,
       });
 
+      await TeamService.invalidateTeamCache(teamId);
+
       return updatedTeam;
     }),
 
@@ -499,6 +502,7 @@ export const adminRouter = createTRPCRouter({
           },
           select: teamAdminSelection,
         });
+        await TeamService.invalidateTeamCache(teamId);
         logger.info(
           { teamId, plan, method: "complimentary" },
           "[AdminRouter]: Plan assigned complimentarily",
